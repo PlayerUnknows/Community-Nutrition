@@ -1,0 +1,85 @@
+<?php
+require_once 'dbcon.php';
+
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+header('Content-Type: application/json');
+
+try {
+    $conn = connect();
+    
+    if (!$conn) {
+        throw new Exception('Database connection failed');
+    }
+    
+    // Pagination and search parameters
+    $draw = $_POST['draw'] ?? 1;
+    $start = $_POST['start'] ?? 0;
+    $length = $_POST['length'] ?? 10;
+    $searchValue = $_POST['search']['value'] ?? '';
+    
+    // Base query
+    $baseQuery = "FROM account_info 
+                  WHERE 1=1 
+                  AND (
+                      user_id LIKE :search OR 
+                      email LIKE :search OR 
+                      CASE 
+                          WHEN role = '1' THEN 'Parent'
+                          WHEN role = '2' THEN 'Health Worker'
+                          WHEN role = '3' THEN 'Administrator'
+                          ELSE 'unknown'
+                      END LIKE :search OR 
+                      created_at LIKE :search
+                  )";
+    
+    // Total records before filtering
+    $totalStmt = $conn->prepare("SELECT COUNT(*) AS total $baseQuery");
+    $totalStmt->execute([':search' => "%$searchValue%"]);
+    $totalRecords = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Filtered records query
+    $query = "SELECT 
+                user_id,
+                email,
+                CASE 
+                    WHEN role = '1' THEN 'Parent'
+                    WHEN role = '2' THEN 'Health Worker'
+                    WHEN role = '3' THEN 'Administrator'
+                    ELSE 'unknown'
+                END AS role,
+                DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+              $baseQuery
+              ORDER BY user_id DESC
+              LIMIT :start, :length";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bindValue(':search', "%$searchValue%", PDO::PARAM_STR);
+    $stmt->bindValue(':start', (int)$start, PDO::PARAM_INT);
+    $stmt->bindValue(':length', (int)$length, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $response = [
+        'draw' => intval($draw),
+        'recordsTotal' => $totalRecords,
+        'recordsFiltered' => $totalRecords,
+        'data' => $users,
+        'success' => true
+    ];
+    
+    echo json_encode($response);
+    
+} catch(Exception $e) {
+    error_log('Fetch users error: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage(),
+        'data' => []
+    ]);
+}
+?>

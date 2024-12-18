@@ -15,23 +15,34 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$userId = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+// Validate the new alphanumeric user ID format
+$userId = isset($_POST['user_id']) ? trim($_POST['user_id']) : '';
 
-if ($userId === 0) {
-    echo json_encode(['success' => false, 'message' => 'Invalid user ID']);
+// Validate the new ID format (starts with letters, followed by numbers)
+if (!preg_match('/^[A-Z]{3}\d{4}$/', $userId)) {
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Invalid user ID format. Expected format: 3 uppercase letters followed by 4 digits (e.g., FAM1234)',
+        'received_id' => $userId
+    ]);
     exit;
 }
 
 try {
     $conn = connect();
     
-    // Check if user exists and is not the current user
-    $stmt = $conn->prepare("SELECT email FROM account_info WHERE user_id = ?");
-    $stmt->execute([$userId]);
+    // Use bindValue instead of bindParam
+    $stmt = $conn->prepare("SELECT email FROM account_info WHERE user_id = :userId");
+    $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
+    $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) {
-        echo json_encode(['success' => false, 'message' => 'User not found']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'User not found', 
+            'user_id' => $userId
+        ]);
         exit;
     }
     
@@ -43,9 +54,10 @@ try {
     // Begin transaction
     $conn->beginTransaction();
     
-    // Delete user
-    $stmt = $conn->prepare("DELETE FROM account_info WHERE user_id = ?");
-    $stmt->execute([$userId]);
+    // Delete user with the new ID format
+    $stmt = $conn->prepare("DELETE FROM account_info WHERE user_id = :userId");
+    $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
+    $stmt->execute();
     
     // Log the action in audit trail
     $stmt = $conn->prepare("INSERT INTO audit_trail (username, action, details) VALUES (?, ?, ?)");

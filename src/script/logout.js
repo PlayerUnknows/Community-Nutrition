@@ -2,39 +2,23 @@ $(document).ready(function () {
     $('#logoutButton').click(function (e) {
         e.preventDefault();
 
-        let timerInterval;
         Swal.fire({
-            title: 'Logging out...',
-            html: '',
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            allowOutsideClick: false,
+            title: 'Logout Confirmation',
+            text: 'Are you sure you want to log out?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'No, cancel',
             customClass: {
                 title: 'text-sm',
-                timerProgressBar: 'bg-primary'
-            },
-            didOpen: () => {
-                const b = Swal.getHtmlContainer().querySelector('b');
-                timerInterval = setInterval(() => {
-                    if (b) b.textContent = `${Swal.getTimerLeft()}`;
-                }, 100);
-                // Add custom styles
-                const progressBar = Swal.getPopup().querySelector('.swal2-timer-progress-bar');
-                if (progressBar) {
-                    progressBar.style.backgroundColor = '#007bff';
-                }
-                // Make title smaller
-                const title = Swal.getPopup().querySelector('.swal2-title');
-                if (title) {
-                    title.style.fontSize = '1rem';
-                }
-            },
-            willClose: () => {
-                clearInterval(timerInterval);
+                popup: 'rounded-lg',
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-danger'
             }
         }).then((result) => {
-            if (result.dismiss === Swal.DismissReason.timer) {
+            if (result.isConfirmed) {
                 // Perform logout
                 $.ajax({
                     url: '/src/backend/logout_handler.php',

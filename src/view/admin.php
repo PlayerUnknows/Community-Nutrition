@@ -6,7 +6,10 @@ use Psr\Log\LogLevel;
 
 $logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
 $logger->error('This is an error message');
+
+session_start();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,10 +34,8 @@ $logger->error('This is an error message');
     <script src="../../assets/dist/chart.js"></script>
 
 
-
-
-
-
+    <script src="/src/script/dropdrown.js"></script>
+    
     <style>
         :root {
             --primary-blue: #007bff;
@@ -257,18 +258,30 @@ $logger->error('This is an error message');
         <div class="container d-flex align-items-center justify-content-between">
             <!-- Logo -->
             <div class="d-flex align-items-center logo-container">
-                <img src="../../assets/img/md.png" alt="San Andres Logo" class="responsive-logo">
+                <img src="../../assets/img/SanAndres.svg" alt="San Andres Logo" class="responsive-logo">
             </div>
 
-            <!-- Welcome Message and Date/Time -->
+
             <div class="text-center">
-                <p class="mb-0">Welcome, <strong id="username">User</strong></p>
+                <p class="mb-0">Welcome, <strong id="username">
+                        <?php
+                        // Multiple checks to retrieve email
+                        $displayEmail = "Guest";
+
+                        if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
+                            $displayEmail = htmlspecialchars($_SESSION['email']);
+                        } elseif (isset($_SESSION['user']['email']) && !empty($_SESSION['user']['email'])) {
+                            $displayEmail = htmlspecialchars($_SESSION['user']['email']);
+                        }
+
+                        echo $displayEmail;
+                        ?>
+                    </strong></p>
                 <p class="mb-0" id="dateTimeDisplay"></p>
             </div>
-
             <!-- Profile Dropdown -->
             <div class="profile-dropdown dropdown">
-                <img src="../../assets/img/md.png"
+                <img src="../../assets/img/dummy-profile.png"
                     alt="Admin Profile"
                     class="dropdown-toggle"
                     id="profileDropdown"
@@ -295,24 +308,24 @@ $logger->error('This is an error message');
         <!-- Bootstrap Tab Navigation -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab" aria-controls="patients" aria-selected="true">Patients Profile</button>
+                <button class="nav-link active" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab" aria-controls="patients" aria-selected="true" tabindex="0">Patients Profile</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false">Check-Up Schedule</button>
-            </li>
-
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="false">Event information</button>
+                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false" tabindex="-1">Nutrition Monitoring and schedule</button>
             </li>
 
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="nutrition-report-tab" data-bs-toggle="tab" data-bs-target="#nutrition-report" type="button" role="tab" aria-controls="nutrition-report" aria-selected="false">Nutrition Report</button>
+                <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="false" tabindex="-1">Event information</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="nutrition-report-tab" data-bs-toggle="tab" data-bs-target="#nutrition-report" type="button" role="tab" aria-controls="nutrition-report" aria-selected="false" tabindex="-1">Nutrition Report</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit" type="button" role="tab" aria-controls="audit" aria-selected="false">Audit Trail</button>
+                <button class="nav-link" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit" type="button" role="tab" aria-controls="audit" aria-selected="false" tabindex="-1">Audit Trail</button>
             </li>
             <li class="nav-item" role="presentation" id="acc-reg-container">
-                <button class="nav-link" id="acc-reg" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab" aria-controls="account" aria-selected="false">Create Account</button>
+                <button class="nav-link" id="acc-reg" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab" aria-controls="account" aria-selected="false" tabindex="-1">Create Account</button>
                 <!-- Sub-navigation -->
                 <div class="sub-nav">
                     <button class="sub-nav-button" data-target="view-users">View Users</button>
@@ -320,46 +333,273 @@ $logger->error('This is an error message');
             </li>
         </ul>
 
-        <div class="tab-content" id="myTabContent">
+        <div class="tab-content" id="myTabContent" role="tabpanel">
             <!-- Patient Profile Section -->
-            <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab">
+            <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
                 <h2 class="mt-4">Patient Profile</h2>
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Age</th>
-                            <th>Contact</th>
-                            <th>Family Record</th>
-                            <th>Parents' Occupation</th>
-                            <th>Medical History</th>
-                            <th>Restrictions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>John Doe</td>
-                            <td>35</td>
-                            <td>(555) 123-4567</td>
-                            <td>Family: Father - John Doe Sr.</td>
-                            <td>Father: Engineer<br>Mother: Teacher</td>
-                            <td>Asthma, Hypertension</td>
-                            <td>Low Salt Diet</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Jane Smith</td>
-                            <td>28</td>
-                            <td>(555) 765-4321</td>
-                            <td>Family: Mother - Emma Smith</td>
-                            <td>Father: Business Owner<br>Mother: Doctor</td>
-                            <td>None</td>
-                            <td>None</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%">PAT ID</th>
+                                <th style="width: 7%">FAM ID</th>
+                                <th style="width: 12%">Name</th>
+                                <th style="width: 5%">Age</th>
+                                <th style="width: 15%">Address</th>
+                                <th style="width: 10%">Contact</th>
+                                <th style="width: 8%">Income</th>
+                                <th style="width: 10%">Family</th>
+                                <th style="width: 15%">Occupation</th>
+                                <th style="width: 8%">Medical</th>
+                                <th style="width: 7%">Diet</th>
+                                <th style="width: 8%">Food Restriction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>P001</td>
+                                <td>F001</td>
+                                <td>Juan Dela Cruz</td>
+                                <td>2 yrs</td>
+                                <td>123 Sampaguita St., Brgy. San Jose</td>
+                                <td>Maria Dela Cruz (Mother) - 0912-345-6789</td>
+                                <td>₱15,000</td>
+                                <td>Parents: Maria & Jose Dela Cruz<br>Siblings: 1</td>
+                                <td>Father: Construction Worker<br>Mother: Housewife</td>
+                                <td>None</td>
+                                <td>None</td>
+                                <td>Dislikes vegetables</td>
+                            </tr>
+                            <tr>
+                                <td>P002</td>
+                                <td>F002</td>
+                                <td>Maria Santos</td>
+                                <td>5 yrs</td>
+                                <td>456 Ilang-Ilang St., Brgy. San Miguel</td>
+                                <td>Roberto Santos (Father) - 0923-456-7890</td>
+                                <td>₱18,000</td>
+                                <td>Parents: Roberto & Ana Santos<br>Siblings: 2</td>
+                                <td>Father: Vendor<br>Mother: Store Owner</td>
+                                <td>Mild asthma</td>
+                                <td>No dairy</td>
+                                <td>Lactose intolerant</td>
+                            </tr>
+                            <tr>
+                                <td>P003</td>
+                                <td>F003</td>
+                                <td>Pedro Reyes</td>
+                                <td>8 mos</td>
+                                <td>789 Rosal St., Brgy. San Antonio</td>
+                                <td>Ana Reyes (Mother) - 0934-567-8901</td>
+                                <td>₱12,000</td>
+                                <td>Parents: Ana & Miguel Reyes<br>Siblings: None</td>
+                                <td>Father: Factory Worker<br>Mother: Teacher</td>
+                                <td>None</td>
+                                <td>None</td>
+                                <td>Starting solid foods</td>
+                            </tr>
+                            <tr>
+                                <td>P004</td>
+                                <td>F004</td>
+                                <td>Sofia Garcia</td>
+                                <td>1 yr</td>
+                                <td>321 Dahlia St., Brgy. San Pedro</td>
+                                <td>Elena Garcia (Mother) - 0945-678-9012</td>
+                                <td>₱20,000</td>
+                                <td>Parents: Elena & Ramon Garcia<br>Siblings: 1</td>
+                                <td>Father: Office Worker<br>Mother: Online Seller</td>
+                                <td>Eczema</td>
+                                <td>No eggs</td>
+                                <td>Egg allergy</td>
+                            </tr>
+                            <tr>
+                                <td>P005</td>
+                                <td>F005</td>
+                                <td>Miguel Luna</td>
+                                <td>3 yrs</td>
+                                <td>654 Gumamela St., Brgy. San Juan</td>
+                                <td>Carlos Luna (Father) - 0956-789-0123</td>
+                                <td>₱16,000</td>
+                                <td>Parents: Carlos & Isabel Luna<br>Siblings: 2</td>
+                                <td>Father: Electrician<br>Mother: Seamstress</td>
+                                <td>None</td>
+                                <td>No peanuts</td>
+                                <td>Peanut allergy</td>
+                            </tr>
+                            <tr>
+                                <td>P006</td>
+                                <td>F006</td>
+                                <td>Isabella Torres</td>
+                                <td>4 yrs</td>
+                                <td>987 Jasmine St., Brgy. Santa Rosa</td>
+                                <td>Carmen Torres (Mother) - 0967-890-1234</td>
+                                <td>₱14,000</td>
+                                <td>Parents: Carmen & Luis Torres<br>Siblings: 1</td>
+                                <td>Father: Driver<br>Mother: Market Vendor</td>
+                                <td>Mild anemia</td>
+                                <td>Iron-rich diet needed</td>
+                                <td>Picky eater</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Check-Up Details Section -->
+            <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
+                <h2 class="mt-4">Nutrition Monitoring (Ages 0-14)</h2>
+
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Upcoming Check-ups</h5>
+                                <div class="col-md-4">
+                                    <input type="text" id="upcomingSearch" class="form-control form-control-sm" placeholder="Search upcoming check-ups...">
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm" id="upcomingTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Patient ID</th>
+                                                <th>Name</th>
+                                                <th>Age</th>
+                                                <th>Accompanied By</th>
+                                                <th>Date</th>
+                                                <th>Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>P001</td>
+                                                <td>Juan Dela Cruz</td>
+                                                <td>2 yrs</td>
+                                                <td>Maria Dela Cruz (Mother)</td>
+                                                <td>2024-12-10</td>
+                                                <td>09:30 AM</td>
+                                            </tr>
+                                            <tr>
+                                                <td>P002</td>
+                                                <td>Maria Santos</td>
+                                                <td>5 yrs</td>
+                                                <td>Roberto Santos (Father)</td>
+                                                <td>2024-12-11</td>
+                                                <td>10:00 AM</td>
+                                            </tr>
+                                            <tr>
+                                                <td>P003</td>
+                                                <td>Pedro Reyes</td>
+                                                <td>8 mos</td>
+                                                <td>Ana Reyes (Mother)</td>
+                                                <td>2024-12-12</td>
+                                                <td>11:30 AM</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3>Nutrition Check-up History</h3>
+                            <div class="col-md-4">
+                                <input type="text" id="historySearch" class="form-control form-control-sm" placeholder="Search nutrition history...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-sm" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Accompanied By</th>
+                                <th>Weight (kg)</th>
+                                <th>Height (cm)</th>
+                                <th>Weight-for-Age</th>
+                                <th>Height-for-Age</th>
+                                <th>Weight-for-Height</th>
+                                <th>Last Check-up</th>
+                                <th>Nutritional Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>P001</td>
+                                <td>Juan Dela Cruz</td>
+                                <td>2 yrs</td>
+                                <td>Maria Dela Cruz (Mother)</td>
+                                <td>12.5</td>
+                                <td>86</td>
+                                <td>Normal</td>
+                                <td>Normal</td>
+                                <td>Normal</td>
+                                <td>2024-12-01</td>
+                                <td>Well-nourished</td>
+                            </tr>
+                            <tr>
+                                <td>P002</td>
+                                <td>Maria Santos</td>
+                                <td>5 yrs</td>
+                                <td>Roberto Santos (Father)</td>
+                                <td>15.2</td>
+                                <td>105</td>
+                                <td>Underweight</td>
+                                <td>Stunted</td>
+                                <td>Wasted</td>
+                                <td>2024-12-02</td>
+                                <td>Needs intervention</td>
+                            </tr>
+                            <tr>
+                                <td>P003</td>
+                                <td>Pedro Reyes</td>
+                                <td>8 mos</td>
+                                <td>Ana Reyes (Mother)</td>
+                                <td>8.3</td>
+                                <td>70</td>
+                                <td>Normal</td>
+                                <td>Normal</td>
+                                <td>Normal</td>
+                                <td>2024-12-03</td>
+                                <td>Well-nourished</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add JavaScript for search functionality for check-ups and history tables -->
+                <script>
+                    document.getElementById('upcomingSearch').addEventListener('keyup', function() {
+                        searchTable('upcomingTable', this.value);
+                    });
+
+                    document.getElementById('historySearch').addEventListener('keyup', function() {
+                        searchTable('historyTable', this.value);
+                    });
+
+                    function searchTable(tableId, searchText) {
+                        const table = document.getElementById(tableId);
+                        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+                        searchText = searchText.toLowerCase();
+
+                        for (let row of rows) {
+                            let text = row.textContent || row.innerText;
+                            text = text.toLowerCase();
+                            row.style.display = text.includes(searchText) ? '' : 'none';
+                        }
+                    }
+                </script>
             </div>
 
             <!-- Check-Up Schedule Section -->
@@ -600,7 +840,7 @@ $logger->error('This is an error message');
                     // Optional callback for any post-load processing
                 });
             });
-            
+
             // Bar Graph Data
             const nutritionBarCtx = document.getElementById('nutritionBarGraph').getContext('2d');
             new Chart(nutritionBarCtx, {
@@ -668,7 +908,7 @@ $logger->error('This is an error message');
             });
         });
     </script>
-    <script src="/src/script/dropdrown.js"></script>
+    
     <script src="/src/script/logout.js"></script>
 
     <script src="/src/script/audit_trail.js"></script>

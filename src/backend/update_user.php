@@ -38,6 +38,11 @@ try {
         throw new Exception('Invalid email format');
     }
     
+    // Validate user ID format (3 uppercase letters followed by 4 digits)
+    if (!preg_match('/^[A-Z]{3}\d{4}$/', $userId)) {
+        throw new Exception('Invalid user ID format. Expected format: 3 uppercase letters followed by 4 digits (e.g., FAM1234)');
+    }
+    
     // Map role names to numeric values
     $roleMap = [
         'Parent' => '1',
@@ -54,8 +59,9 @@ try {
     $roleValue = $roleMap[$role];
     
     // Check if user exists
-    $checkStmt = $conn->prepare("SELECT email, role FROM account_info WHERE user_id = ?");
-    $checkStmt->execute([$userId]);
+    $checkStmt = $conn->prepare("SELECT email, role FROM account_info WHERE user_id = :user_id");
+    $checkStmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
+    $checkStmt->execute();
     $existingUser = $checkStmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$existingUser) {
@@ -67,9 +73,9 @@ try {
     
     // Update user
     $updateStmt = $conn->prepare("UPDATE account_info SET email = :email, role = :role WHERE user_id = :user_id");
-    $updateStmt->bindParam(':email', $email);
-    $updateStmt->bindParam(':role', $roleValue);
-    $updateStmt->bindParam(':user_id', $userId);
+    $updateStmt->bindValue(':email', $email, PDO::PARAM_STR);
+    $updateStmt->bindValue(':role', $roleValue, PDO::PARAM_STR);
+    $updateStmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
     $updateResult = $updateStmt->execute();
 
    

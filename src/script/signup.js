@@ -1,21 +1,21 @@
 // Load signup form when the Account tab is clicked
-document.getElementById('acc-reg').addEventListener('click', function() {
+document.getElementById('acc-reg').addEventListener('click', function () {
     // Get the container where we'll put the form
     const container = document.getElementById('signupFormContainer');
-    
+
     // Use AJAX to load the signup form
     $.ajax({
         url: '../view/signup.php',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             // Extract the form content from the response
             const parser = new DOMParser();
             const doc = parser.parseFromString(response, 'text/html');
             const signupContainer = doc.querySelector('.signup-container');
-            
+
             if (signupContainer) {
                 container.innerHTML = signupContainer.outerHTML;
-                
+
                 // Add the submitBtn class to the submit button
                 const submitButton = container.querySelector('button[type="submit"]');
                 if (submitButton) {
@@ -32,6 +32,11 @@ document.getElementById('acc-reg').addEventListener('click', function() {
 
                     // Clear previous error messages
                     clearErrorMessages();
+
+                    // Clear input values
+                    $('#email').val('');
+                    $('#password').val('');
+                    $('#role').val('0');
 
                     // Basic client-side validation
                     if (!validateForm(email, password, role)) {
@@ -105,7 +110,7 @@ document.getElementById('acc-reg').addEventListener('click', function() {
                 });
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             container.innerHTML = '<div class="alert alert-danger">Error loading signup form. Please try again.</div>';
             console.error('Error loading signup form:', error);
         }
@@ -139,3 +144,17 @@ function resetForm() {
     $('#signupForm')[0].reset();
     clearErrorMessages();
 }
+
+/* Clear inputs on page load/refresh
+$(document).ready(function () {
+    // Clear signup form inputs
+    $('#email').val('');
+    $('#password').val('');
+    $('#role').val('0');  // Reset to default/first option
+
+    // Optional: Prevent form resubmission on page refresh
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+});
+*/

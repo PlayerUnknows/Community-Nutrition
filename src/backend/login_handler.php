@@ -9,15 +9,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     
     if (isset($data['email']) && isset($data['password'])) {
-        $email = $data['email'];
+        $loginIdentifier = $data['email'];
         $password = $data['password'];
         
         try {
             $conn = connect();
             
-            // Check user credentials
-            $stmt = $conn->prepare("SELECT user_id, email, password, role FROM account_info WHERE email = :email");
-            $stmt->bindParam(':email', $email);
+            // Prepare a query that checks both email and user_id
+            $stmt = $conn->prepare("SELECT user_id, email, password, role 
+                FROM account_info 
+                WHERE email = :identifier OR user_id = :identifier");
+            $stmt->bindParam(':identifier', $loginIdentifier);
             $stmt->execute();
             
             if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -56,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         echo json_encode([
             'success' => false,
-            'message' => 'Email and password are required'
+            'message' => 'Login identifier and password are required'
         ]);
     }
 } else {

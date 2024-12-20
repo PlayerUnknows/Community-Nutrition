@@ -47,7 +47,7 @@ $(document).ready(function() {
                 }
             }
         ],
-        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center"lip>',
+        dom: '<"row align-items-center"<"col-md-6"l><"col-md-6"f>><"row"<"col-sm-12"tr>><"row align-items-center"<"col-md-5"i><"col-md-7"p>>',
         buttons: [
             {
                 extend: 'collection',
@@ -119,7 +119,7 @@ $(document).ready(function() {
                                 </div>
                                 <div class="mb-3">
                                     <label for="editRole" class="form-label">Role</label>
-                                    <select class="form-control" id="editRole" required>
+                                    <select class="form-control" id="editRole" required>    
                                         <option value="Parent">Parent</option>
                                         <option value="Health Worker">Health Worker</option>
                                         <option value="Administrator">Administrator</option>
@@ -135,7 +135,7 @@ $(document).ready(function() {
                             const userId = $('#editUserId').val();
 
                             return $.ajax({
-                                url: '../backend/update_user.php',
+                                url: '../backend/edit_user.php',
                                 type: 'POST',
                                 data: { 
                                     user_id: userId, 

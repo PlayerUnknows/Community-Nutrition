@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Community Nutrition Information System</title>
-    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
-    
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/@fortawesome/fontawesome-free/css/all.css">
+    <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
 </head>
 
 <body>
@@ -52,16 +53,16 @@
     </div>
 
     <!-- Include jQuery library -->
-    <script src="../../assets/dist/jquery.js" type="text/javascript"></script>
+    <script src="../../node_modules/jquery/dist/jquery.js" type="text/javascript"></script>
 
     <!-- Include Popper.js for Bootstrap tooltips -->
-    <script src="../../assets/dist/popper.js" type="text/javascript"></script>
+    <script src="../../node_modules/@popperjs/core/dist/umd/popper.js" type="text/javascript"></script>
 
     <!-- Include Bootstrap JavaScript -->
-    <script src="../../assets/dist/bootstrap.min.js" type="text/javascript"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js" type="text/javascript"></script>
 
     <!-- Include SweetAlert for alert modals -->
-    <script src="../../assets/dist/sweetalert.js" type="text/javascript"></script>
+    <script src="../../node_modules/sweetalert2/dist/sweetalert2.js" type="text/javascript"></script>
 
     <!-- Link to your separate JS file -->
     <script src="/src/script/signup.js" type="text/javascript"></script>

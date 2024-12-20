@@ -4,20 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users - Community Nutrition System</title>
-    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../assets/css/datatable.css">
-    <link rel="stylesheet" href="../../assets/css/sweetalert2.css">
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/@fortawesome/fontawesome-free/css/all.css">
+    <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
+    <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.css">
 
     <!--core js-->
-    <script src="../../assets/dist/jquery.js"></script>
-    <script src="../../assets/dist/datatable.js"></script>
-    <script src="../../assets/dist/popper.js"></script>
-    <script src="../../assets/dist/bootstrap.min.js"></script>
-    <script src="../../assets/dist/sweetalert.js"></script>
+    <script src="../../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../../node_modules/datatables.net/js/jquery.dataTables.js"></script>
+    <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
+   
+    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.js"></script>
 
     <style>
         .text-right {
-            text-align: center !important;
+            text-align: right;
+        }
+        
+        /* DataTable styling */
+        .dataTables_wrapper .dataTables_length {
+            margin-right: 2rem;
+            display: inline-block;
+        }
+        
+        .dataTables_wrapper .dataTables_filter {
+            display: inline-block;
+            float: right;
+        }
+        
+        .dataTables_wrapper .dataTables_info {
+            padding-top: 0.85em;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate {
+            padding-top: 0.5em;
+            float: right;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.3em 0.8em;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+        
+        .dataTables_wrapper .row {
+            margin-bottom: 1rem;
         }
     </style>
 </head>

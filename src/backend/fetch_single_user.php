@@ -32,7 +32,7 @@ try {
               WHERE user_id = :user_id";
     
     $stmt = $conn->prepare($query);
-    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR); 
     $stmt->execute();
     
     $user = $stmt->fetch(PDO::FETCH_ASSOC);

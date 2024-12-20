@@ -26,8 +26,8 @@ $auditTrails = getAuditTrails($filters);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit Trail - Community Nutrition System</title>
-    <link rel="stylesheet" href="../../assets/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../assets/dist/datatable.css">
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
     <style>
         .audit-details {
             font-size: 0.9rem;
@@ -176,8 +176,8 @@ $auditTrails = getAuditTrails($filters);
         </div>
     </div>
 
-    <script src="../../assets/dist/bootstrap.min.js"></script>
-    <script src="../../assets/dist/datatable.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#auditTable').DataTable({

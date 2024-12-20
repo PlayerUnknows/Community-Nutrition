@@ -9,7 +9,6 @@ $logger->error('This is an error message');
 
 session_start();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,24 +17,21 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../assets/css/sweetalert2.css">
-    <link rel="stylesheet" href="../../assets/css/datatable.css">
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
+    <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
 
 
     <!-- Core JS - Order is important -->
-    <script src="../../assets/dist/jquery.js"></script>
-    <script src="../../assets/dist/datatable.js"></script>
-    <script src="../../assets/dist/popper.js"></script>
-    <script src="../../assets/dist/bootstrap.min.js"></script>
-    <script src="../../assets/dist/sweetalert.js"></script>
-    <script src="../../assets/dist/moment.js"></script>
-    <script src="../../assets/dist/chart.js"></script>
-
-
+    <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
+    <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="../../node_modules/moment/min/moment.min.js"></script>
     <script src="/src/script/dropdrown.js"></script>
-    
+
     <style>
         :root {
             --primary-blue: #007bff;
@@ -337,8 +333,11 @@ session_start();
             <!-- Patient Profile Section -->
             <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
                 <h2 class="mt-4">Patient Profile</h2>
+                <div class="col-md-4">
+                    <input type="text" id="Patients-Search" class="form-control form-control-sm" placeholder="Search patients...">
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover table-sm">
+                    <table class="table table-striped table-hover table-sm" id="patientsTable">
                         <thead>
                             <tr>
                                 <th style="width: 8%">PAT ID</th>
@@ -585,6 +584,10 @@ session_start();
 
                     document.getElementById('historySearch').addEventListener('keyup', function() {
                         searchTable('historyTable', this.value);
+                    });
+
+                    document.getElementById('Patients-Search').addEventListener('keyup', function() {
+                        searchTable('patientsTable', this.value);
                     });
 
                     function searchTable(tableId, searchText) {
@@ -908,10 +911,12 @@ session_start();
             });
         });
     </script>
-    
+
     <script src="/src/script/logout.js"></script>
 
     <script src="/src/script/audit_trail.js"></script>
+    
+    <script src="/src/script/loader.js"></script>   
 
 </body>
 

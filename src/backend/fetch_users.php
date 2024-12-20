@@ -7,6 +7,13 @@ ini_set('display_errors', 1);
 
 header('Content-Type: application/json');
 
+// Role mapping
+$roleMap = [
+    '1' => 'Parent',
+    '2' => 'Health Worker',
+    '3' => 'Administrator'
+];
+
 try {
     $conn = connect();
     
@@ -20,17 +27,17 @@ try {
     $length = $_POST['length'] ?? 10;
     $searchValue = $_POST['search']['value'] ?? '';
     
-    // Base query
+    // Base query with role mapping
     $baseQuery = "FROM account_info 
                   WHERE 1=1 
                   AND (
                       user_id LIKE :search OR 
                       email LIKE :search OR 
-                      CASE 
-                          WHEN role = '1' THEN 'Parent'
-                          WHEN role = '2' THEN 'Health Worker'
-                          WHEN role = '3' THEN 'Administrator'
-                          ELSE 'unknown'
+                      CASE role
+                          WHEN '1' THEN 'Parent'
+                          WHEN '2' THEN 'Health Worker'
+                          WHEN '3' THEN 'Administrator'
+                          ELSE role
                       END LIKE :search OR 
                       created_at LIKE :search
                   )";
@@ -40,15 +47,15 @@ try {
     $totalStmt->execute([':search' => "%$searchValue%"]);
     $totalRecords = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Filtered records query
+    // Filtered records query with proper role mapping
     $query = "SELECT 
                 user_id,
                 email,
-                CASE 
-                    WHEN role = '1' THEN 'Parent'
-                    WHEN role = '2' THEN 'Health Worker'
-                    WHEN role = '3' THEN 'Administrator'
-                    ELSE 'unknown'
+                CASE role
+                    WHEN '1' THEN 'Parent'
+                    WHEN '2' THEN 'Health Worker'
+                    WHEN '3' THEN 'Administrator'
+                    ELSE role
                 END AS role,
                 DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
               $baseQuery
@@ -82,4 +89,3 @@ try {
         'data' => []
     ]);
 }
-?>

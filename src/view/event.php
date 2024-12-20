@@ -8,13 +8,13 @@
         <title>Event Management</title>
 
         <!-- Bootstrap CSS -->
-        <link href="../../assets/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
 
         <!-- Font Awesome -->
-        <link href="../../assets/fontawesome-free-5.15.4-web/css/all.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../node_modules/@fortawesome/fontawesome-free/css/all.css">
 
         <!-- SweetAlert2 CSS -->
-        <link href="../../assets/css/sweetalert2.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
 
         <!-- Custom CSS -->
         <style>
@@ -481,10 +481,13 @@
                     </script>
 
                     <!-- Bootstrap JS -->
-                    <script src="../../assets/dist/bootstrap.min.js"></script>
-                    <script src="../../assets/dist/popper.js"></script>
+                    <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-                    <script src="../../assets/dist/sweetalert.js"></script>
+                    <!-- Font Awesome -->
+                    <script src="../../node_modules/@fortawesome/fontawesome-free/js/all.js"></script>
+
+                    <!-- SweetAlert2 -->
+                    <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
                 </main>
             </div>
         </div>

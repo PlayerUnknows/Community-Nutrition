@@ -3,10 +3,14 @@
 ## Installation
 
 After cloning the project, follow these steps:
+1. Install Node.js and npm
+    Download and install Node.js from https://nodejs.org         (LTS version recommended).
+    Verify the installation: 
+        node -v
+        npm -v
+2. Run `composer install` to install all vendor libraries.
 
-1. Run `composer install` to install all vendor libraries.
-
-2. Set up the assets directory structure:
+3. Set up the assets directory structure:
 ```
 assets/
 ├── css/
@@ -24,16 +28,20 @@ assets/
         └── [font files]
 ```
 
-3. Download Font Awesome 5.15.4:
+4. Download Font Awesome 5.15.4:
    - Go to https://github.com/FortAwesome/Font-Awesome/releases/tag/5.15.4
    - Download the zip file
    - Extract and copy the contents to `assets/fontawesome-free-5.15.4-web/`
 
-4. Download required CSS and JS files:
+5. Download required CSS and JS files:
    - Bootstrap 5.3.3 CSS and JS
    - SweetAlert2 CSS and JS
 
-5. Place your custom images in the `assets/images/` directory. You can customize the images while maintaining the same directory structure.
+6. Place your custom images in the `assets/images/` directory. You can customize the images while maintaining the same directory structure.
+
+7. Run npm install to install any required Node.js packages.
+
+
 
 ## Directory Structure
 
@@ -60,6 +68,7 @@ assets/
 ### Requirements
 - PHP 7.4+
 - Composer
+- Node.js and npm
 - Ratchet WebSocket Library
 
 ### Configuration

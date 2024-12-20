@@ -68,24 +68,38 @@ function getAuditTrails($filters = [], $limit = 100) {
         
         if (!empty($filters['date_from'])) {
             $sql .= " AND action_timestamp >= :date_from";
-            $params[':date_from'] = $filters['date_from'];
+            $params[':date_from'] = $filters['date_from'] . ' 00:00:00';
         }
         
         if (!empty($filters['date_to'])) {
             $sql .= " AND action_timestamp <= :date_to";
-            $params[':date_to'] = $filters['date_to'];
+            $params[':date_to'] = $filters['date_to'] . ' 23:59:59';
         }
         
         $sql .= " ORDER BY action_timestamp DESC LIMIT :limit";
-        $params[':limit'] = $limit;
+        $params[':limit'] = (int)$limit;
         
         $stmt = $conn->prepare($sql);
+        
+        // Debug output
+        error_log("SQL Query: " . $sql);
+        error_log("Parameters: " . print_r($params, true));
+        
         foreach ($params as $key => &$value) {
-            $stmt->bindParam($key, $value);
+            if ($key === ':limit') {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindParam($key, $value);
+            }
         }
         
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Debug output
+        error_log("Query Results Count: " . count($results));
+        
+        return $results;
     } catch(PDOException $e) {
         error_log("Get Audit Trail Error: " . $e->getMessage());
         return [];

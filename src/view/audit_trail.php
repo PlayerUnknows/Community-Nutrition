@@ -17,6 +17,15 @@ if (isset($_GET['date_to'])) $filters['date_to'] = $_GET['date_to'];
 
 $auditTrails = getAuditTrails($filters);
 
+// Debug output
+error_log("Audit Trails Count: " . count($auditTrails));
+if (!empty($auditTrails)) {
+    error_log("First Record Keys: " . print_r(array_keys($auditTrails[0]), true));
+    error_log("First Record Data: " . print_r($auditTrails[0], true));
+} else {
+    error_log("No audit trail records found");
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -45,6 +54,29 @@ $auditTrails = getAuditTrails($filters);
 
         .audit-details strong {
             color: #495057;
+        }
+
+        /* DataTables Bootstrap 5 Styling */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            width: auto;
+            display: inline-block;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .pagination {
+            justify-content: flex-end;
+        }
+
+        .page-link {
+            padding: 0.375rem 0.75rem;
         }
     </style>
 </head>
@@ -95,98 +127,119 @@ $auditTrails = getAuditTrails($filters);
                         <th>Timestamp</th>
                         <th>User</th>
                         <th>Action</th>
-                        <th>IP Address</th>
                         <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $details = $audit['details'];
-                    if ($details) {
-                        $decodedDetails = json_decode($details, true);
-                        if (json_last_error() === JSON_ERROR_NONE) {
-                            // Handle UPDATE_USER action more comprehensively
-                            if ($audit['action'] === 'UPDATE_USER') {
-                                echo '<div class="audit-details">';
+                    <?php foreach ($auditTrails as $audit): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($audit['action_timestamp']); ?></td>
+                            <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
+                            <td><?php echo htmlspecialchars($audit['action']); ?></td>
+                            <td>
+                                <?php
+                                $details = $audit['details'];
+                                if ($details) {
+                                    $decodedDetails = json_decode($details, true);
+                                    if (json_last_error() === JSON_ERROR_NONE) {
+                                        // Handle UPDATE_USER action more comprehensively
+                                        if ($audit['action'] === 'UPDATE_USER') {
+                                            echo '<div class="audit-details">';
 
-                                // Display User ID being updated
-                                if (isset($decodedDetails['updated_user_id'])) {
-                                    echo "<div><strong>User ID:</strong> {$decodedDetails['updated_user_id']}</div>";
+                                            // Display User ID being updated
+                                            if (isset($decodedDetails['updated_user_id'])) {
+                                                echo "<div><strong>User ID:</strong> {$decodedDetails['updated_user_id']}</div>";
+                                            }
+
+                                            // Prepare role mapping
+                                            $roleMap = [
+                                                '1' => 'Admin',
+                                                '2' => 'Staff',
+                                                '3' => 'User'
+                                            ];
+
+                                            // Display changes
+                                            $changes = [];
+
+                                            // Check email change
+                                            if (
+                                                isset($decodedDetails['old_email']) && isset($decodedDetails['updated_user_email'])
+                                                && $decodedDetails['old_email'] !== $decodedDetails['updated_user_email']
+                                            ) {
+                                                $changes[] = "<strong>Email:</strong> {$decodedDetails['old_email']} → {$decodedDetails['updated_user_email']}";
+                                            }
+
+                                            // Check role change
+                                            if (
+                                                isset($decodedDetails['old_role']) && isset($decodedDetails['new_role'])
+                                                && $decodedDetails['old_role'] !== $decodedDetails['new_role']
+                                            ) {
+                                                $oldRole = $roleMap[$decodedDetails['old_role']] ?? 'Unknown';
+                                                $newRole = $roleMap[$decodedDetails['new_role']] ?? 'Unknown';
+                                                $changes[] = "<strong>Role:</strong> {$oldRole} → {$newRole}";
+                                            }
+
+                                            // Display changes if any
+                                            if (!empty($changes)) {
+                                                echo implode('<br>', $changes);
+                                            } else {
+                                                echo "No significant changes";
+                                            }
+                                            echo '</div>';
+                                        } else {
+                                            // For other actions, display details as is
+                                            echo '<div class="audit-details">';
+                                            foreach ($decodedDetails as $key => $value) {
+                                                if (is_array($value)) {
+                                                    $value = json_encode($value);
+                                                }
+                                                echo "<div><strong>" . htmlspecialchars(ucwords(str_replace('_', ' ', $key))) . ":</strong> " . htmlspecialchars($value) . "</div>";
+                                            }
+                                            echo '</div>';
+                                        }
+                                    } else {
+                                        echo htmlspecialchars($details);
+                                    }
                                 }
-
-                                // Prepare role mapping
-                                $roleMap = [
-                                    '1' => 'Admin',
-                                    '2' => 'Staff',
-                                    '3' => 'User'
-                                ];
-
-                                // Display changes
-                                $changes = [];
-
-                                // Check email change
-                                if (
-                                    isset($decodedDetails['old_email']) && isset($decodedDetails['updated_user_email'])
-                                    && $decodedDetails['old_email'] !== $decodedDetails['updated_user_email']
-                                ) {
-                                    $changes[] = "<strong>Email:</strong> {$decodedDetails['old_email']} → {$decodedDetails['updated_user_email']}";
-                                }
-
-                                // Check role change
-                                if (
-                                    isset($decodedDetails['old_role']) && isset($decodedDetails['new_role'])
-                                    && $decodedDetails['old_role'] !== $decodedDetails['new_role']
-                                ) {
-                                    $oldRole = $roleMap[$decodedDetails['old_role']] ?? 'Unknown';
-                                    $newRole = $roleMap[$decodedDetails['new_role']] ?? 'Unknown';
-                                    $changes[] = "<strong>Role:</strong> {$oldRole} → {$newRole}";
-                                }
-
-                                // Display changes if any
-                                if (!empty($changes)) {
-                                    echo implode('<br>', $changes);
-                                } else {
-                                    echo "No significant changes";
-                                }
-
-                                echo '</div>';
-                            }
-                            // Handle other actions as before
-                            else if ($audit['action'] === 'LOGIN' || $audit['action'] === 'LOGOUT') {
-                                echo "<div class='audit-details'>";
-                                echo "<div>" . ($audit['action'] === 'LOGIN' ? 'User logged in' : 'User logged out') . "</div>";
-                                echo "</div>";
-                            } else {
-                                echo '<div class="audit-details">';
-                                foreach ($decodedDetails as $key => $value) {
-                                    $label = ucwords(str_replace('_', ' ', $key));
-                                    echo "<div><strong>{$label}:</strong> {$value}</div>";
-                                }
-                                echo '</div>';
-                            }
-                        } else {
-                            echo htmlspecialchars($details);
-                        }
-                    } else {
-                        echo "-";
-                    }
-                    ?>
+                                ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#auditTable').DataTable({
-                order: [
-                    [0, 'desc']
-                ]
+                order: [[0, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                language: {
+                    lengthMenu: "Show _MENU_ entries",
+                    search: "Search:",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                },
+                drawCallback: function() {
+                    $('.dataTables_paginate > .pagination').addClass('pagination-sm');
+                }
             });
         });
     </script>
+    <script src="/src/script/audit_trail.js"></script>
 </body>
 
 </html>

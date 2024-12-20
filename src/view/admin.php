@@ -5,7 +5,7 @@ use Katzgrau\KLogger\Logger;
 use Psr\Log\LogLevel;
 
 $logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
-$logger->error('This is an error message');
+
 
 session_start();
 ?>
@@ -332,121 +332,13 @@ session_start();
         <div class="tab-content" id="myTabContent" role="tabpanel">
             <!-- Patient Profile Section -->
             <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
-                <h2 class="mt-4">Patient Profile</h2>
-                <div class="col-md-4">
-                    <input type="text" id="Patients-Search" class="form-control form-control-sm" placeholder="Search patients...">
+                <div id="patientFormContainer" class="container mt-4">
+                    <!-- Event form will be loaded here -->
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-sm" id="patientsTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 8%">PAT ID</th>
-                                <th style="width: 7%">FAM ID</th>
-                                <th style="width: 12%">Name</th>
-                                <th style="width: 5%">Age</th>
-                                <th style="width: 15%">Address</th>
-                                <th style="width: 10%">Contact</th>
-                                <th style="width: 8%">Income</th>
-                                <th style="width: 10%">Family</th>
-                                <th style="width: 15%">Occupation</th>
-                                <th style="width: 8%">Medical</th>
-                                <th style="width: 7%">Diet</th>
-                                <th style="width: 8%">Food Restriction</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>P001</td>
-                                <td>F001</td>
-                                <td>Juan Dela Cruz</td>
-                                <td>2 yrs</td>
-                                <td>123 Sampaguita St., Brgy. San Jose</td>
-                                <td>Maria Dela Cruz (Mother) - 0912-345-6789</td>
-                                <td>₱15,000</td>
-                                <td>Parents: Maria & Jose Dela Cruz<br>Siblings: 1</td>
-                                <td>Father: Construction Worker<br>Mother: Housewife</td>
-                                <td>None</td>
-                                <td>None</td>
-                                <td>Dislikes vegetables</td>
-                            </tr>
-                            <tr>
-                                <td>P002</td>
-                                <td>F002</td>
-                                <td>Maria Santos</td>
-                                <td>5 yrs</td>
-                                <td>456 Ilang-Ilang St., Brgy. San Miguel</td>
-                                <td>Roberto Santos (Father) - 0923-456-7890</td>
-                                <td>₱18,000</td>
-                                <td>Parents: Roberto & Ana Santos<br>Siblings: 2</td>
-                                <td>Father: Vendor<br>Mother: Store Owner</td>
-                                <td>Mild asthma</td>
-                                <td>No dairy</td>
-                                <td>Lactose intolerant</td>
-                            </tr>
-                            <tr>
-                                <td>P003</td>
-                                <td>F003</td>
-                                <td>Pedro Reyes</td>
-                                <td>8 mos</td>
-                                <td>789 Rosal St., Brgy. San Antonio</td>
-                                <td>Ana Reyes (Mother) - 0934-567-8901</td>
-                                <td>₱12,000</td>
-                                <td>Parents: Ana & Miguel Reyes<br>Siblings: None</td>
-                                <td>Father: Factory Worker<br>Mother: Teacher</td>
-                                <td>None</td>
-                                <td>None</td>
-                                <td>Starting solid foods</td>
-                            </tr>
-                            <tr>
-                                <td>P004</td>
-                                <td>F004</td>
-                                <td>Sofia Garcia</td>
-                                <td>1 yr</td>
-                                <td>321 Dahlia St., Brgy. San Pedro</td>
-                                <td>Elena Garcia (Mother) - 0945-678-9012</td>
-                                <td>₱20,000</td>
-                                <td>Parents: Elena & Ramon Garcia<br>Siblings: 1</td>
-                                <td>Father: Office Worker<br>Mother: Online Seller</td>
-                                <td>Eczema</td>
-                                <td>No eggs</td>
-                                <td>Egg allergy</td>
-                            </tr>
-                            <tr>
-                                <td>P005</td>
-                                <td>F005</td>
-                                <td>Miguel Luna</td>
-                                <td>3 yrs</td>
-                                <td>654 Gumamela St., Brgy. San Juan</td>
-                                <td>Carlos Luna (Father) - 0956-789-0123</td>
-                                <td>₱16,000</td>
-                                <td>Parents: Carlos & Isabel Luna<br>Siblings: 2</td>
-                                <td>Father: Electrician<br>Mother: Seamstress</td>
-                                <td>None</td>
-                                <td>No peanuts</td>
-                                <td>Peanut allergy</td>
-                            </tr>
-                            <tr>
-                                <td>P006</td>
-                                <td>F006</td>
-                                <td>Isabella Torres</td>
-                                <td>4 yrs</td>
-                                <td>987 Jasmine St., Brgy. Santa Rosa</td>
-                                <td>Carmen Torres (Mother) - 0967-890-1234</td>
-                                <td>₱14,000</td>
-                                <td>Parents: Carmen & Luis Torres<br>Siblings: 1</td>
-                                <td>Father: Driver<br>Mother: Market Vendor</td>
-                                <td>Mild anemia</td>
-                                <td>Iron-rich diet needed</td>
-                                <td>Picky eater</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
 
             <!-- Check-Up Details Section -->
-            <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
+            <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
                 <h2 class="mt-4">Nutrition Monitoring (Ages 0-14)</h2>
 
                 <div class="row mb-4">
@@ -586,9 +478,6 @@ session_start();
                         searchTable('historyTable', this.value);
                     });
 
-                    document.getElementById('Patients-Search').addEventListener('keyup', function() {
-                        searchTable('patientsTable', this.value);
-                    });
 
                     function searchTable(tableId, searchText) {
                         const table = document.getElementById(tableId);
@@ -785,7 +674,16 @@ session_start();
     <!-- Scripts -->
     <script>
         $(document).ready(function() {
-            // Update date and time
+            // Handle tab selection from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            
+            if (tabParam) {
+                // Activate the correct tab
+                $(`#${tabParam}-tab`).tab('show');
+            }
+            
+            // Update date and time function
             function updateDateTime() {
                 const now = new Date();
                 const options = {
@@ -801,23 +699,94 @@ session_start();
                 $('#dateTimeDisplay').text(dateTimeStr);
             }
 
-            // Update time immediately and then every second
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
+            // Store active tab in session storage
+            function storeActiveTab() {
+                const activeTabId = $('.nav-link.active').attr('id');
+                sessionStorage.setItem('activeTab', activeTabId);
+            }
 
-            // Refresh table when viewing users
+            // Restore active tab from session storage
+            function restoreActiveTab() {
+                const activeTabId = sessionStorage.getItem('activeTab');
+                if (activeTabId) {
+                    // Remove active class from all tabs
+                    $('.nav-link').removeClass('active');
+                    $('.tab-pane').removeClass('show active');
+                    
+                    // Activate stored tab
+                    $(`#${activeTabId}`).addClass('active');
+                    const targetPane = $(`#${activeTabId}`).attr('data-bs-target');
+                    $(targetPane).addClass('show active');
+                    
+                    // Load content based on active tab
+                    loadTabContent(activeTabId);
+                } else {
+                    // If no stored tab, load patients tab by default
+                    loadTabContent('patients-tab');
+                }
+            }
+
+            // Load content based on tab ID
+            function loadTabContent(tabId) {
+                switch(tabId) {
+                    case 'patients-tab':
+                        loadContentWithAnimation('#patientFormContainer', '../../src/view/patient_profile.php');
+                        break;
+                    case 'event-tab':
+                        loadContentWithAnimation('#eventFormContainer', '../../src/view/event.php');
+                        break;
+                    case 'nutrition-report-tab':
+                        loadContentWithAnimation('#nutrition-report', '../../src/view/report.php');
+                        // Initialize charts after content is loaded
+                        $(document).ajaxComplete(function(event, xhr, settings) {
+                            if (settings.url === '../../src/view/report.php') {
+                                initializeCharts();
+                                $(document).off('ajaxComplete'); // Remove handler after execution
+                            }
+                        });
+                        break;
+                    case 'audit-tab':
+                        loadContentWithAnimation('#audit .container-fluid', '../../src/view/audit_trail.php');
+                        break;
+                    case 'acc-reg':
+                        $('.sub-content').hide();
+                        $('#add-account').show();
+                        loadContentWithAnimation('#signupFormContainer', '../../src/view/signup.php');
+                        break;
+                }
+            }
+
+            // Function to load content with loading animation
+            function loadContentWithAnimation(containerId, url) {
+                showLoadingOverlay();
+                $(containerId).load(url, function(response, status, xhr) {
+                    if (status === "error") {
+                        console.error("Error loading content:", xhr.status, xhr.statusText);
+                        $(containerId).html('<div class="alert alert-danger">Error loading content. Please try again.</div>');
+                    }
+                    $('#loading-overlay').css('background-position', '100% 0%').fadeOut(500, function() {
+                        $(this).remove();
+                    });
+                });
+            }
+
+            // Tab click event handlers
+            $('.nav-link').on('click', function() {
+                const tabId = $(this).attr('id');
+                storeActiveTab();
+                loadTabContent(tabId);
+            });
+
+            // Account management handlers
             $('.sub-nav-button[data-target="view-users"]').click(function() {
                 $('.sub-content').hide();
                 $('#viewer').show();
-
-                // Load content without affecting other elements
-                $('#UsersFormContainer').load('../../src/view/users.php', function() {});
-
-                // Hide sub-nav after clicking
+                loadContentWithAnimation('#UsersFormContainer', '../../src/view/users.php');
                 $('.sub-nav').hide();
+                sessionStorage.setItem('activeSubContent', 'viewer');
             });
 
-            // Show sub-nav on hover
+            // Show/hide sub-nav on hover for desktop
             $('#acc-reg-container').hover(
                 function() {
                     $('.sub-nav').show();
@@ -829,84 +798,116 @@ session_start();
                 }
             );
 
-            // Create Account tab click handler
-            $('#acc-reg').on('click', function() {
+            // Initialize on page load
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            restoreActiveTab();
+
+            // Restore sub-content state
+            const activeSubContent = sessionStorage.getItem('activeSubContent');
+            if (activeSubContent) {
                 $('.sub-content').hide();
-                $('#add-account').show();
-                $('#signupFormContainer').load('/src/view/signup.php', function() {
+                $(`#${activeSubContent}`).show();
+            }
 
-                });
-            });
-
-            $('#event-tab').on('click', function() {
-                $('#eventFormContainer').load('/src/view/event.php', function() {
-                    // Optional callback for any post-load processing
-                });
-            });
-
-            // Bar Graph Data
-            const nutritionBarCtx = document.getElementById('nutritionBarGraph').getContext('2d');
-            new Chart(nutritionBarCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Center 1', 'Center 2', 'Center 3', 'Center 4', 'Center 5', 'Center 6'],
-                    datasets: [{
-                        label: 'Normal Weight %',
-                        data: [75, 82, 78, 85, 80, 77],
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)'
-                    }, {
-                        label: 'Underweight %',
-                        data: [15, 10, 12, 8, 12, 13],
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                    }, {
-                        label: 'Overweight %',
-                        data: [10, 8, 10, 7, 8, 10],
-                        backgroundColor: 'rgba(255, 206, 86, 0.6)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100
+            // Initialize charts function
+            function initializeCharts() {
+                if ($('#nutrition-report').hasClass('active')) {
+                    // Bar Graph Data
+                    const nutritionBarCtx = document.getElementById('nutritionBarGraph').getContext('2d');
+                    new Chart(nutritionBarCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Center 1', 'Center 2', 'Center 3', 'Center 4', 'Center 5', 'Center 6'],
+                            datasets: [{
+                                label: 'Normal Weight %',
+                                data: [75, 82, 78, 85, 80, 77],
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                            }, {
+                                label: 'Underweight %',
+                                data: [15, 10, 12, 8, 12, 13],
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                            }, {
+                                label: 'Overweight %',
+                                data: [10, 8, 10, 7, 8, 10],
+                                backgroundColor: 'rgba(255, 206, 86, 0.6)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
                         }
-                    }
+                    });
+
+                    // Line Graph Data
+                    const nutritionLineCtx = document.getElementById('nutritionLineGraph').getContext('2d');
+                    new Chart(nutritionLineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                            datasets: [{
+                                label: '0-4 years',
+                                data: [65, 70, 75, 78, 82, 85],
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                tension: 0.1
+                            }, {
+                                label: '5-9 years',
+                                data: [70, 72, 76, 80, 83, 85],
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                tension: 0.1
+                            }, {
+                                label: '10-14 years',
+                                data: [75, 77, 80, 82, 85, 87],
+                                borderColor: 'rgba(255, 206, 86, 1)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    min: 50,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
                 }
+            }
+
+            // Initialize charts when switching to nutrition report tab
+            $('#nutrition-report-tab').on('shown.bs.tab', function() {
+                initializeCharts();
             });
 
-            // Line Graph Data
-            const nutritionLineCtx = document.getElementById('nutritionLineGraph').getContext('2d');
-            new Chart(nutritionLineCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: '0-4 years',
-                        data: [65, 70, 75, 78, 82, 85],
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        tension: 0.1
-                    }, {
-                        label: '5-9 years',
-                        data: [70, 72, 76, 80, 83, 85],
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        tension: 0.1
-                    }, {
-                        label: '10-14 years',
-                        data: [75, 77, 80, 82, 85, 87],
-                        borderColor: 'rgba(255, 206, 86, 1)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: 50,
-                            max: 100
-                        }
-                    }
+            // Search functionality
+            $('#upcomingSearch, #historySearch').on('keyup', function() {
+                const tableId = $(this).attr('id').replace('Search', 'Table');
+                searchTable(tableId, this.value);
+            });
+
+            function searchTable(tableId, searchText) {
+                const table = document.getElementById(tableId);
+                const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                searchText = searchText.toLowerCase();
+
+                for (let row of rows) {
+                    let text = row.textContent || row.innerText;
+                    text = text.toLowerCase();
+                    row.style.display = text.includes(searchText) ? '' : 'none';
+                }
+            }
+
+            // Listen for refresh messages from iframes
+            window.addEventListener('message', function(event) {
+                if (event.data === 'refreshPage') {
+                    location.reload();
                 }
             });
         });
@@ -915,8 +916,8 @@ session_start();
     <script src="/src/script/logout.js"></script>
 
     <script src="/src/script/audit_trail.js"></script>
-    
-    <script src="/src/script/loader.js"></script>   
+
+    <script src="/src/script/loader.js"></script>
 
 </body>
 

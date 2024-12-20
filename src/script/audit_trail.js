@@ -121,7 +121,7 @@ $(document).ready(function() {
         processing: true,
         serverSide: false,
         ajax: {
-            url: '../backend/fetch_audit_trail.php', // Fix the path
+            url: '../backend/fetch_audit_trail.php',
             type: 'GET',
             dataSrc: 'data'
         },
@@ -161,21 +161,96 @@ $(document).ready(function() {
         ],
         order: [[0, 'desc']],
         responsive: true,
-        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center"lip>',
+        dom: '<"row mb-3"<"col-md-6"B><"col-md-6"f>>' +
+             '<"row"<"col-md-12"tr>>' +
+             '<"row mt-3"<"col-md-4"l><"col-md-4 text-center"i><"col-md-4"p>>',
         buttons: [
             {
                 extend: 'collection',
-                text: 'Export',
-                buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                text: '<i class="fas fa-download me-1"></i>Export',
+                className: 'btn btn-primary',
+                buttons: [
+                    {
+                        extend: 'copy',
+                        className: 'btn btn-light',
+                        text: '<i class="fas fa-copy me-1"></i>Copy'
+                    },
+                    {
+                        extend: 'csv',
+                        className: 'btn btn-light',
+                        text: '<i class="fas fa-file-csv me-1"></i>CSV'
+                    },
+                    {
+                        extend: 'excel',
+                        className: 'btn btn-light',
+                        text: '<i class="fas fa-file-excel me-1"></i>Excel'
+                    },
+                    {
+                        extend: 'pdf',
+                        className: 'btn btn-light',
+                        text: '<i class="fas fa-file-pdf me-1"></i>PDF'
+                    },
+                    {
+                        extend: 'print',
+                        className: 'btn btn-light',
+                        text: '<i class="fas fa-print me-1"></i>Print'
+                    }
+                ]
             }
         ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
+        displayStart: 0,
+        pageLength: 5,
+        lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]],
+        language: {
+            paginate: {
+                first: '<i class="fas fa-angle-double-left"></i>',
+                previous: '<i class="fas fa-angle-left"></i>',
+                next: '<i class="fas fa-angle-right"></i>',
+                last: '<i class="fas fa-angle-double-right"></i>'
+            },
+            lengthMenu: "_MENU_ entries per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            search: "<i class='fas fa-search me-1'></i>Search:",
+            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+        },
+        drawCallback: function(settings) {
+            // Add Bootstrap classes to pagination
+            const pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate');
+            pagination.addClass('pagination-sm');
+            pagination.find('.paginate_button').addClass('px-3 py-2');
+            pagination.find('.current').addClass('bg-primary text-white');
+            
+            // Ensure 5 is selected by default
+            const lengthSelect = $(this).closest('.dataTables_wrapper').find('.dataTables_length select');
+            if (lengthSelect.val() !== '5') {
+                lengthSelect.val('5').trigger('change');
+            }
+        },
+        initComplete: function(settings, json) {
+            // Set initial page length to 5
+            this.api().page.len(5).draw();
+        }
     });
 
     // Register the table in the global tables object
     if (window.tables) {
         window.tables.auditTable = auditTable;
+    }
+
+    // Function to refresh audit trail data
+    function refreshAuditTrailData() {
+        fetch('../backend/audit_trail.php?action=get_audit_trails')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const auditTable = document.querySelector('#auditTable');
+                    if (auditTable && $.fn.DataTable.isDataTable('#auditTable')) {
+                        const dataTable = $(auditTable).DataTable();
+                        dataTable.ajax.reload(null, false);
+                    }
+                }
+            })
+            .catch(error => console.error('Error refreshing audit trail:', error));
     }
 
     // Handle filter form submission

@@ -48,7 +48,7 @@
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
                                         <button class="btn btn-sm btn-danger delete-patient" data-id="P002">
-                                            <i class="fas fa-trash"></i> Delete
+                                            <i class="fas fa-tra  sh"></i> Delete
                                         </button>
                                     </td>
                                 </tr>

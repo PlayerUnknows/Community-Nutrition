@@ -2,14 +2,13 @@
 require_once '../backend/audit_trail.php';
 session_start();
 
-/* Check if user is logged in and has admin privileges
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: login.php');
-    exit();
-}
-*/
+// Set default limit for records
+$limit = 100; // Default limit of records to fetch
+
 // Get filter parameters
-$filters = [];
+$filters = [
+    'limit' => $limit // Add limit to filters
+];
 if (isset($_GET['user_id'])) $filters['user_id'] = $_GET['user_id'];
 if (isset($_GET['action'])) $filters['action'] = $_GET['action'];
 if (isset($_GET['date_from'])) $filters['date_from'] = $_GET['date_from'];
@@ -17,13 +16,51 @@ if (isset($_GET['date_to'])) $filters['date_to'] = $_GET['date_to'];
 
 $auditTrails = getAuditTrails($filters);
 
+// Function to generate a unique key for each audit entry
+function getAuditKey($audit) {
+    return $audit['username'] . '_' . $audit['action'] . '_' . date('Y-m-d H:i', strtotime($audit['action_timestamp']));
+}
+
+// Merge duplicate entries
+$mergedAuditTrails = [];
+foreach ($auditTrails as $audit) {
+    $key = getAuditKey($audit);
+    
+    if (!isset($mergedAuditTrails[$key])) {
+        $mergedAuditTrails[$key] = $audit;
+        $mergedAuditTrails[$key]['count'] = 1;
+    } else {
+        // Increment count for duplicate actions
+        $mergedAuditTrails[$key]['count']++;
+        
+        // Keep the latest timestamp
+        if (strtotime($audit['action_timestamp']) > strtotime($mergedAuditTrails[$key]['action_timestamp'])) {
+            $mergedAuditTrails[$key]['action_timestamp'] = $audit['action_timestamp'];
+        }
+        
+        // Merge details if they're different
+        if ($audit['details'] !== $mergedAuditTrails[$key]['details']) {
+            $currentDetails = json_decode($mergedAuditTrails[$key]['details'], true) ?? [];
+            $newDetails = json_decode($audit['details'], true) ?? [];
+            
+            if (is_array($currentDetails) && is_array($newDetails)) {
+                $mergedDetails = array_merge_recursive($currentDetails, $newDetails);
+                $mergedAuditTrails[$key]['details'] = json_encode($mergedDetails);
+            }
+        }
+    }
+}
+
+// Convert back to indexed array and sort by timestamp
+$auditTrails = array_values($mergedAuditTrails);
+usort($auditTrails, function($a, $b) {
+    return strtotime($b['action_timestamp']) - strtotime($a['action_timestamp']);
+});
+
 // Debug output
-error_log("Audit Trails Count: " . count($auditTrails));
+error_log("Merged Audit Trails Count: " . count($auditTrails));
 if (!empty($auditTrails)) {
-    error_log("First Record Keys: " . print_r(array_keys($auditTrails[0]), true));
-    error_log("First Record Data: " . print_r($auditTrails[0], true));
-} else {
-    error_log("No audit trail records found");
+    error_log("First Merged Record: " . print_r($auditTrails[0], true));
 }
 
 ?>
@@ -133,7 +170,14 @@ if (!empty($auditTrails)) {
                 <tbody>
                     <?php foreach ($auditTrails as $audit): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($audit['action_timestamp']); ?></td>
+                            <td>
+                                <?php 
+                                echo htmlspecialchars($audit['action_timestamp']);
+                                if (isset($audit['count']) && $audit['count'] > 1) {
+                                    echo '<br><small class="text-muted">(' . $audit['count'] . ' similar actions)</small>';
+                                }
+                                ?>
+                            </td>
                             <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
                             <td><?php echo htmlspecialchars($audit['action']); ?></td>
                             <td>
@@ -142,61 +186,74 @@ if (!empty($auditTrails)) {
                                 if ($details) {
                                     $decodedDetails = json_decode($details, true);
                                     if (json_last_error() === JSON_ERROR_NONE) {
-                                        // Handle UPDATE_USER action more comprehensively
+                                        echo '<div class="audit-details">';
+                                        
+                                        // Handle UPDATE_USER action
                                         if ($audit['action'] === 'UPDATE_USER') {
-                                            echo '<div class="audit-details">';
-
                                             // Display User ID being updated
                                             if (isset($decodedDetails['updated_user_id'])) {
                                                 echo "<div><strong>User ID:</strong> {$decodedDetails['updated_user_id']}</div>";
                                             }
 
-                                            // Prepare role mapping
+                                            // Role mapping
                                             $roleMap = [
                                                 '1' => 'Admin',
                                                 '2' => 'Staff',
                                                 '3' => 'User'
                                             ];
 
-                                            // Display changes
+                                            // Display unique changes
                                             $changes = [];
-
-                                            // Check email change
-                                            if (
-                                                isset($decodedDetails['old_email']) && isset($decodedDetails['updated_user_email'])
-                                                && $decodedDetails['old_email'] !== $decodedDetails['updated_user_email']
-                                            ) {
-                                                $changes[] = "<strong>Email:</strong> {$decodedDetails['old_email']} → {$decodedDetails['updated_user_email']}";
+                                            
+                                            // Email changes
+                                            if (isset($decodedDetails['old_email'], $decodedDetails['updated_user_email'])) {
+                                                $oldEmails = (array)$decodedDetails['old_email'];
+                                                $newEmails = (array)$decodedDetails['updated_user_email'];
+                                                $uniqueChanges = array_unique(array_map(function($old, $new) {
+                                                    return "$old → $new";
+                                                }, $oldEmails, $newEmails));
+                                                
+                                                foreach ($uniqueChanges as $change) {
+                                                    $changes[] = "<strong>Email:</strong> $change";
+                                                }
                                             }
 
-                                            // Check role change
-                                            if (
-                                                isset($decodedDetails['old_role']) && isset($decodedDetails['new_role'])
-                                                && $decodedDetails['old_role'] !== $decodedDetails['new_role']
-                                            ) {
-                                                $oldRole = $roleMap[$decodedDetails['old_role']] ?? 'Unknown';
-                                                $newRole = $roleMap[$decodedDetails['new_role']] ?? 'Unknown';
-                                                $changes[] = "<strong>Role:</strong> {$oldRole} → {$newRole}";
+                                            // Role changes
+                                            if (isset($decodedDetails['old_role'], $decodedDetails['new_role'])) {
+                                                $oldRoles = (array)$decodedDetails['old_role'];
+                                                $newRoles = (array)$decodedDetails['new_role'];
+                                                $uniqueChanges = array_unique(array_map(function($old, $new) use ($roleMap) {
+                                                    $oldRole = $roleMap[$old] ?? 'Unknown';
+                                                    $newRole = $roleMap[$new] ?? 'Unknown';
+                                                    return "$oldRole → $newRole";
+                                                }, $oldRoles, $newRoles));
+                                                
+                                                foreach ($uniqueChanges as $change) {
+                                                    $changes[] = "<strong>Role:</strong> $change";
+                                                }
                                             }
 
-                                            // Display changes if any
                                             if (!empty($changes)) {
-                                                echo implode('<br>', $changes);
+                                                echo implode('<br>', array_unique($changes));
                                             } else {
                                                 echo "No significant changes";
                                             }
-                                            echo '</div>';
                                         } else {
-                                            // For other actions, display details as is
-                                            echo '<div class="audit-details">';
+                                            // For other actions, display unique details
+                                            $displayedDetails = [];
                                             foreach ($decodedDetails as $key => $value) {
                                                 if (is_array($value)) {
-                                                    $value = json_encode($value);
+                                                    $value = array_unique((array)$value);
+                                                    $value = implode(', ', $value);
                                                 }
-                                                echo "<div><strong>" . htmlspecialchars(ucwords(str_replace('_', ' ', $key))) . ":</strong> " . htmlspecialchars($value) . "</div>";
+                                                $displayKey = ucwords(str_replace('_', ' ', $key));
+                                                if (!isset($displayedDetails[$displayKey])) {
+                                                    echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . htmlspecialchars($value) . "</div>";
+                                                    $displayedDetails[$displayKey] = true;
+                                                }
                                             }
-                                            echo '</div>';
                                         }
+                                        echo '</div>';
                                     } else {
                                         echo htmlspecialchars($details);
                                     }
@@ -215,31 +272,51 @@ if (!empty($auditTrails)) {
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
     <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#auditTable').DataTable({
-                order: [[0, 'desc']],
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-                language: {
-                    lengthMenu: "Show _MENU_ entries",
-                    search: "Search:",
-                    paginate: {
-                        first: "First",
-                        last: "Last",
-                        next: "Next",
-                        previous: "Previous"
-                    }
-                },
-                drawCallback: function() {
-                    $('.dataTables_paginate > .pagination').addClass('pagination-sm');
+        // Wait for DataTables to be available
+        function waitForDataTables(callback) {
+            if (typeof $.fn.DataTable !== 'undefined') {
+                callback();
+            } else {
+                setTimeout(function() {
+                    waitForDataTables(callback);
+                }, 100);
+            }
+        }
+
+        // Initialize table only when DataTables is available
+        waitForDataTables(function() {
+            if (typeof initializeAuditTable === 'function') {
+                initializeAuditTable();
+            } else {
+                var table = $('#auditTable');
+                if (table.length) {
+                    table.DataTable({
+                        order: [[0, 'desc']],
+                        pageLength: 10,
+                        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                             "<'row'<'col-sm-12'tr>>" +
+                             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                        language: {
+                            lengthMenu: "Show _MENU_ entries",
+                            search: "Search:",
+                            info: "Showing _START_ to _END_ of _TOTAL_ entries (Limited to last 100 records)",
+                            paginate: {
+                                first: "First",
+                                last: "Last",
+                                next: "Next",
+                                previous: "Previous"
+                            }
+                        },
+                        drawCallback: function() {
+                            $('.dataTables_paginate > .pagination').addClass('pagination-sm');
+                        }
+                    });
                 }
-            });
+            }
         });
     </script>
-    <script src="/src/script/audit_trail.js"></script>
+    <script src="../script/audit_trail.js"></script>
 </body>
 
 </html>

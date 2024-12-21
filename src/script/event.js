@@ -78,11 +78,15 @@ function addEvent(formElement) {
                 bsModal.hide();
             }
             
-            // Remove modal backdrop
+            // Remove modal backdrop and immediately restore scrolling
             const backdrop = document.querySelector('.modal-backdrop');
             if (backdrop) {
                 backdrop.remove();
             }
+            // Ensure scrolling is restored immediately
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.overflow = 'scroll';
             
             Swal.fire({
                 icon: 'success',
@@ -93,6 +97,10 @@ function addEvent(formElement) {
             }).then(() => {
                 // Reset the form
                 formElement.reset();
+                // Ensure scrolling is restored
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document.body.style.overflow = 'scroll';
                 // Reload the parent page
                 reloadParentTab();
             });
@@ -136,11 +144,15 @@ function updateEvent(formElement) {
                 bsModal.hide();
             }
             
-            // Remove modal backdrop
+            // Remove modal backdrop and immediately restore scrolling
             const backdrop = document.querySelector('.modal-backdrop');
             if (backdrop) {
                 backdrop.remove();
             }
+            // Ensure scrolling is restored immediately
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.overflow = 'scroll';
             
             Swal.fire({
                 icon: 'success',
@@ -149,6 +161,10 @@ function updateEvent(formElement) {
                 showConfirmButton: false,
                 timer: 1500
             }).then(() => {
+                // Ensure scrolling is restored
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document.body.style.overflow = 'scroll';
                 // Reload the parent page
                 reloadParentTab();
             });
@@ -260,11 +276,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (focusedElement) {
                 focusedElement.blur();
             }
-            // Remove modal backdrop
+            // Remove modal backdrop and immediately restore scrolling
             const backdrop = document.querySelector('.modal-backdrop');
             if (backdrop) {
                 backdrop.remove();
             }
+            // Ensure scrolling is restored immediately
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.overflow = 'scroll';
         });
     }
     
@@ -278,11 +298,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (focusedElement) {
                 focusedElement.blur();
             }
-            // Remove modal backdrop
+            // Remove modal backdrop and immediately restore scrolling
             const backdrop = document.querySelector('.modal-backdrop');
             if (backdrop) {
                 backdrop.remove();
             }
+            // Ensure scrolling is restored immediately
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.overflow = 'scroll';
         });
     }
 });

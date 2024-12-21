@@ -4,6 +4,9 @@ $(document).ready(function() {
     let socket = null;
     let reconnectAttempts = 0;
     const MAX_RECONNECT_ATTEMPTS = 5;
+    let initializeAttempts = 0;
+    const MAX_INITIALIZE_ATTEMPTS = 30; // 3 seconds max wait time
+    let auditTableInitialized = false;
 
     function initWebSocket() {
         // TEMPORARILY DISABLED FOR PROTOTYPE
@@ -108,134 +111,130 @@ $(document).ready(function() {
         */
     }
 
-    // Initialize WebSocket connection (now a no-op)
-    initWebSocket();
-
-    // Only initialize if not already initialized
-    if ($.fn.DataTable.isDataTable('#auditTable')) {
-        return;
+    // Function to check if DataTable is available
+    function isDataTableAvailable() {
+        return typeof $.fn.DataTable !== 'undefined' && typeof $.fn.DataTable.ext !== 'undefined';
     }
 
-    // Initialize DataTable with proper configuration
-    var auditTable = $('#auditTable').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-            url: '../backend/fetch_audit_trail.php',
-            type: 'GET',
-            dataSrc: 'data'
-        },
-        columns: [
-            { 
-                data: 'timestamp',
-                className: 'text-center',
-                render: function(data) {
-                    return moment(data).format('YYYY-MM-DD HH:mm:ss');
-                }
-            },
-            { 
-                data: 'username',
-                className: 'text-center'
-            },
-            { 
-                data: 'action',
-                className: 'text-center',
-                render: function(data) {
-                    return `<span class="badge bg-primary">${data}</span>`;
-                }
-            },
-            { 
-                data: 'details',
-                render: function(data) {
-                    if (!data) return '';
-                    try {
-                        const parsed = JSON.parse(data);
-                        return `<pre class="mb-0 small" style="max-height: 100px; overflow-y: auto; white-space: pre-wrap;">
-                                ${JSON.stringify(parsed, null, 2)}
-                               </pre>`;
-                    } catch(e) {
-                        return data;
-                    }
-                }
+    // Function to initialize or reinitialize audit table with retry logic
+    function initializeAuditTable() {
+        if (initializeAttempts >= MAX_INITIALIZE_ATTEMPTS) {
+            console.error('Failed to initialize DataTable after maximum attempts');
+            return;
+        }
+
+        // Check if DataTables is loaded
+        if (!isDataTableAvailable()) {
+            console.warn('DataTables not loaded yet. Waiting... (Attempt ' + (initializeAttempts + 1) + '/' + MAX_INITIALIZE_ATTEMPTS + ')');
+            initializeAttempts++;
+            setTimeout(initializeAuditTable, 100);
+            return;
+        }
+
+        var table = $('#auditTable');
+        if (!table.length) {
+            return; // Table doesn't exist in DOM yet
+        }
+
+        try {
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable(table)) {
+                table.DataTable().destroy();
             }
-        ],
-        order: [[0, 'desc']],
-        responsive: true,
-        dom: '<"row mb-3"<"col-md-6"B><"col-md-6"f>>' +
-             '<"row"<"col-md-12"tr>>' +
-             '<"row mt-3"<"col-md-4"l><"col-md-4 text-center"i><"col-md-4"p>>',
-        buttons: [
-            {
-                extend: 'collection',
-                text: '<i class="fas fa-download me-1"></i>Export',
-                className: 'btn btn-primary',
-                buttons: [
-                    {
-                        extend: 'copy',
-                        className: 'btn btn-light',
-                        text: '<i class="fas fa-copy me-1"></i>Copy'
+
+            // Initialize DataTable with configurations
+            table.DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: '../backend/fetch_audit_trail.php',
+                    type: 'GET',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { 
+                        data: 'timestamp',
+                        className: 'text-center',
+                        render: function(data) {
+                            return moment(data).format('YYYY-MM-DD HH:mm:ss');
+                        }
                     },
-                    {
-                        extend: 'csv',
-                        className: 'btn btn-light',
-                        text: '<i class="fas fa-file-csv me-1"></i>CSV'
+                    { 
+                        data: 'username',
+                        className: 'text-center'
                     },
-                    {
-                        extend: 'excel',
-                        className: 'btn btn-light',
-                        text: '<i class="fas fa-file-excel me-1"></i>Excel'
+                    { 
+                        data: 'action',
+                        className: 'text-center',
+                        render: function(data) {
+                            return '<span class="badge bg-primary">' + data + '</span>';
+                        }
                     },
-                    {
-                        extend: 'pdf',
-                        className: 'btn btn-light',
-                        text: '<i class="fas fa-file-pdf me-1"></i>PDF'
-                    },
-                    {
-                        extend: 'print',
-                        className: 'btn btn-light',
-                        text: '<i class="fas fa-print me-1"></i>Print'
+                    { 
+                        data: 'details',
+                        className: 'text-start',
+                        render: function(data) {
+                            try {
+                                const parsedDetails = JSON.parse(data || '{}');
+                                return '<pre class="mb-0 small" style="max-height: 100px; overflow-y: auto; white-space: pre-wrap;">' +
+                                    JSON.stringify(parsedDetails, null, 2) +
+                                    '</pre>';
+                            } catch(e) {
+                                return data || '';
+                            }
+                        }
                     }
-                ]
-            }
-        ],
-        displayStart: 0,
-        pageLength: 5,
-        lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]],
-        language: {
-            paginate: {
-                first: '<i class="fas fa-angle-double-left"></i>',
-                previous: '<i class="fas fa-angle-left"></i>',
-                next: '<i class="fas fa-angle-right"></i>',
-                last: '<i class="fas fa-angle-double-right"></i>'
-            },
-            lengthMenu: "_MENU_ entries per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            search: "<i class='fas fa-search me-1'></i>Search:",
-            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
-        },
-        drawCallback: function(settings) {
-            // Add Bootstrap classes to pagination
-            const pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate');
-            pagination.addClass('pagination-sm');
-            pagination.find('.paginate_button').addClass('px-3 py-2');
-            pagination.find('.current').addClass('bg-primary text-white');
+                ],
+                order: [[0, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                responsive: true,
+                language: {
+                    emptyTable: "No audit records found",
+                    processing: "Loading audit records..."
+                }
+            });
+
+            console.log('Audit table initialized successfully');
+            auditTableInitialized = true;
+            initializeAttempts = 0; // Reset counter on successful initialization
             
-            // Ensure 5 is selected by default
-            const lengthSelect = $(this).closest('.dataTables_wrapper').find('.dataTables_length select');
-            if (lengthSelect.val() !== '5') {
-                lengthSelect.val('5').trigger('change');
-            }
-        },
-        initComplete: function(settings, json) {
-            // Set initial page length to 5
-            this.api().page.len(5).draw();
+        } catch (error) {
+            console.error('Error initializing audit table:', error);
+            initializeAttempts++;
+            setTimeout(initializeAuditTable, 100);
+        }
+    }
+
+    // Initialize table when audit tab is shown
+    $(document).on('shown.bs.tab', 'button[data-bs-toggle="tab"]', function(e) {
+        if ($(e.target).attr('id') === 'audit-tab') {
+            setTimeout(function() {
+                if (!auditTableInitialized) {
+                    initializeAuditTable();
+                }
+            }, 100);
         }
     });
 
-    // Register the table in the global tables object
-    if (window.tables) {
-        window.tables.auditTable = auditTable;
+    // Also initialize if we're already on the audit tab
+    if ($('#audit-tab').hasClass('active')) {
+        setTimeout(initializeAuditTable, 100);
     }
+
+    // Handle AJAX content loading
+    $(document).ajaxComplete(function(event, xhr, settings) {
+        if (settings.url && settings.url.includes('audit_trail.php')) {
+            setTimeout(function() {
+                if (!auditTableInitialized) {
+                    initializeAuditTable();
+                }
+            }, 100);
+        }
+    });
+
+    // Initialize WebSocket connection (now a no-op)
+    initWebSocket();
 
     // Function to refresh audit trail data
     function refreshAuditTrailData() {
@@ -267,6 +266,7 @@ $(document).ready(function() {
         }, {});
 
         // Reload table with filters
+        var auditTable = $('#auditTable').DataTable();
         auditTable.ajax.url('../backend/fetch_audit_trail.php?' + $.param(filters)).load(function() {
             $('#auditTable').removeClass('loading');
         });

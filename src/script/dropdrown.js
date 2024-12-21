@@ -111,4 +111,41 @@ $(document).ready(function () {
 
     // Fallback global dropdown initialization
     window.initializeDropdowns();
+
+    function initializeDropdowns() {
+        // Initialize all dropdowns
+        var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+        dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
+
+        // Handle dropdown item clicks
+        $('.dropdown-item').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent event bubbling
+            var targetId = $(this).data('target');
+            if (targetId) {
+                $('.sub-content').hide();
+                $('#' + targetId).show();
+            }
+        });
+    }
+
+    // Initial initialization
+    initializeDropdowns();
+
+    // Reinitialize dropdowns after AJAX content is loaded
+    $(document).ajaxComplete(function() {
+        initializeDropdowns();
+    });
+
+    // Handle manual dropdown toggle
+    $(document).on('click', '[data-bs-toggle="dropdown"]', function(e) {
+        e.preventDefault();
+        var dropdown = bootstrap.Dropdown.getInstance(this);
+        if (!dropdown) {
+            dropdown = new bootstrap.Dropdown(this);
+        }
+        dropdown.toggle();
+    });
 });

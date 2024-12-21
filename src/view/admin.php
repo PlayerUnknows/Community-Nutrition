@@ -24,13 +24,28 @@ session_start();
 
     <!-- Core JS - Order is important -->
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
-    <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
-    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
-    <script src="../../node_modules/moment/min/moment.min.js"></script>
-    <script src="/src/script/dropdrown.js"></script>
+    <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../../node_modules/moment/moment.js"></script>
+    <script src="../../node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
+    <script src="/src/script/logout.js"></script>
+    <script src="/src/script/audit_trail.js"></script>
+    <script src="/src/script/loader.js"></script>
+    <script src="../script/dropdrown.js" defer></script>
+    <script src="../script/event.js" defer></script>
+    
+    <script>
+        // Ensure Bootstrap is fully loaded before initializing components
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+            dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl);
+            });
+        });
+    </script>
 
     <style>
         :root {
@@ -110,6 +125,11 @@ session_start();
                 width: 95px;
                 height: 95px;
             }
+        }
+
+        /* Ensure body scrollbar remains visible */
+        body {
+            overflow-y: scroll !important;
         }
 
         /* Remove problematic margins */
@@ -244,6 +264,40 @@ session_start();
         #acc-reg-container {
             position: relative;
         }
+
+        /* Content centering styles */
+        .container-fluid {
+            padding: 20px;
+            max-width: 100%;
+        }
+
+        .tab-content {
+            margin-top: 20px;
+        }
+
+        #patientFormContainer,
+        #eventFormContainer,
+        #signupFormContainer,
+        #UsersFormContainer {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+        /* Table styles */
+        .table-responsive {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Remove extra margins */
+        .tab-pane {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Ensure body scrollbar remains visible */
     </style>
 </head>
 
@@ -299,8 +353,7 @@ session_start();
 
 
     <!-- Page Content -->
-    <div class="container-fluid mt-4">
-
+    <div class="container-fluid">
         <!-- Bootstrap Tab Navigation -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
@@ -332,7 +385,7 @@ session_start();
         <div class="tab-content" id="myTabContent" role="tabpanel">
             <!-- Patient Profile Section -->
             <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
-                <div id="patientFormContainer" class="container mt-4">
+                <div id="patientFormContainer">
                     <!-- Event form will be loaded here -->
                 </div>
             </div>
@@ -528,7 +581,7 @@ session_start();
 
             <!-- Event information Section -->
             <div class="tab-pane fade" id="event" role="tabpanel" aria-labelledby="event-tab">
-                <div id="eventFormContainer" class="container mt-4">
+                <div id="eventFormContainer">
                     <!-- Event form will be loaded here -->
                 </div>
             </div>
@@ -653,7 +706,7 @@ session_start();
             <div class="tab-pane fade" id="account" role="tabpanel" aria-labelledby="acc-reg">
                 <!-- Add Account Form -->
                 <div id="add-account" class="sub-content" style="display: none;">
-                    <div id="signupFormContainer" class="container mt-4">
+                    <div id="signupFormContainer">
                         <!-- Signup form will be loaded here -->
                     </div>
                 </div>
@@ -671,7 +724,6 @@ session_start();
     </div>
     </div>
 
-    <!-- Scripts -->
     <script>
         $(document).ready(function() {
             // Handle tab selection from URL parameter
@@ -679,47 +731,15 @@ session_start();
             const tabParam = urlParams.get('tab');
             
             if (tabParam) {
-                // Activate the correct tab
-                $(`#${tabParam}-tab`).tab('show');
-            }
-            
-            // Update date and time function
-            function updateDateTime() {
-                const now = new Date();
-                const options = {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                };
-                const dateTimeStr = now.toLocaleDateString('en-US', options);
-                $('#dateTimeDisplay').text(dateTimeStr);
-            }
-
-            // Store active tab in session storage
-            function storeActiveTab() {
-                const activeTabId = $('.nav-link.active').attr('id');
-                sessionStorage.setItem('activeTab', activeTabId);
-            }
-
-            // Restore active tab from session storage
-            function restoreActiveTab() {
-                const activeTabId = sessionStorage.getItem('activeTab');
-                if (activeTabId) {
-                    // Remove active class from all tabs
-                    $('.nav-link').removeClass('active');
-                    $('.tab-pane').removeClass('show active');
-                    
-                    // Activate stored tab
-                    $(`#${activeTabId}`).addClass('active');
-                    const targetPane = $(`#${activeTabId}`).attr('data-bs-target');
-                    $(targetPane).addClass('show active');
-                    
-                    // Load content based on active tab
-                    loadTabContent(activeTabId);
+                // If tab parameter exists, activate that tab
+                $('button[data-bs-target="#' + tabParam + '"]').tab('show');
+                loadTabContent(tabParam + '-tab');
+            } else {
+                // Check if there's a stored tab
+                const storedTab = sessionStorage.getItem('activeTab');
+                if (storedTab) {
+                    $('button[data-bs-target="#' + storedTab + '"]').tab('show');
+                    loadTabContent(storedTab + '-tab');
                 } else {
                     // If no stored tab, load patients tab by default
                     loadTabContent('patients-tab');
@@ -737,7 +757,6 @@ session_start();
                         break;
                     case 'nutrition-report-tab':
                         loadContentWithAnimation('#nutrition-report', '../../src/view/report.php');
-                        // Initialize charts after content is loaded
                         $(document).ajaxComplete(function(event, xhr, settings) {
                             if (settings.url === '../../src/view/report.php') {
                                 initializeCharts();
@@ -756,166 +775,22 @@ session_start();
                 }
             }
 
-            // Function to load content with loading animation
-            function loadContentWithAnimation(containerId, url) {
-                showLoadingOverlay();
-                $(containerId).load(url, function(response, status, xhr) {
-                    if (status === "error") {
-                        console.error("Error loading content:", xhr.status, xhr.statusText);
-                        $(containerId).html('<div class="alert alert-danger">Error loading content. Please try again.</div>');
-                    }
-                    $('#loading-overlay').css('background-position', '100% 0%').fadeOut(500, function() {
-                        $(this).remove();
+            function loadContentWithAnimation(container, url) {
+                $(container).fadeOut(200, function() {
+                    $(this).load(url, function() {
+                        $(this).fadeIn(200);
+                        reinitializeBootstrapComponents();
                     });
                 });
             }
 
-            // Tab click event handlers
-            $('.nav-link').on('click', function() {
-                const tabId = $(this).attr('id');
-                storeActiveTab();
-                loadTabContent(tabId);
-            });
-
-            // Account management handlers
-            $('.sub-nav-button[data-target="view-users"]').click(function() {
-                $('.sub-content').hide();
-                $('#viewer').show();
-                loadContentWithAnimation('#UsersFormContainer', '../../src/view/users.php');
-                $('.sub-nav').hide();
-                sessionStorage.setItem('activeSubContent', 'viewer');
-            });
-
-            // Show/hide sub-nav on hover for desktop
-            $('#acc-reg-container').hover(
-                function() {
-                    $('.sub-nav').show();
-                },
-                function() {
-                    if (!$('#viewer').is(':visible')) {
-                        $('.sub-nav').hide();
-                    }
-                }
-            );
-
-            // Initialize on page load
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            restoreActiveTab();
-
-            // Restore sub-content state
-            const activeSubContent = sessionStorage.getItem('activeSubContent');
-            if (activeSubContent) {
-                $('.sub-content').hide();
-                $(`#${activeSubContent}`).show();
-            }
-
-            // Initialize charts function
-            function initializeCharts() {
-                if ($('#nutrition-report').hasClass('active')) {
-                    // Bar Graph Data
-                    const nutritionBarCtx = document.getElementById('nutritionBarGraph').getContext('2d');
-                    new Chart(nutritionBarCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Center 1', 'Center 2', 'Center 3', 'Center 4', 'Center 5', 'Center 6'],
-                            datasets: [{
-                                label: 'Normal Weight %',
-                                data: [75, 82, 78, 85, 80, 77],
-                                backgroundColor: 'rgba(75, 192, 192, 0.6)'
-                            }, {
-                                label: 'Underweight %',
-                                data: [15, 10, 12, 8, 12, 13],
-                                backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                            }, {
-                                label: 'Overweight %',
-                                data: [10, 8, 10, 7, 8, 10],
-                                backgroundColor: 'rgba(255, 206, 86, 0.6)'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    max: 100
-                                }
-                            }
-                        }
-                    });
-
-                    // Line Graph Data
-                    const nutritionLineCtx = document.getElementById('nutritionLineGraph').getContext('2d');
-                    new Chart(nutritionLineCtx, {
-                        type: 'line',
-                        data: {
-                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                            datasets: [{
-                                label: '0-4 years',
-                                data: [65, 70, 75, 78, 82, 85],
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                tension: 0.1
-                            }, {
-                                label: '5-9 years',
-                                data: [70, 72, 76, 80, 83, 85],
-                                borderColor: 'rgba(255, 99, 132, 1)',
-                                tension: 0.1
-                            }, {
-                                label: '10-14 years',
-                                data: [75, 77, 80, 82, 85, 87],
-                                borderColor: 'rgba(255, 206, 86, 1)',
-                                tension: 0.1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                y: {
-                                    beginAtZero: false,
-                                    min: 50,
-                                    max: 100
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-
-            // Initialize charts when switching to nutrition report tab
-            $('#nutrition-report-tab').on('shown.bs.tab', function() {
-                initializeCharts();
-            });
-
-            // Search functionality
-            $('#upcomingSearch, #historySearch').on('keyup', function() {
-                const tableId = $(this).attr('id').replace('Search', 'Table');
-                searchTable(tableId, this.value);
-            });
-
-            function searchTable(tableId, searchText) {
-                const table = document.getElementById(tableId);
-                const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-                searchText = searchText.toLowerCase();
-
-                for (let row of rows) {
-                    let text = row.textContent || row.innerText;
-                    text = text.toLowerCase();
-                    row.style.display = text.includes(searchText) ? '' : 'none';
-                }
-            }
-
-            // Listen for refresh messages from iframes
-            window.addEventListener('message', function(event) {
-                if (event.data === 'refreshPage') {
-                    location.reload();
-                }
+            // Store active tab in session storage when changed
+            $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                const target = $(e.target).data('bs-target');
+                sessionStorage.setItem('activeTab', target.replace('#', ''));
             });
         });
     </script>
-
-    <script src="/src/script/logout.js"></script>
-
-    <script src="/src/script/audit_trail.js"></script>
 
     <script src="/src/script/loader.js"></script>
 

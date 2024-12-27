@@ -3,6 +3,15 @@
 class User
 {
     private $conn;
+    
+    // Constants for role-specific ID prefixes
+    private const ID_PREFIX = [
+        1 => 'FAM',  // Parent/Family
+        2 => 'HWK',  // Health Worker
+        3 => 'ADM'   // Admin
+    ];
+    
+    private const ID_LENGTH = 4; // Length of the numeric part
 
     public function __construct($db)
     {
@@ -13,9 +22,9 @@ class User
     public function createUser($email, $password, $role)
     {
         try {
-            // Generate a unique 4-digit user ID
+            // Generate a unique role-specific ID
             do {
-                $userId = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                $userId = $this->generateRoleSpecificId($role);
                 $checkUnique = $this->checkUserIdUnique($userId);
             } while (!$checkUnique);
 
@@ -43,6 +52,19 @@ class User
             // Rethrow other exceptions
             throw $e;
         }
+    }
+
+    // Generate role-specific ID with prefix
+    private function generateRoleSpecificId($role)
+    {
+        // Get the prefix based on role
+        $prefix = self::ID_PREFIX[$role] ?? 'USR'; // Default to 'USR' if role not found
+        
+        // Generate random number
+        $randomNum = str_pad(mt_rand(0, pow(10, self::ID_LENGTH) - 1), self::ID_LENGTH, '0', STR_PAD_LEFT);
+        
+        // Combine prefix and number
+        return $prefix . $randomNum;
     }
 
     // Helper method to check if user ID is unique

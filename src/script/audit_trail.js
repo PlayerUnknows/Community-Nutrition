@@ -4,6 +4,9 @@ $(document).ready(function() {
     let socket = null;
     let reconnectAttempts = 0;
     const MAX_RECONNECT_ATTEMPTS = 5;
+    let initializeAttempts = 0;
+    const MAX_INITIALIZE_ATTEMPTS = 30; // 3 seconds max wait time
+    let auditTableInitialized = false;
 
     function initWebSocket() {
         // TEMPORARILY DISABLED FOR PROTOTYPE
@@ -108,74 +111,145 @@ $(document).ready(function() {
         */
     }
 
+    // Function to check if DataTable is available
+    function isDataTableAvailable() {
+        return typeof $.fn.DataTable !== 'undefined' && typeof $.fn.DataTable.ext !== 'undefined';
+    }
+
+    // Function to initialize or reinitialize audit table with retry logic
+    function initializeAuditTable() {
+        if (initializeAttempts >= MAX_INITIALIZE_ATTEMPTS) {
+            console.error('Failed to initialize DataTable after maximum attempts');
+            return;
+        }
+
+        // Check if DataTables is loaded
+        if (!isDataTableAvailable()) {
+            console.warn('DataTables not loaded yet. Waiting... (Attempt ' + (initializeAttempts + 1) + '/' + MAX_INITIALIZE_ATTEMPTS + ')');
+            initializeAttempts++;
+            setTimeout(initializeAuditTable, 100);
+            return;
+        }
+
+        var table = $('#auditTable');
+        if (!table.length) {
+            return; // Table doesn't exist in DOM yet
+        }
+
+        try {
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable(table)) {
+                table.DataTable().destroy();
+            }
+
+            // Initialize DataTable with configurations
+            table.DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: '../backend/fetch_audit_trail.php',
+                    type: 'GET',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { 
+                        data: 'timestamp',
+                        className: 'text-center',
+                        render: function(data) {
+                            return moment(data).format('YYYY-MM-DD HH:mm:ss');
+                        }
+                    },
+                    { 
+                        data: 'username',
+                        className: 'text-center'
+                    },
+                    { 
+                        data: 'action',
+                        className: 'text-center',
+                        render: function(data) {
+                            return '<span class="badge bg-primary">' + data + '</span>';
+                        }
+                    },
+                    { 
+                        data: 'details',
+                        className: 'text-start',
+                        render: function(data) {
+                            try {
+                                const parsedDetails = JSON.parse(data || '{}');
+                                return '<pre class="mb-0 small" style="max-height: 100px; overflow-y: auto; white-space: pre-wrap;">' +
+                                    JSON.stringify(parsedDetails, null, 2) +
+                                    '</pre>';
+                            } catch(e) {
+                                return data || '';
+                            }
+                        }
+                    }
+                ],
+                order: [[0, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                responsive: true,
+                language: {
+                    emptyTable: "No audit records found",
+                    processing: "Loading audit records..."
+                }
+            });
+
+            console.log('Audit table initialized successfully');
+            auditTableInitialized = true;
+            initializeAttempts = 0; // Reset counter on successful initialization
+            
+        } catch (error) {
+            console.error('Error initializing audit table:', error);
+            initializeAttempts++;
+            setTimeout(initializeAuditTable, 100);
+        }
+    }
+
+    // Initialize table when audit tab is shown
+    $(document).on('shown.bs.tab', 'button[data-bs-toggle="tab"]', function(e) {
+        if ($(e.target).attr('id') === 'audit-tab') {
+            setTimeout(function() {
+                if (!auditTableInitialized) {
+                    initializeAuditTable();
+                }
+            }, 100);
+        }
+    });
+
+    // Also initialize if we're already on the audit tab
+    if ($('#audit-tab').hasClass('active')) {
+        setTimeout(initializeAuditTable, 100);
+    }
+
+    // Handle AJAX content loading
+    $(document).ajaxComplete(function(event, xhr, settings) {
+        if (settings.url && settings.url.includes('audit_trail.php')) {
+            setTimeout(function() {
+                if (!auditTableInitialized) {
+                    initializeAuditTable();
+                }
+            }, 100);
+        }
+    });
+
     // Initialize WebSocket connection (now a no-op)
     initWebSocket();
 
-    // Only initialize if not already initialized
-    if ($.fn.DataTable.isDataTable('#auditTable')) {
-        return;
-    }
-
-    // Initialize DataTable with proper configuration
-    var auditTable = $('#auditTable').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-            url: '../backend/fetch_audit_trail.php', // Fix the path
-            type: 'GET',
-            dataSrc: 'data'
-        },
-        columns: [
-            { 
-                data: 'timestamp',
-                className: 'text-center',
-                render: function(data) {
-                    return moment(data).format('YYYY-MM-DD HH:mm:ss');
-                }
-            },
-            { 
-                data: 'username',
-                className: 'text-center'
-            },
-            { 
-                data: 'action',
-                className: 'text-center',
-                render: function(data) {
-                    return `<span class="badge bg-primary">${data}</span>`;
-                }
-            },
-            { 
-                data: 'details',
-                render: function(data) {
-                    if (!data) return '';
-                    try {
-                        const parsed = JSON.parse(data);
-                        return `<pre class="mb-0 small" style="max-height: 100px; overflow-y: auto; white-space: pre-wrap;">
-                                ${JSON.stringify(parsed, null, 2)}
-                               </pre>`;
-                    } catch(e) {
-                        return data;
+    // Function to refresh audit trail data
+    function refreshAuditTrailData() {
+        fetch('../backend/audit_trail.php?action=get_audit_trails')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const auditTable = document.querySelector('#auditTable');
+                    if (auditTable && $.fn.DataTable.isDataTable('#auditTable')) {
+                        const dataTable = $(auditTable).DataTable();
+                        dataTable.ajax.reload(null, false);
                     }
                 }
-            }
-        ],
-        order: [[0, 'desc']],
-        responsive: true,
-        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center"lip>',
-        buttons: [
-            {
-                extend: 'collection',
-                text: 'Export',
-                buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
-            }
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
-    });
-
-    // Register the table in the global tables object
-    if (window.tables) {
-        window.tables.auditTable = auditTable;
+            })
+            .catch(error => console.error('Error refreshing audit trail:', error));
     }
 
     // Handle filter form submission
@@ -192,6 +266,7 @@ $(document).ready(function() {
         }, {});
 
         // Reload table with filters
+        var auditTable = $('#auditTable').DataTable();
         auditTable.ajax.url('../backend/fetch_audit_trail.php?' + $.param(filters)).load(function() {
             $('#auditTable').removeClass('loading');
         });

@@ -36,6 +36,10 @@ session_start();
         :root {
             --primary-blue: #007bff;
             --light-blue: #63a4ff;
+            --logo-width: 50px; /* Default logo width */
+            --logo-height: 60px; /* Slightly increased logo height */
+            --profile-img-width: 40px; /* Default profile image width */
+            --profile-img-height: 70px; /* Slightly increased profile image height */
         }
 
         .bg-primary {
@@ -49,8 +53,8 @@ session_start();
         }
 
         .responsive-logo {
-            width: 100px;
-            height: 100px;
+            width: var(--logo-width);
+            height: var(--logo-height);
             object-fit: cover;
             transition: all 0.3s ease;
         }
@@ -63,8 +67,8 @@ session_start();
         }
 
         .profile-dropdown img.dropdown-toggle {
-            width: 85px;
-            height: 85px;
+            width: var(--profile-img-width);
+            height: var(--profile-img-height);
             border-radius: 40%;
             object-fit: cover;
             cursor: pointer;
@@ -245,16 +249,34 @@ session_start();
             position: relative;
         }
     </style>
+
+    <style>
+        .header-section {
+            padding: 0.25rem 0; /* Further reduced padding */
+        }
+        .header-section .responsive-logo {
+            width: 40px; /* Smaller logo size */
+            height: auto;
+        }
+        .header-section .text-center p {
+            font-size: 0.8rem; /* Smaller font size */
+            margin-bottom: 0; /* Remove bottom margin */
+        }
+        .header-section .profile-dropdown img {
+            width: 30px; /* Smaller profile image size */
+            height: auto;
+        }
+    </style>
 </head>
 
 <body>
 
     <!-- Header Section -->
-    <div class="bg-white py-2 shadow-sm h-1">
+    <div class="bg-white py-1 shadow-sm h-1 header-section">
         <div class="container d-flex align-items-center justify-content-between">
             <!-- Logo -->
             <div class="d-flex align-items-center logo-container">
-                <img src="../../assets/img/SanAndres.svg" alt="San Andres Logo" class="responsive-logo">
+                <img src="../../assets/img/SanAndres.svg" alt="San Andres Logo" class="responsive-logo" style="width: 65px; height: 65px;">
             </div>
 
 
@@ -282,7 +304,8 @@ session_start();
                     class="dropdown-toggle"
                     id="profileDropdown"
                     data-bs-toggle="dropdown"
-                    aria-expanded="false">
+                    aria-expanded="false"
+                    style="width: 65px; height: 65px;">
 
                 <!-- Dropdown menu -->
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
@@ -307,7 +330,7 @@ session_start();
                 <button class="nav-link active" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab" aria-controls="patients" aria-selected="true" tabindex="0">Patients Profile</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false" tabindex="-1">Nutrition Monitoring and schedule</button>
+                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false" tabindex="-1">Nutrition Monitoring</button>
             </li>
 
             <li class="nav-item" role="presentation">
@@ -332,117 +355,9 @@ session_start();
         <div class="tab-content" id="myTabContent" role="tabpanel">
             <!-- Patient Profile Section -->
             <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
-                <h2 class="mt-4">Patient Profile</h2>
-                <div class="col-md-4">
-                    <input type="text" id="Patients-Search" class="form-control form-control-sm" placeholder="Search patients...">
+                <div id="patientProfileContainer" class="container mt-4">
+                    <!-- Patient profile content will be loaded here -->
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-sm" id="patientsTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 8%">PAT ID</th>
-                                <th style="width: 7%">FAM ID</th>
-                                <th style="width: 12%">Name</th>
-                                <th style="width: 5%">Age</th>
-                                <th style="width: 15%">Address</th>
-                                <th style="width: 10%">Contact</th>
-                                <th style="width: 8%">Income</th>
-                                <th style="width: 10%">Family</th>
-                                <th style="width: 15%">Occupation</th>
-                                <th style="width: 8%">Medical</th>
-                                <th style="width: 7%">Diet</th>
-                                <th style="width: 8%">Food Restriction</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>P001</td>
-                                <td>F001</td>
-                                <td>Juan Dela Cruz</td>
-                                <td>2 yrs</td>
-                                <td>123 Sampaguita St., Brgy. San Jose</td>
-                                <td>Maria Dela Cruz (Mother) - 0912-345-6789</td>
-                                <td>₱15,000</td>
-                                <td>Parents: Maria & Jose Dela Cruz<br>Siblings: 1</td>
-                                <td>Father: Construction Worker<br>Mother: Housewife</td>
-                                <td>None</td>
-                                <td>None</td>
-                                <td>Dislikes vegetables</td>
-                            </tr>
-                            <tr>
-                                <td>P002</td>
-                                <td>F002</td>
-                                <td>Maria Santos</td>
-                                <td>5 yrs</td>
-                                <td>456 Ilang-Ilang St., Brgy. San Miguel</td>
-                                <td>Roberto Santos (Father) - 0923-456-7890</td>
-                                <td>₱18,000</td>
-                                <td>Parents: Roberto & Ana Santos<br>Siblings: 2</td>
-                                <td>Father: Vendor<br>Mother: Store Owner</td>
-                                <td>Mild asthma</td>
-                                <td>No dairy</td>
-                                <td>Lactose intolerant</td>
-                            </tr>
-                            <tr>
-                                <td>P003</td>
-                                <td>F003</td>
-                                <td>Pedro Reyes</td>
-                                <td>8 mos</td>
-                                <td>789 Rosal St., Brgy. San Antonio</td>
-                                <td>Ana Reyes (Mother) - 0934-567-8901</td>
-                                <td>₱12,000</td>
-                                <td>Parents: Ana & Miguel Reyes<br>Siblings: None</td>
-                                <td>Father: Factory Worker<br>Mother: Teacher</td>
-                                <td>None</td>
-                                <td>None</td>
-                                <td>Starting solid foods</td>
-                            </tr>
-                            <tr>
-                                <td>P004</td>
-                                <td>F004</td>
-                                <td>Sofia Garcia</td>
-                                <td>1 yr</td>
-                                <td>321 Dahlia St., Brgy. San Pedro</td>
-                                <td>Elena Garcia (Mother) - 0945-678-9012</td>
-                                <td>₱20,000</td>
-                                <td>Parents: Elena & Ramon Garcia<br>Siblings: 1</td>
-                                <td>Father: Office Worker<br>Mother: Online Seller</td>
-                                <td>Eczema</td>
-                                <td>No eggs</td>
-                                <td>Egg allergy</td>
-                            </tr>
-                            <tr>
-                                <td>P005</td>
-                                <td>F005</td>
-                                <td>Miguel Luna</td>
-                                <td>3 yrs</td>
-                                <td>654 Gumamela St., Brgy. San Juan</td>
-                                <td>Carlos Luna (Father) - 0956-789-0123</td>
-                                <td>₱16,000</td>
-                                <td>Parents: Carlos & Isabel Luna<br>Siblings: 2</td>
-                                <td>Father: Electrician<br>Mother: Seamstress</td>
-                                <td>None</td>
-                                <td>No peanuts</td>
-                                <td>Peanut allergy</td>
-                            </tr>
-                            <tr>
-                                <td>P006</td>
-                                <td>F006</td>
-                                <td>Isabella Torres</td>
-                                <td>4 yrs</td>
-                                <td>987 Jasmine St., Brgy. Santa Rosa</td>
-                                <td>Carmen Torres (Mother) - 0967-890-1234</td>
-                                <td>₱14,000</td>
-                                <td>Parents: Carmen & Luis Torres<br>Siblings: 1</td>
-                                <td>Father: Driver<br>Mother: Market Vendor</td>
-                                <td>Mild anemia</td>
-                                <td>Iron-rich diet needed</td>
-                                <td>Picky eater</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
 
             <!-- Check-Up Details Section -->
@@ -584,10 +499,6 @@ session_start();
 
                     document.getElementById('historySearch').addEventListener('keyup', function() {
                         searchTable('historyTable', this.value);
-                    });
-
-                    document.getElementById('Patients-Search').addEventListener('keyup', function() {
-                        searchTable('patientsTable', this.value);
                     });
 
                     function searchTable(tableId, searchText) {
@@ -840,6 +751,13 @@ session_start();
 
             $('#event-tab').on('click', function() {
                 $('#eventFormContainer').load('/src/view/event.php', function() {
+                    // Optional callback for any post-load processing
+                });
+            });
+
+            // Load patient profile content when the tab is clicked
+            $('#patients-tab').on('click', function() {
+                $('#patientProfileContainer').load('/src/view/patient_profile.php', function() {
                     // Optional callback for any post-load processing
                 });
             });

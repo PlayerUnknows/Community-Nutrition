@@ -108,7 +108,7 @@ function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, 
                     event_place = :place,
                     event_date = :date,
                     edited_by = :edited_by
-                WHERE event_id = :id";
+                WHERE event_prikey = :id";
         
         $stmt = $conn->prepare($sql);
         
@@ -148,10 +148,10 @@ function deleteEvent($eventId) {
         error_log("Database connection established");
         
         // Debug: Log the SQL and values
-        error_log("Preparing SQL: DELETE FROM event_info WHERE event_id = ?");
+        error_log("Preparing SQL: DELETE FROM event_info WHERE event_prikey = ?");
         error_log("Values: Id=$eventId");
         
-        $sql = "DELETE FROM event_info WHERE event_id = :id";
+        $sql = "DELETE FROM event_info WHERE event_prikey = :id";
         $stmt = $conn->prepare($sql);
         
         // Bind parameters

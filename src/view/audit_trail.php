@@ -50,11 +50,11 @@ $auditTrails = getAuditTrails($filters);
 </head>
 
 <body>
-    <div class="container-fluid mt-4">
+    <div class="container-fluid mt-4" style="height: 50px;">
         <h2>System Audit Trail</h2>
 
         <!-- Filter Form -->
-        <div class="card mb-4">
+        <div class="card mb-4" style="height: 50px;">
             <div class="card-body">
                 <form method="GET" class="row g-3">
                     <div class="col-md-3">

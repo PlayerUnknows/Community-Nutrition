@@ -115,6 +115,33 @@ if (!empty($auditTrails)) {
         .page-link {
             padding: 0.375rem 0.75rem;
         }
+
+        /* Added styles for better table layout */
+        .container-fluid {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .table-responsive {
+            margin: 0 auto;
+        }
+
+        #auditTable {
+            margin: 0;
+            width: 100%;
+        }
+
+        #auditTable td {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+        }
+
+        #auditTable td:last-child {
+            max-width: none;
+        }
     </style>
 </head>
 
@@ -123,12 +150,12 @@ if (!empty($auditTrails)) {
         <h2>System Audit Trail</h2>
 
         <!-- Filter Form -->
-        <div class="card mb-4" style="height: 50px;">
+        <div class="card mb-4">
             <div class="card-body">
-                <form method="GET" class="row g-3">
+                <form method="GET" class="row g-3 audit-filter-form">
                     <div class="col-md-3">
-                        <label class="form-label">Action Type</label>
-                        <select name="action" class="form-select">
+                        <label class="form-label small mb-1">Action Type</label>
+                        <select name="action" class="form-select form-select-sm">
                             <option value="">All Actions</option>
                             <option value="LOGIN">Login</option>
                             <option value="LOGOUT">Logout</option>
@@ -141,16 +168,16 @@ if (!empty($auditTrails)) {
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Date From</label>
-                        <input type="date" name="date_from" class="form-control">
+                        <label class="form-label small mb-1">Date From</label>
+                        <input type="date" name="date_from" class="form-control form-control-sm">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Date To</label>
-                        <input type="date" name="date_to" class="form-control">
+                        <label class="form-label small mb-1">Date To</label>
+                        <input type="date" name="date_to" class="form-control form-control-sm">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary d-block">Filter</button>
+                        <label class="form-label small mb-1">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary btn-sm d-block w-100">Filter</button>
                     </div>
                 </form>
             </div>
@@ -158,7 +185,7 @@ if (!empty($auditTrails)) {
 
         <!-- Audit Trail Table -->
         <div class="table-responsive">
-            <table id="auditTable" class="table table-striped">
+            <table id="auditTable" class="table table-striped table-sm">
                 <thead>
                     <tr>
                         <th>Timestamp</th>
@@ -285,8 +312,8 @@ if (!empty($auditTrails)) {
 
         // Initialize table only when DataTables is available
         waitForDataTables(function() {
-            if (typeof initializeAuditTable === 'function') {
-                initializeAuditTable();
+            if (typeof window.initializeAuditTable === 'function') {
+                window.initializeAuditTable();
             } else {
                 var table = $('#auditTable');
                 if (table.length) {

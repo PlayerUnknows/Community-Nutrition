@@ -25,6 +25,7 @@ session_start();
     <!-- Core JS - Order is important -->
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
     <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
@@ -618,55 +619,11 @@ session_start();
 
             <!-- Audit Trail Section -->
             <div class="tab-pane fade" id="audit" role="tabpanel" aria-labelledby="audit-tab">
-                <div class="container-fluid mt-4">
-                    <h2>System Audit Trail</h2>
-
-                    <!-- Filter Form -->
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <form id="auditFilterForm" class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Action Type</label>
-                                    <select name="action" class="form-select">
-                                        <option value="">All Actions</option>
-                                        <option value="LOGIN">Login</option>
-                                        <option value="LOGOUT">Logout</option>
-                                        <option value="REGISTER">Register</option>
-                                        <option value="CREATE">Create</option>
-                                        <option value="UPDATE">Update</option>
-                                        <option value="DELETE">Delete</option>
-                                        <option value="VIEW">View</option>
-                                        <option value="SYSTEM_CHANGE">System Change</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Date From</label>
-                                    <input type="date" name="date_from" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Date To</label>
-                                    <input type="date" name="date_to" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary d-block w-100">Filter</button>
-                                </div>
-                            </form>
+                <div class="container mt-4">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+                            <?php include 'audit_trail.php'; ?>
                         </div>
-                    </div>
-
-                    <!-- Audit Trail Table -->
-                    <div class="table-responsive">
-                        <table id="auditTable" class="table table-striped display responsive nowrap" width="100%">
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -759,6 +716,24 @@ session_start();
             $('#patients-tab').on('click', function() {
                 $('#patientProfileContainer').load('/src/view/patient_profile.php', function() {
                     // Optional callback for any post-load processing
+                });
+            });
+
+            // Load audit trail content when the tab is clicked
+            $('#audit-tab').on('click', function() {
+                $('.container', '#audit').load('/src/view/audit_trail.php', function() {
+                    // Initialize DataTable if it exists
+                    if ($.fn.DataTable.isDataTable('#auditTable')) {
+                        $('#auditTable').DataTable().destroy();
+                    }
+                    if ($('#auditTable').length) {
+                        $('#auditTable').DataTable({
+                            order: [[0, 'desc']], // Sort by first column (timestamp) descending
+                            responsive: true,
+                            pageLength: 10,
+                            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                        });
+                    }
                 });
             });
 

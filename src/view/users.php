@@ -52,24 +52,64 @@
         .dataTables_wrapper .row {
             margin-bottom: 1rem;
         }
+
+        /* Added styles for centering and layout */
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .table-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 1rem 0;
+            color: #333;
+        }
+
+        #usersTable {
+            margin: 0;
+            width: 100%;
+        }
+
+        #usersTable th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table-responsive {
+            padding: 1rem;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <table id="usersTable" class="table table-striped">
-            <thead>
-                <tr>
-                    <th class="text-right">User ID</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Created At</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-        </table>
+    <div class="page-container">
+        <h1 class="page-title">User Management</h1>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table id="usersTable" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-right">User ID</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
     </div>
-
 
     <script src="../script/users.js"></script>
 </body>

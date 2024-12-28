@@ -76,13 +76,14 @@ if (!empty($auditTrails)) {
     <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
     <style>
         .audit-details {
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             line-height: 1.4;
-            max-height: 120px;
+            max-height: 100px;
             overflow-y: auto;
-            padding: 8px;
+            padding: 0.5rem;
             background-color: #f8f9fa;
             border-radius: 4px;
+            margin: 0;
         }
 
         .audit-details div {
@@ -116,20 +117,48 @@ if (!empty($auditTrails)) {
             padding: 0.375rem 0.75rem;
         }
 
-        /* Added styles for better table layout */
-        .container-fluid {
-            max-width: 1000px;
+        /* Layout styles */
+        .audit-container {
+            width: 95%;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 15px;
+            padding: 20px;
         }
 
-        .table-responsive {
-            margin: 0 auto;
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: calc(100vh - 280px);
+            position: relative;
+        }
+
+        .table-scroll {
+            overflow-y: auto;
+            height: 100%;
+            border-radius: 8px;
         }
 
         #auditTable {
             margin: 0;
             width: 100%;
+            font-size: 0.875rem;
+        }
+
+        #auditTable thead th {
+            position: sticky;
+            top: 0;
+            background-color: #0d6efd;
+            color: white;
+            z-index: 1;
+            padding: 0.75rem;
+            font-weight: 500;
+        }
+
+        #auditTable tbody tr:first-child td {
+            border-top: none;
         }
 
         #auditTable td {
@@ -137,20 +166,72 @@ if (!empty($auditTrails)) {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: normal;
+            background-color: white;
+            padding: 0.75rem;
+            vertical-align: middle;
         }
 
         #auditTable td:last-child {
             max-width: none;
         }
+
+        .filter-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .filter-card .card-body {
+            padding: 1rem;
+        }
+
+        /* Header styling */
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 500;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .audit-container {
+                width: 100%;
+                padding: 15px;
+            }
+
+            .table-wrapper {
+                margin-top: 0.5rem;
+                height: calc(100vh - 230px);
+            }
+
+            .filter-card .card-body {
+                padding: 0.75rem;
+            }
+
+            #auditTable {
+                font-size: 0.8125rem;
+            }
+
+            #auditTable td,
+            #auditTable th {
+                padding: 0.5rem;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <div class="container-fluid mt-4" style="height: 50px;">
-        <h2>System Audit Trail</h2>
+    <div class="audit-container">
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <h1 class="text-primary mb-0">System Audit Trail</h1>
+        </div>
 
         <!-- Filter Form -->
-        <div class="card mb-4">
+        <div class="filter-card">
             <div class="card-body">
                 <form method="GET" class="row g-3 audit-filter-form">
                     <div class="col-md-3">
@@ -184,113 +265,115 @@ if (!empty($auditTrails)) {
         </div>
 
         <!-- Audit Trail Table -->
-        <div class="table-responsive">
-            <table id="auditTable" class="table table-striped table-sm">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($auditTrails as $audit): ?>
+        <div class="table-wrapper">
+            <div class="table-scroll">
+                <table id="auditTable" class="table table-striped table-sm">
+                    <thead>
                         <tr>
-                            <td>
-                                <?php 
-                                echo htmlspecialchars($audit['action_timestamp']);
-                                if (isset($audit['count']) && $audit['count'] > 1) {
-                                    echo '<br><small class="text-muted">(' . $audit['count'] . ' similar actions)</small>';
-                                }
-                                ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
-                            <td><?php echo htmlspecialchars($audit['action']); ?></td>
-                            <td>
-                                <?php
-                                $details = $audit['details'];
-                                if ($details) {
-                                    $decodedDetails = json_decode($details, true);
-                                    if (json_last_error() === JSON_ERROR_NONE) {
-                                        echo '<div class="audit-details">';
-                                        
-                                        // Handle UPDATE_USER action
-                                        if ($audit['action'] === 'UPDATE_USER') {
-                                            // Display User ID being updated
-                                            if (isset($decodedDetails['updated_user_id'])) {
-                                                echo "<div><strong>User ID:</strong> {$decodedDetails['updated_user_id']}</div>";
-                                            }
-
-                                            // Role mapping
-                                            $roleMap = [
-                                                '1' => 'Admin',
-                                                '2' => 'Staff',
-                                                '3' => 'User'
-                                            ];
-
-                                            // Display unique changes
-                                            $changes = [];
-                                            
-                                            // Email changes
-                                            if (isset($decodedDetails['old_email'], $decodedDetails['updated_user_email'])) {
-                                                $oldEmails = (array)$decodedDetails['old_email'];
-                                                $newEmails = (array)$decodedDetails['updated_user_email'];
-                                                $uniqueChanges = array_unique(array_map(function($old, $new) {
-                                                    return "$old → $new";
-                                                }, $oldEmails, $newEmails));
-                                                
-                                                foreach ($uniqueChanges as $change) {
-                                                    $changes[] = "<strong>Email:</strong> $change";
-                                                }
-                                            }
-
-                                            // Role changes
-                                            if (isset($decodedDetails['old_role'], $decodedDetails['new_role'])) {
-                                                $oldRoles = (array)$decodedDetails['old_role'];
-                                                $newRoles = (array)$decodedDetails['new_role'];
-                                                $uniqueChanges = array_unique(array_map(function($old, $new) use ($roleMap) {
-                                                    $oldRole = $roleMap[$old] ?? 'Unknown';
-                                                    $newRole = $roleMap[$new] ?? 'Unknown';
-                                                    return "$oldRole → $newRole";
-                                                }, $oldRoles, $newRoles));
-                                                
-                                                foreach ($uniqueChanges as $change) {
-                                                    $changes[] = "<strong>Role:</strong> $change";
-                                                }
-                                            }
-
-                                            if (!empty($changes)) {
-                                                echo implode('<br>', array_unique($changes));
-                                            } else {
-                                                echo "No significant changes";
-                                            }
-                                        } else {
-                                            // For other actions, display unique details
-                                            $displayedDetails = [];
-                                            foreach ($decodedDetails as $key => $value) {
-                                                if (is_array($value)) {
-                                                    $value = array_unique((array)$value);
-                                                    $value = implode(', ', $value);
-                                                }
-                                                $displayKey = ucwords(str_replace('_', ' ', $key));
-                                                if (!isset($displayedDetails[$displayKey])) {
-                                                    echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . htmlspecialchars($value) . "</div>";
-                                                    $displayedDetails[$displayKey] = true;
-                                                }
-                                            }
-                                        }
-                                        echo '</div>';
-                                    } else {
-                                        echo htmlspecialchars($details);
-                                    }
-                                }
-                                ?>
-                            </td>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($auditTrails as $audit): ?>
+                            <tr>
+                                <td>
+                                    <?php 
+                                    echo htmlspecialchars($audit['action_timestamp']);
+                                    if (isset($audit['count']) && $audit['count'] > 1) {
+                                        echo '<br><small class="text-muted">(' . $audit['count'] . ' similar actions)</small>';
+                                    }
+                                    ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
+                                <td><?php echo htmlspecialchars($audit['action']); ?></td>
+                                <td>
+                                    <?php
+                                    $details = $audit['details'];
+                                    if ($details) {
+                                        $decodedDetails = json_decode($details, true);
+                                        if (json_last_error() === JSON_ERROR_NONE) {
+                                            echo '<div class="audit-details">';
+                                            
+                                            // Handle UPDATE_USER action
+                                            if ($audit['action'] === 'UPDATE_USER') {
+                                                // Display User ID being updated
+                                                if (isset($decodedDetails['updated_user_id'])) {
+                                                    echo "<div><strong>User ID:</strong> {$decodedDetails['updated_user_id']}</div>";
+                                                }
+
+                                                // Role mapping
+                                                $roleMap = [
+                                                    '1' => 'Admin',
+                                                    '2' => 'Staff',
+                                                    '3' => 'User'
+                                                ];
+
+                                                // Display unique changes
+                                                $changes = [];
+                                                
+                                                // Email changes
+                                                if (isset($decodedDetails['old_email'], $decodedDetails['updated_user_email'])) {
+                                                    $oldEmails = (array)$decodedDetails['old_email'];
+                                                    $newEmails = (array)$decodedDetails['updated_user_email'];
+                                                    $uniqueChanges = array_unique(array_map(function($old, $new) {
+                                                        return "$old → $new";
+                                                    }, $oldEmails, $newEmails));
+                                                    
+                                                    foreach ($uniqueChanges as $change) {
+                                                        $changes[] = "<strong>Email:</strong> $change";
+                                                    }
+                                                }
+
+                                                // Role changes
+                                                if (isset($decodedDetails['old_role'], $decodedDetails['new_role'])) {
+                                                    $oldRoles = (array)$decodedDetails['old_role'];
+                                                    $newRoles = (array)$decodedDetails['new_role'];
+                                                    $uniqueChanges = array_unique(array_map(function($old, $new) use ($roleMap) {
+                                                        $oldRole = $roleMap[$old] ?? 'Unknown';
+                                                        $newRole = $roleMap[$new] ?? 'Unknown';
+                                                        return "$oldRole → $newRole";
+                                                    }, $oldRoles, $newRoles));
+                                                    
+                                                    foreach ($uniqueChanges as $change) {
+                                                        $changes[] = "<strong>Role:</strong> $change";
+                                                    }
+                                                }
+
+                                                if (!empty($changes)) {
+                                                    echo implode('<br>', array_unique($changes));
+                                                } else {
+                                                    echo "No significant changes";
+                                                }
+                                            } else {
+                                                // For other actions, display unique details
+                                                $displayedDetails = [];
+                                                foreach ($decodedDetails as $key => $value) {
+                                                    if (is_array($value)) {
+                                                        $value = array_unique((array)$value);
+                                                        $value = implode(', ', $value);
+                                                    }
+                                                    $displayKey = ucwords(str_replace('_', ' ', $key));
+                                                    if (!isset($displayedDetails[$displayKey])) {
+                                                        echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . htmlspecialchars($value) . "</div>";
+                                                        $displayedDetails[$displayKey] = true;
+                                                    }
+                                                }
+                                            }
+                                            echo '</div>';
+                                        } else {
+                                            echo htmlspecialchars($details);
+                                        }
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

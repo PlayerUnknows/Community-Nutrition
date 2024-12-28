@@ -31,16 +31,20 @@ session_start();
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
     <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
     <script src="../../node_modules/moment/min/moment.min.js"></script>
-    <script src="/src/script/dropdrown.js"></script>
+   
 
     <style>
         :root {
             --primary-blue: #007bff;
             --light-blue: #63a4ff;
-            --logo-width: 50px; /* Default logo width */
-            --logo-height: 60px; /* Slightly increased logo height */
-            --profile-img-width: 40px; /* Default profile image width */
-            --profile-img-height: 70px; /* Slightly increased profile image height */
+            --logo-width: 50px;
+            /* Default logo width */
+            --logo-height: 60px;
+            /* Slightly increased logo height */
+            --profile-img-width: 40px;
+            /* Default profile image width */
+            --profile-img-height: 70px;
+            /* Slightly increased profile image height */
         }
 
         .bg-primary {
@@ -173,7 +177,7 @@ session_start();
             display: block;
         }
 
-        #signupFormContainer .signup-container {
+        /*#signupFormContainer .signup-container {
             background-color: #ffffff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -206,7 +210,7 @@ session_start();
         #signupFormContainer .signup-container:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
-        }
+        }*/
 
         /* Sub-navigation styles */
         .sub-nav {
@@ -249,22 +253,29 @@ session_start();
         #acc-reg-container {
             position: relative;
         }
-    </style>
 
-    <style>
+        /* Adjustments for smaller screens */
         .header-section {
-            padding: 0.25rem 0; /* Further reduced padding */
+            padding: 0.25rem 0;
+            /* Further reduced padding */
         }
+
         .header-section .responsive-logo {
-            width: 40px; /* Smaller logo size */
+            width: 40px;
+            /* Smaller logo size */
             height: auto;
         }
+
         .header-section .text-center p {
-            font-size: 0.8rem; /* Smaller font size */
-            margin-bottom: 0; /* Remove bottom margin */
+            font-size: 0.8rem;
+            /* Smaller font size */
+            margin-bottom: 0;
+            /* Remove bottom margin */
         }
+
         .header-section .profile-dropdown img {
-            width: 30px; /* Smaller profile image size */
+            width: 30px;
+            /* Smaller profile image size */
             height: auto;
         }
     </style>
@@ -321,7 +332,7 @@ session_start();
         </div>
     </div>
 
-
+   
     <!-- Page Content -->
     <div class="container-fluid mt-4">
 
@@ -553,6 +564,7 @@ session_start();
             <div class="tab-pane fade" id="event" role="tabpanel" aria-labelledby="event-tab">
                 <div id="eventFormContainer" class="container mt-4">
                     <!-- Event form will be loaded here -->
+                    <?php include 'event.php'; ?>
                 </div>
             </div>
             <!-- Nutrition Report Section -->
@@ -634,6 +646,7 @@ session_start();
                 <div id="add-account" class="sub-content" style="display: none;">
                     <div id="signupFormContainer" class="container mt-4">
                         <!-- Signup form will be loaded here -->
+                        <?php include 'signup.php'; ?>
                     </div>
                 </div>
 
@@ -651,8 +664,98 @@ session_start();
     </div>
 
     <!-- Scripts -->
+  
+    <script src="/src/script/dropdrown.js"></script>
     <script>
         $(document).ready(function() {
+            // Track loaded state for each tab
+            const loadedTabs = {
+                patients: false,
+                schedule: false,
+                event: false,
+                'nutrition-report': false,
+                audit: false,
+                account: false,
+                users: false
+            };
+
+            // Load patient profile content immediately on page load
+            if (!loadedTabs.patients) {
+                $('#patientProfileContainer').load('/src/view/patient_profile.php', function() {
+                    loadedTabs.patients = true;
+                });
+            }
+
+            // Load signup form content once when the document is ready
+            if (!loadedTabs.account) {
+                $('#signupFormContainer').load('/src/view/signup.php', function() {
+                    loadedTabs.account = true;
+                });
+            }
+
+            // Event tab click handler
+            $('#event-tab').on('click', function() {
+                if (!loadedTabs.event) {
+                    $('#eventFormContainer').load('/src/view/event.php', function() {
+                        loadedTabs.event = true;
+                    });
+                }
+            });
+
+            // Audit trail tab click handler
+            $('#audit-tab').on('click', function() {
+                if (!loadedTabs.audit) {
+                    $('.container', '#audit').load('/src/view/audit_trail.php', function() {
+                        loadedTabs.audit = true;
+                        // Initialize DataTable if it exists
+                        if ($.fn.DataTable.isDataTable('#auditTable')) {
+                            $('#auditTable').DataTable().destroy();
+                        }
+                        if ($('#auditTable').length) {
+                            $('#auditTable').DataTable({
+                                order: [[0, 'desc']], // Sort by first column (timestamp) descending
+                                responsive: true,
+                                pageLength: 10,
+                                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Refresh table only when viewing users for the first time
+            $('.sub-nav-button[data-target="view-users"]').click(function() {
+                $('.sub-content').hide();
+                $('#viewer').show();
+
+                if (!loadedTabs.users) {
+                    $('#UsersFormContainer').load('../../src/view/users.php', function() {
+                        loadedTabs.users = true;
+                    });
+                }
+
+                // Hide sub-nav after clicking
+                $('.sub-nav').hide();
+            });
+
+            // Create Account tab click handler
+            $('#acc-reg').on('click', function() {
+                $('.sub-content').hide();
+                $('#add-account').show();
+            });
+
+            // Show sub-nav on hover
+            $('#acc-reg-container').hover(
+                function() {
+                    $('.sub-nav').show();
+                },
+                function() {
+                    if (!$('#viewer').is(':visible')) {
+                        $('.sub-nav').hide();
+                    }
+                }
+            );
+
             // Update date and time
             function updateDateTime() {
                 const now = new Date();
@@ -673,66 +776,100 @@ session_start();
             updateDateTime();
             setInterval(updateDateTime, 1000);
 
-            // Refresh table when viewing users
-            $('.sub-nav-button[data-target="view-users"]').click(function() {
-                $('.sub-content').hide();
-                $('#viewer').show();
+            // Modal accessibility improvements
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                // Store the element that triggered the modal
+                let triggerElement = null;
+                const modalInstance = new bootstrap.Modal(modal);
 
-                // Load content without affecting other elements
-                $('#UsersFormContainer').load('../../src/view/users.php', function() {});
-
-                // Hide sub-nav after clicking
-                $('.sub-nav').hide();
-            });
-
-            // Show sub-nav on hover
-            $('#acc-reg-container').hover(
-                function() {
-                    $('.sub-nav').show();
-                },
-                function() {
-                    if (!$('#viewer').is(':visible')) {
-                        $('.sub-nav').hide();
+                // Function to properly hide modal and clean up
+                function hideModalAndCleanup() {
+                    modalInstance.hide();
+                    // Remove backdrop
+                    const backdrops = document.getElementsByClassName('modal-backdrop');
+                    while (backdrops.length > 0) {
+                        backdrops[0].remove();
                     }
+                    // Clean up body classes
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                    // Reset modal state
+                    modal.style.display = 'none';
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.setAttribute('inert', '');
                 }
-            );
 
-            // Create Account tab click handler
-            $('#acc-reg').on('click', function() {
-                $('.sub-content').hide();
-                $('#add-account').show();
-                $('#signupFormContainer').load('/src/view/signup.php', function() {
-
+                // When modal is about to be shown
+                modal.addEventListener('show.bs.modal', function () {
+                    this.removeAttribute('aria-hidden');
+                    triggerElement = document.activeElement;
+                    this.removeAttribute('inert');
                 });
-            });
 
-            $('#event-tab').on('click', function() {
-                $('#eventFormContainer').load('/src/view/event.php', function() {
-                    // Optional callback for any post-load processing
-                });
-            });
-
-            // Load patient profile content when the tab is clicked
-            $('#patients-tab').on('click', function() {
-                $('#patientProfileContainer').load('/src/view/patient_profile.php', function() {
-                    // Optional callback for any post-load processing
-                });
-            });
-
-            // Load audit trail content when the tab is clicked
-            $('#audit-tab').on('click', function() {
-                $('.container', '#audit').load('/src/view/audit_trail.php', function() {
-                    // Initialize DataTable if it exists
-                    if ($.fn.DataTable.isDataTable('#auditTable')) {
-                        $('#auditTable').DataTable().destroy();
+                // When modal is hidden
+                modal.addEventListener('hidden.bs.modal', function () {
+                    if (triggerElement) {
+                        triggerElement.focus();
                     }
-                    if ($('#auditTable').length) {
-                        $('#auditTable').DataTable({
-                            order: [[0, 'desc']], // Sort by first column (timestamp) descending
-                            responsive: true,
-                            pageLength: 10,
-                            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
-                        });
+                    hideModalAndCleanup();
+                });
+
+                // Add cleanup to all close buttons in this modal
+                const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', hideModalAndCleanup);
+                });
+
+                // Cleanup after successful transactions
+                modal.addEventListener('transactionComplete', function() {
+                    hideModalAndCleanup();
+                });
+
+                // Trap focus within modal when open
+                modal.addEventListener('keydown', function (e) {
+                    if (e.key === 'Tab') {
+                        const focusableElements = modal.querySelectorAll(
+                            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                        );
+                        const firstFocusable = focusableElements[0];
+                        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstFocusable) {
+                                lastFocusable.focus();
+                                e.preventDefault();
+                            }
+                        } else {
+                            if (document.activeElement === lastFocusable) {
+                                firstFocusable.focus();
+                                e.preventDefault();
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Add transaction complete event trigger to form submissions
+            function handleFormSuccess(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    // Dispatch transaction complete event
+                    modal.dispatchEvent(new Event('transactionComplete'));
+                }
+            }
+
+            // Example: Add to your existing AJAX success callbacks
+            $(document).on('submit', 'form', function(e) {
+                e.preventDefault();
+                const form = $(this);
+                const modalId = form.closest('.modal').attr('id');
+                
+                $.ajax({
+                    // ... your existing AJAX settings ...
+                    success: function(response) {
+                        // Your existing success handling
+                        handleFormSuccess(modalId);
                     }
                 });
             });
@@ -804,12 +941,12 @@ session_start();
             });
         });
     </script>
-
+     
     <script src="/src/script/logout.js"></script>
 
     <script src="/src/script/audit_trail.js"></script>
-    
-    <script src="/src/script/loader.js"></script>   
+
+    <script src="/src/script/loader.js"></script>
 
 </body>
 

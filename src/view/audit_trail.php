@@ -122,16 +122,16 @@ if (!empty($auditTrails)) {
             width: 95%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
         }
 
         .table-wrapper {
             overflow-x: auto;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: calc(100vh - 280px);
+            height: calc(100vh - 200px);
             position: relative;
         }
 
@@ -179,18 +179,18 @@ if (!empty($auditTrails)) {
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .filter-card .card-body {
-            padding: 1rem;
+            padding: 0.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 0.5rem;
         }
 
         /* Header styling */
-        .page-header {
-            margin-bottom: 1.5rem;
-        }
-
         .page-header h1 {
             font-size: 1.75rem;
             font-weight: 500;
@@ -200,16 +200,16 @@ if (!empty($auditTrails)) {
         @media (max-width: 768px) {
             .audit-container {
                 width: 100%;
-                padding: 15px;
+                padding: 10px;
             }
 
             .table-wrapper {
                 margin-top: 0.5rem;
-                height: calc(100vh - 230px);
+                height: calc(100vh - 200px);
             }
 
             .filter-card .card-body {
-                padding: 0.75rem;
+                padding: 0.5rem;
             }
 
             #auditTable {

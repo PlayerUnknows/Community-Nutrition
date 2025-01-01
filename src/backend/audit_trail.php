@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
 
 function logAuditTrail($userId, $username, $action, $details = '') {
     $conn = connect();

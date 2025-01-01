@@ -1,5 +1,5 @@
 <?php
-require_once 'dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
 
 header('Content-Type: application/json');
 session_start();
@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Role mapping
 $roleToNumber = [
     'Parent' => '1',
-    'Health Worker' => '2',
+    'Brgy Health Worker' => '2',
     'Administrator' => '3'
 ];
 
@@ -84,7 +84,7 @@ try {
         'new_role' => $roleNumber,
         'password_changed' => !empty($newPassword)
     ];
-    $stmt->execute([$_SESSION['email'], 'EDIT_USER', json_encode($changes)]);
+    $stmt->execute([$_SESSION['email'], 'UPDATED_USER', json_encode($changes)]);
     
     // Commit transaction
     $conn->commit();

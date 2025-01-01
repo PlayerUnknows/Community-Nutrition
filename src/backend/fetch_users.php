@@ -1,5 +1,5 @@
 <?php
-require_once 'dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
 
 // Enable error reporting
 error_reporting(E_ALL);
@@ -10,7 +10,7 @@ header('Content-Type: application/json');
 // Role mapping
 $roleMap = [
     '1' => 'Parent',
-    '2' => 'Health Worker',
+    '2' => 'Brgy Health Worker',
     '3' => 'Administrator'
 ];
 
@@ -35,7 +35,7 @@ try {
                       email LIKE :search OR 
                       CASE role
                           WHEN '1' THEN 'Parent'
-                          WHEN '2' THEN 'Health Worker'
+                          WHEN '2' THEN 'Brgy Health Worker'
                           WHEN '3' THEN 'Administrator'
                           ELSE role
                       END LIKE :search OR 
@@ -53,13 +53,13 @@ try {
                 email,
                 CASE role
                     WHEN '1' THEN 'Parent'
-                    WHEN '2' THEN 'Health Worker'
+                    WHEN '2' THEN 'Brgy Health Worker'
                     WHEN '3' THEN 'Administrator'
                     ELSE role
                 END AS role,
                 DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
               $baseQuery
-              ORDER BY user_id DESC
+              ORDER BY created_at DESC
               LIMIT :start, :length";
     
     $stmt = $conn->prepare($query);

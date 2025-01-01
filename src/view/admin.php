@@ -20,17 +20,19 @@ session_start();
     <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
     <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
-
+    <link rel="stylesheet" href="../../node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css">
 
     <!-- Core JS - Order is important -->
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../../node_modules/moment/min/moment.min.js"></script>
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
     <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../../node_modules/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
     <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
     <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
     <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
-    <script src="../../node_modules/moment/min/moment.min.js"></script>
+    <script src="/src/script/appointments.js"></script>
    
 
     <style>
@@ -399,30 +401,6 @@ session_start();
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>P001</td>
-                                                <td>Juan Dela Cruz</td>
-                                                <td>2 yrs</td>
-                                                <td>Maria Dela Cruz (Mother)</td>
-                                                <td>2024-12-10</td>
-                                                <td>09:30 AM</td>
-                                            </tr>
-                                            <tr>
-                                                <td>P002</td>
-                                                <td>Maria Santos</td>
-                                                <td>5 yrs</td>
-                                                <td>Roberto Santos (Father)</td>
-                                                <td>2024-12-11</td>
-                                                <td>10:00 AM</td>
-                                            </tr>
-                                            <tr>
-                                                <td>P003</td>
-                                                <td>Pedro Reyes</td>
-                                                <td>8 mos</td>
-                                                <td>Ana Reyes (Mother)</td>
-                                                <td>2024-12-12</td>
-                                                <td>11:30 AM</td>
-                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>

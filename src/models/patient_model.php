@@ -1,6 +1,6 @@
 <?php
 
-include '../backend/dbcon.php';
+include '../config/dbcon.php';
 
 function getPatients() {
     $con = connect(); // Use PDO connection

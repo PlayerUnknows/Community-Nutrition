@@ -241,9 +241,8 @@ if (!empty($auditTrails)) {
                             <option value="LOGIN">Login</option>
                             <option value="LOGOUT">Logout</option>
                             <option value="REGISTER">Register</option>
-                            <option value="CREATE">Create</option>
-                            <option value="UPDATE">Update</option>
-                            <option value="DELETE">Delete</option>
+                            <option value="UPDATED_USER">Update</option>
+                            <option value="DELETED_USER">Delete</option>
                             <option value="VIEW">View</option>
                             <option value="SYSTEM_CHANGE">System Change</option>
                         </select>
@@ -296,72 +295,15 @@ if (!empty($auditTrails)) {
                                         $decodedDetails = json_decode($details, true);
                                         if (json_last_error() === JSON_ERROR_NONE) {
                                             echo '<div class="audit-details">';
-                                            
-                                            // Handle UPDATE_USER action
-                                            if ($audit['action'] === 'UPDATE_USER') {
-                                                // Display User ID being updated
-                                                if (isset($decodedDetails['updated_user_id'])) {
-                                                    echo "<div><strong>User ID:</strong> {$decodedDetails['updated_user_id']}</div>";
-                                                }
-
-                                                // Role mapping
-                                                $roleMap = [
-                                                    '1' => 'Admin',
-                                                    '2' => 'Staff',
-                                                    '3' => 'User'
-                                                ];
-
-                                                // Display unique changes
-                                                $changes = [];
-                                                
-                                                // Email changes
-                                                if (isset($decodedDetails['old_email'], $decodedDetails['updated_user_email'])) {
-                                                    $oldEmails = (array)$decodedDetails['old_email'];
-                                                    $newEmails = (array)$decodedDetails['updated_user_email'];
-                                                    $uniqueChanges = array_unique(array_map(function($old, $new) {
-                                                        return "$old → $new";
-                                                    }, $oldEmails, $newEmails));
-                                                    
-                                                    foreach ($uniqueChanges as $change) {
-                                                        $changes[] = "<strong>Email:</strong> $change";
-                                                    }
-                                                }
-
-                                                // Role changes
-                                                if (isset($decodedDetails['old_role'], $decodedDetails['new_role'])) {
-                                                    $oldRoles = (array)$decodedDetails['old_role'];
-                                                    $newRoles = (array)$decodedDetails['new_role'];
-                                                    $uniqueChanges = array_unique(array_map(function($old, $new) use ($roleMap) {
-                                                        $oldRole = $roleMap[$old] ?? 'Unknown';
-                                                        $newRole = $roleMap[$new] ?? 'Unknown';
-                                                        return "$oldRole → $newRole";
-                                                    }, $oldRoles, $newRoles));
-                                                    
-                                                    foreach ($uniqueChanges as $change) {
-                                                        $changes[] = "<strong>Role:</strong> $change";
-                                                    }
-                                                }
-
-                                                if (!empty($changes)) {
-                                                    echo implode('<br>', array_unique($changes));
-                                                } else {
-                                                    echo "No significant changes";
-                                                }
-                                            } else {
-                                                // For other actions, display unique details
-                                                $displayedDetails = [];
+                                            // Display all details generically
                                                 foreach ($decodedDetails as $key => $value) {
                                                     if (is_array($value)) {
-                                                        $value = array_unique((array)$value);
-                                                        $value = implode(', ', $value);
+                                                        $value = implode(', ', array_unique((array)$value));
                                                     }
                                                     $displayKey = ucwords(str_replace('_', ' ', $key));
-                                                    if (!isset($displayedDetails[$displayKey])) {
-                                                        echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . htmlspecialchars($value) . "</div>";
-                                                        $displayedDetails[$displayKey] = true;
-                                                    }
+                                                    echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . 
+                                                         htmlspecialchars((string)$value) . "</div>";
                                                 }
-                                            }
                                             echo '</div>';
                                         } else {
                                             echo htmlspecialchars($details);

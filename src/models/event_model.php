@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/../backend/dbcon.php');
+require_once(__DIR__ . '/../config/dbcon.php');
 
 function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate) {
     try {

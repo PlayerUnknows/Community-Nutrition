@@ -1,7 +1,7 @@
 <?php
 // /controller/UserController.php
 require_once '../models/User.php';
-require_once '../backend/dbcon.php';
+require_once '../config/dbcon.php';
 require_once '../models/AuditTrail.php'; // Include the AuditTrail model
 
 $dbcon = connect();

@@ -5,7 +5,7 @@ use Ratchet\WebSocket\WsServer;
 use Ratchet\ConnectionInterface;
 
 require __DIR__ . '/../../vendor/autoload.php';
-require_once __DIR__ . '/../backend/dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
 require_once __DIR__ . '/../backend/audit_trail.php';
 
 // Add error logging

@@ -1,5 +1,5 @@
 <?php
-require_once 'dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
 
 header('Content-Type: application/json');
 session_start();
@@ -100,7 +100,7 @@ try {
         'old_role' => $existingUser['role'],
         'new_role' => $roleValue
     ]);
-    $auditStmt->execute([$_SESSION['email'], 'UPDATE_USER', $details]);
+    $auditStmt->execute([$_SESSION['email'], 'UPDATED_USER', $details]);
     
     // Commit transaction
     $conn->commit();

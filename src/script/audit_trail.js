@@ -2,7 +2,7 @@ $(document).ready(function() {
     let auditTable = null;
 
     // Function to initialize audit table
-    window.initializeAuditTable = function() {
+    function initializeAuditTable() {
         // Destroy existing instance if it exists
         if ($.fn.DataTable.isDataTable('#auditTable')) {
             $('#auditTable').DataTable().destroy();
@@ -34,14 +34,19 @@ $(document).ready(function() {
         });
 
         return auditTable;
-    };
+    }
 
     // Initialize table when audit tab is shown
-    $(document).on('shown.bs.tab', 'button[data-bs-toggle="tab"]', function(e) {
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
         if ($(e.target).attr('id') === 'audit-tab') {
-            setTimeout(window.initializeAuditTable, 100);
+            setTimeout(initializeAuditTable, 100);
         }
     });
+
+    // Initialize if audit tab is active on page load
+    if ($('#audit-tab').hasClass('active')) {
+        setTimeout(initializeAuditTable, 100);
+    }
 
     // Handle filter form submission
     $(document).on('submit', '.audit-filter-form', function(e) {
@@ -72,12 +77,52 @@ $(document).ready(function() {
                         if (audit.details) {
                             try {
                                 const details = JSON.parse(audit.details);
-                                detailsHtml = '<div class="audit-details">';
-                                for (const [key, value] of Object.entries(details)) {
-                                    const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                    detailsHtml += `<div><strong>${displayKey}:</strong> ${value}</div>`;
+                                if (audit.action === 'UPDATED_USER') {
+                                    const roleMap = {
+                                        '1': 'Parent',
+                                        '2': 'Brgy Health Worker',
+                                        '3': 'Administrator'
+                                    };
+
+                                    detailsHtml = '<div class="audit-details">';
+                                    
+                                    // User ID
+                                    if (details.updated_user_id) {
+                                        detailsHtml += `<div><strong>User Id:</strong> ${details.updated_user_id}</div>`;
+                                    }
+                                    
+                                    // Email Changes
+                                    if (details.old_email) {
+                                        detailsHtml += `<div><strong>Old Email:</strong> ${details.old_email}</div>`;
+                                    }
+                                    if (details.updated_user_email) {
+                                        detailsHtml += `<div><strong>New Email:</strong> ${details.updated_user_email}</div>`;
+                                    }
+                                    
+                                    // Role Changes
+                                    if (details.old_role) {
+                                        const oldRole = roleMap[details.old_role] || 'Unknown';
+                                        detailsHtml += `<div><strong>Old Role:</strong> ${oldRole}</div>`;
+                                    }
+                                    if (details.new_role) {
+                                        const newRole = roleMap[details.new_role] || 'Unknown';
+                                        detailsHtml += `<div><strong>New Role:</strong> ${newRole}</div>`;
+                                    }
+                                    
+                                    // Password Status
+                                    if (details.password_changed !== undefined) {
+                                        detailsHtml += `<div><strong>Password Status:</strong> ${details.password_changed ? 'Changed' : 'Not Changed'}</div>`;
+                                    }
+                                    
+                                    detailsHtml += '</div>';
+                                } else {
+                                    detailsHtml = '<div class="audit-details">';
+                                    for (const [key, value] of Object.entries(details)) {
+                                        const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        detailsHtml += `<div><strong>${displayKey}:</strong> ${value}</div>`;
+                                    }
+                                    detailsHtml += '</div>';
                                 }
-                                detailsHtml += '</div>';
                             } catch (e) {
                                 detailsHtml = audit.details;
                             }
@@ -95,7 +140,7 @@ $(document).ready(function() {
                 }
                 
                 // Reinitialize DataTable
-                window.initializeAuditTable();
+                initializeAuditTable();
             },
             error: function(xhr, status, error) {
                 console.error('Error fetching audit trail:', error);

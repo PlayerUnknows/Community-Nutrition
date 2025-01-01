@@ -23,7 +23,7 @@ $(document).ready(function() {
             { 
                 data: 'role',
                 render: function(data) {
-                    return `<span class="badge bg-${data === 'Administrator' ? 'primary' : data === 'Health Worker' ? 'success' : 'info'}">${data}</span>`;
+                    return `<span class="badge bg-${data === 'Administrator' ? 'primary' : data === 'Brgy Health Worker' ? 'success' : 'info'}">${data}</span>`;
                 }
             },
             { data: 'created_at' },
@@ -32,15 +32,15 @@ $(document).ready(function() {
                 orderable: false,
                 render: function(data) {
                     return `
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-info view-user" data-id="${data.user_id}">
-                                <i class="fas fa-eye"></i> View
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-info view-user" data-id="${data.user_id}" title="View">
+                                <i class="far fa-eye"></i>
                             </button>
-                            <button class="btn btn-sm btn-primary edit-user" data-id="${data.user_id}">
-                                <i class="fas fa-edit"></i> Edit
+                            <button class="btn btn-sm btn-outline-primary edit-user" data-id="${data.user_id}" title="Edit">
+                                <i class="far fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger delete-user" data-id="${data.user_id}">
-                                <i class="fas fa-trash"></i> Delete
+                            <button class="btn btn-sm btn-outline-danger delete-user" data-id="${data.user_id}" title="Delete">
+                                <i class="fa fa-trash"></i>
                             </button>
                         </div>
                     `;
@@ -121,7 +121,7 @@ $(document).ready(function() {
                                     <label for="editRole" class="form-label">Role</label>
                                     <select class="form-control" id="editRole" required>    
                                         <option value="Parent">Parent</option>
-                                        <option value="Health Worker">Health Worker</option>
+                                        <option value="Brgy Health Worker">Brgy Health Worker</option>
                                         <option value="Administrator">Administrator</option>
                                     </select>
                                 </div>

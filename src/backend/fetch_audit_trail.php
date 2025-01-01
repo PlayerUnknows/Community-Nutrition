@@ -1,6 +1,6 @@
 <?php
-require_once 'audit_trail.php';
-require_once 'dbcon.php';
+require_once __DIR__ . '/audit_trail.php';
+require_once __DIR__ . '/../config/dbcon.php';
 
 header('Content-Type: application/json');
 

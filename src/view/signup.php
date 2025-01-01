@@ -14,6 +14,7 @@
             --dark-gray: #495057;
             --error-red: #dc3545;
             --success-green: #28a745;
+            --glow-color: rgba(52, 152, 219, 0.6);
         }
 
         .signup-form {
@@ -25,15 +26,24 @@
             width: 100%;
             max-width: 450px;
             position: relative;
-            animation: glowAnimation 3s infinite alternate;
+            animation: pulseGlow 3s ease-in-out infinite;
         }
 
-        @keyframes glowAnimation {
+        @keyframes pulseGlow {
             0% {
-                box-shadow: 0 0 15px var(--primary-blue), 0 0 30px var(--primary-blue), 0 0 45px var(--primary-blue);
+                box-shadow: 0 0 5px var(--glow-color),
+                           0 0 10px var(--glow-color),
+                           0 0 15px var(--glow-color);
+            }
+            50% {
+                box-shadow: 0 0 20px var(--glow-color),
+                           0 0 35px var(--glow-color),
+                           0 0 50px var(--glow-color);
             }
             100% {
-                box-shadow: 0 0 15px var(--light-blue), 0 0 30px var(--light-blue), 0 0 45px var(--light-blue);
+                box-shadow: 0 0 5px var(--glow-color),
+                           0 0 10px var(--glow-color),
+                           0 0 15px var(--glow-color);
             }
         }
 

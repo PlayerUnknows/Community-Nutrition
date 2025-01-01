@@ -1,4 +1,8 @@
 $(document).ready(function() {
+    let currentPage = 1;
+    let itemsPerPage = 5;
+    let allAppointments = [];
+
     // Load appointments using regular AJAX
     function loadAppointments() {
         $.ajax({
@@ -7,33 +11,8 @@ $(document).ready(function() {
             success: function(data) {
                 if (!data) return;
                 
-                const table = $('#appointmentsTable tbody');
-                table.empty(); // Clear existing rows
-                
-                data.forEach(function(appointment) {
-                    const isCancelled = appointment.status === 'cancelled';
-                    const row = `<tr class="${isCancelled ? 'text-muted' : ''}">
-                        <td>${appointment.user_id || ''}</td>
-                        <td>${moment(appointment.date).format('YYYY-MM-DD') || ''}</td>
-                        <td>${appointment.time || ''}</td>
-                        <td>${appointment.description || ''}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary edit-btn" data-id="${appointment.appointment_prikey}" ${isCancelled ? 'disabled' : ''}>
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-sm ${isCancelled ? 'btn-secondary' : 'btn-warning'} cancel-btn" 
-                                    data-id="${appointment.appointment_prikey}"
-                                    ${isCancelled ? 'disabled' : ''}>
-                                <i class="fas ${isCancelled ? 'fa-ban' : 'fa-times'}"></i> 
-                                ${isCancelled ? 'Cancelled' : 'Cancel'}
-                            </button>
-                        </td>
-                        <td>
-                            <span class="badge ${isCancelled ? 'bg-secondary' : 'bg-success'}">${isCancelled ? 'Cancelled' : 'Active'}</span>
-                        </td>
-                    </tr>`;
-                    table.append(row);
-                });
+                allAppointments = data;
+                updateTable();
             },
             error: function(xhr, status, error) {
                 console.error("Error loading appointments:", error);
@@ -46,20 +25,152 @@ $(document).ready(function() {
         });
     }
 
+    function updateTable(filteredData = null) {
+        const table = $('#appointmentsTable tbody');
+        table.empty();
+        
+        const dataToUse = filteredData || allAppointments;
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedData = dataToUse.slice(startIndex, endIndex);
+        
+        paginatedData.forEach(function(appointment) {
+            const isCancelled = appointment.status === 'cancelled';
+            const row = `<tr class="${isCancelled ? 'text-muted' : ''}">
+                <td>${appointment.user_id || ''}</td>
+                <td>${moment(appointment.date).format('YYYY-MM-DD') || ''}</td>
+                <td>${appointment.time || ''}</td>
+                <td>${appointment.description || ''}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary edit-btn" data-id="${appointment.appointment_prikey}" ${isCancelled ? 'disabled' : ''}>
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm ${isCancelled ? 'btn-secondary' : 'btn-warning'} cancel-btn" 
+                            data-id="${appointment.appointment_prikey}"
+                            ${isCancelled ? 'disabled' : ''}>
+                        <i class="fas ${isCancelled ? 'fa-ban' : 'fa-times'}"></i> 
+                        ${isCancelled ? 'Cancelled' : 'Cancel'}
+                    </button>
+                </td>
+                <td>
+                    <span class="badge ${isCancelled ? 'bg-secondary' : 'bg-success'}">${isCancelled ? 'Cancelled' : 'Active'}</span>
+                </td>
+            </tr>`;
+            table.append(row);
+        });
+
+        updatePagination(dataToUse.length);
+    }
+
+    function updatePagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const showing = `Showing ${((currentPage - 1) * itemsPerPage) + 1}-${Math.min(currentPage * itemsPerPage, totalItems)} of ${totalItems} entries`;
+        $('#showing-entries').text(showing);
+
+        // Update page numbers
+        const pageNumbers = $('.page-numbers');
+        pageNumbers.empty();
+
+        // Calculate range of page numbers to show
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        // Adjust start if we're near the end
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        // Add first page if not in range
+        if (startPage > 1) {
+            pageNumbers.append(`
+                <a class="page-link" href="#" data-page="1">1</a>
+                ${startPage > 2 ? '<span class="page-link">...</span>' : ''}
+            `);
+        }
+
+        // Add page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers.append(`
+                <a class="page-link ${i === currentPage ? 'active' : ''}" 
+                   href="#" 
+                   data-page="${i}">${i}</a>
+            `);
+        }
+
+        // Add last page if not in range
+        if (endPage < totalPages) {
+            pageNumbers.append(`
+                ${endPage < totalPages - 1 ? '<span class="page-link">...</span>' : ''}
+                <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+            `);
+        }
+
+        $('#prevPage').parent().toggleClass('disabled', currentPage === 1);
+        $('#nextPage').parent().toggleClass('disabled', currentPage >= totalPages);
+        $('#appointmentsPagination').parent().parent().toggle(totalPages > 1);
+    }
+
     // Initial load
     loadAppointments();
 
     // Reload every 5 minutes
     setInterval(loadAppointments, 300000);
 
-    // Custom search functionality
+    // Enhanced search functionality
     $('#appointmentSearch').on('keyup', function() {
         const searchValue = $(this).val().toLowerCase();
-        $('#appointmentsTable tbody tr').each(function() {
-            const row = $(this);
-            const isVisible = row.find('td').text().toLowerCase().includes(searchValue);
-            row.toggle(isVisible);
+        if (searchValue === '') {
+            currentPage = 1;
+            updateTable();
+            return;
+        }
+
+        const filteredData = allAppointments.filter(appointment => {
+            return (
+                (appointment.user_id || '').toString().toLowerCase().includes(searchValue) ||
+                (appointment.date || '').toLowerCase().includes(searchValue) ||
+                (appointment.time || '').toLowerCase().includes(searchValue) ||
+                (appointment.description || '').toLowerCase().includes(searchValue)
+            );
         });
+
+        currentPage = 1;
+        updateTable(filteredData);
+    });
+
+    // Items per page change handler
+    $('#itemsPerPage').on('change', function() {
+        itemsPerPage = parseInt($(this).val());
+        currentPage = 1;
+        updateTable();
+    });
+
+    // Add pagination handlers
+    $('#prevPage').on('click', function(e) {
+        e.preventDefault();
+        if (currentPage > 1) {
+            currentPage--;
+            updateTable();
+        }
+    });
+
+    $('#nextPage').on('click', function(e) {
+        e.preventDefault();
+        const totalPages = Math.ceil(allAppointments.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            updateTable();
+        }
+    });
+
+    // Add page number click handler
+    $(document).on('click', '.page-numbers .page-link', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        if (page && page !== currentPage) {
+            currentPage = page;
+            updateTable();
+        }
     });
 
     // Handle appointment cancellation
@@ -162,6 +273,6 @@ $(document).ready(function() {
                 );
                 console.error("Error updating appointment:", error);
             }
-        });
+        });s
     });
 });

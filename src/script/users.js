@@ -47,7 +47,8 @@ $(document).ready(function() {
                 }
             }
         ],
-        dom: '<"row align-items-center"<"col-md-6"l><"col-md-6"f>><"row"<"col-sm-12"tr>><"row align-items-center"<"col-md-5"i><"col-md-7"p>>',
+        dom: 't',
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         buttons: [
             {
                 extend: 'collection',
@@ -62,6 +63,12 @@ $(document).ready(function() {
             processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
         }
     });
+
+    // Move DataTable controls to external containers
+    $('.dataTables_length').appendTo('#length-container');
+    $('.dataTables_filter').appendTo('#filter-container');
+    $('.dataTables_info').appendTo('#info-container');
+    $('.dataTables_paginate').appendTo('#pagination-container');
 
     // View User Details
     $('#usersTable').on('click', '.view-user', function() {

@@ -17,7 +17,9 @@
     "datatables.net": "^1.13.8",
     "datatables.net-bs5": "^1.13.8",
     "jquery": "^3.7.1",
+    "jspdf": "^2.5.2",
     "moment": "^2.30.1",
-    "sweetalert2": "^11.10.1"
+    "sweetalert2": "^11.10.1",
+    "xlsx": "^0.18.5"
   }
 }

@@ -1,13 +1,18 @@
 $(document).ready(function() {
     let currentPage = 1;
-    let itemsPerPage = 5;
+    let itemsPerPage = parseInt($('#appointmentsPerPage').val()) || 10;
+    let totalPages = 0;
     let allAppointments = [];
 
-    // Load appointments using regular AJAX
     function loadAppointments() {
         $.ajax({
             url: "/src/controllers/AppointmentController.php?action=getAppointments",
-            type: "GET",
+            type: "POST",
+            data: {
+                page: currentPage,
+                length: itemsPerPage,
+                search: $('#appointmentSearch').val()
+            },
             success: function(data) {
                 if (!data) return;
                 
@@ -117,32 +122,20 @@ $(document).ready(function() {
     setInterval(loadAppointments, 300000);
 
     // Enhanced search functionality
-    $('#appointmentSearch').on('keyup', function() {
-        const searchValue = $(this).val().toLowerCase();
-        if (searchValue === '') {
+    let searchTimeout;
+    $('#appointmentSearch').on('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
             currentPage = 1;
-            updateTable();
-            return;
-        }
-
-        const filteredData = allAppointments.filter(appointment => {
-            return (
-                (appointment.user_id || '').toString().toLowerCase().includes(searchValue) ||
-                (appointment.date || '').toLowerCase().includes(searchValue) ||
-                (appointment.time || '').toLowerCase().includes(searchValue) ||
-                (appointment.description || '').toLowerCase().includes(searchValue)
-            );
-        });
-
-        currentPage = 1;
-        updateTable(filteredData);
+            loadAppointments();
+        }, 500);
     });
 
     // Items per page change handler
-    $('#itemsPerPage').on('change', function() {
+    $('#appointmentsPerPage').on('change', function() {
         itemsPerPage = parseInt($(this).val());
         currentPage = 1;
-        updateTable();
+        loadAppointments();
     });
 
     // Add pagination handlers
@@ -150,7 +143,7 @@ $(document).ready(function() {
         e.preventDefault();
         if (currentPage > 1) {
             currentPage--;
-            updateTable();
+            loadAppointments();
         }
     });
 
@@ -159,7 +152,7 @@ $(document).ready(function() {
         const totalPages = Math.ceil(allAppointments.length / itemsPerPage);
         if (currentPage < totalPages) {
             currentPage++;
-            updateTable();
+            loadAppointments();
         }
     });
 
@@ -169,7 +162,7 @@ $(document).ready(function() {
         const page = $(this).data('page');
         if (page && page !== currentPage) {
             currentPage = page;
-            updateTable();
+            loadAppointments();
         }
     });
 
@@ -273,6 +266,6 @@ $(document).ready(function() {
                 );
                 console.error("Error updating appointment:", error);
             }
-        });s
+        });
     });
 });

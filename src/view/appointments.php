@@ -15,7 +15,7 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" id="itemsPerPage">
+                    <select class="form-select" id="appointmentsPerPage">
                         <option value="5">5 per page</option>
                         <option value="10">10 per page</option>
                         <option value="25">25 per page</option>
@@ -23,7 +23,7 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <p id="showing-entries" class="text-muted mb-0 text-end">Showing 0 entries</p>
+                    <p id="appointments-showing-entries" class="text-muted mb-0 text-end">Showing 0 entries</p>
                 </div>
             </div>
 

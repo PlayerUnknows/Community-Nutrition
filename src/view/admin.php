@@ -358,16 +358,22 @@ session_start();
     </div>
 
     <!-- Scripts -->
-  
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
     <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
     <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
-    <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
+    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script src="../../node_modules/moment/moment.js"></script>
-    <script src="/src/script/appointments.js"></script>
-    <script src="/src/script/users.js"></script>
-    <script src="/src/script/dropdrown.js"></script>
+    <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="../script/logout.js"></script>
+    <script src="../script/audit_trail.js"></script>
+    <script src="../script/monitoring.js"></script>
+    <script src="../script/appointments.js"></script>
+    <script src="../script/users.js"></script>
+    <script src="../script/dropdrown.js"></script>
+
     <script>
         $(document).ready(function() {
             // Track loaded state for each tab

@@ -34,47 +34,74 @@ $(document).ready(function() {
         const table = $('#appointmentsTable tbody');
         table.empty();
         
-        const dataToUse = filteredData || allAppointments;
+        let dataToUse = filteredData || allAppointments;
+        
+        // Apply search filter if search text exists
+        const searchText = $('#appointmentSearch').val().toLowerCase();
+        if (searchText) {
+            dataToUse = dataToUse.filter(appointment => {
+                return (
+                    (appointment.user_id || '').toString().toLowerCase().includes(searchText) ||
+                    (appointment.date || '').toLowerCase().includes(searchText) ||
+                    (appointment.time || '').toLowerCase().includes(searchText) ||
+                    (appointment.description || '').toLowerCase().includes(searchText) ||
+                    (appointment.status || '').toLowerCase().includes(searchText)
+                );
+            });
+        }
+        
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const paginatedData = dataToUse.slice(startIndex, endIndex);
         
-        paginatedData.forEach(function(appointment) {
-            const isCancelled = appointment.status === 'cancelled';
-            const row = `<tr class="${isCancelled ? 'text-muted' : ''}">
-                <td>${appointment.user_id || ''}</td>
-                <td>${moment(appointment.date).format('YYYY-MM-DD') || ''}</td>
-                <td>${appointment.time || ''}</td>
-                <td>${appointment.description || ''}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary edit-btn" data-id="${appointment.appointment_prikey}" ${isCancelled ? 'disabled' : ''}>
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-sm ${isCancelled ? 'btn-secondary' : 'btn-warning'} cancel-btn" 
-                            data-id="${appointment.appointment_prikey}"
-                            ${isCancelled ? 'disabled' : ''}>
-                        <i class="fas ${isCancelled ? 'fa-ban' : 'fa-times'}"></i> 
-                        ${isCancelled ? 'Cancelled' : 'Cancel'}
-                    </button>
-                </td>
-                <td>
-                    <span class="badge ${isCancelled ? 'bg-secondary' : 'bg-success'}">${isCancelled ? 'Cancelled' : 'Active'}</span>
-                </td>
-            </tr>`;
-            table.append(row);
-        });
+        if (paginatedData.length === 0) {
+            table.append('<tr><td colspan="6" class="text-center">No matching records found</td></tr>');
+        } else {
+            paginatedData.forEach(function(appointment) {
+                const isCancelled = appointment.status === 'cancelled';
+                const row = `<tr class="${isCancelled ? 'text-muted' : ''}">
+                    <td>${appointment.user_id || ''}</td>
+                    <td>${moment(appointment.date).format('YYYY-MM-DD') || ''}</td>
+                    <td>${appointment.time || ''}</td>
+                    <td>${appointment.description || ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary edit-btn" data-id="${appointment.appointment_prikey}" ${isCancelled ? 'disabled' : ''}>
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm ${isCancelled ? 'btn-secondary' : 'btn-warning'} cancel-btn" 
+                                data-id="${appointment.appointment_prikey}"
+                                ${isCancelled ? 'disabled' : ''}>
+                            <i class="fas ${isCancelled ? 'fa-ban' : 'fa-times'}"></i> 
+                            ${isCancelled ? 'Cancelled' : 'Cancel'}
+                        </button>
+                    </td>
+                    <td>
+                        <span class="badge ${isCancelled ? 'bg-secondary' : 'bg-success'}">${isCancelled ? 'Cancelled' : 'Active'}</span>
+                    </td>
+                </tr>`;
+                table.append(row);
+            });
+        }
 
         updatePagination(dataToUse.length);
     }
 
     function updatePagination(totalItems) {
         const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const showing = `Showing ${((currentPage - 1) * itemsPerPage) + 1}-${Math.min(currentPage * itemsPerPage, totalItems)} of ${totalItems} entries`;
+        let start = totalItems === 0 ? 0 : ((currentPage - 1) * itemsPerPage) + 1;
+        let end = Math.min(currentPage * itemsPerPage, totalItems);
+        
+        const showing = totalItems === 0 
+            ? 'Showing 0 of 0 entries' 
+            : `Showing ${start}-${end} of ${totalItems} entries`;
+            
         $('#showing-entries').text(showing);
 
         // Update page numbers
         const pageNumbers = $('.page-numbers');
         pageNumbers.empty();
+
+        if (totalItems === 0) return; // Don't show pagination if no entries
 
         // Calculate range of page numbers to show
         let startPage = Math.max(1, currentPage - 2);
@@ -123,12 +150,12 @@ $(document).ready(function() {
 
     // Enhanced search functionality
     let searchTimeout;
-    $('#appointmentSearch').on('input', function() {
+    $('#appointmentSearch').on('keyup', function() {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            currentPage = 1;
-            loadAppointments();
-        }, 500);
+        searchTimeout = setTimeout(function() {
+            currentPage = 1; // Reset to first page when searching
+            updateTable();
+        }, 300); // Wait 300ms after user stops typing
     });
 
     // Items per page change handler

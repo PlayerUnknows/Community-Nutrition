@@ -16,6 +16,25 @@ require_once __DIR__ . '/../models/MonitoringModel.php';
             </div>
         </div>
         <div class="card-body">
+            <!-- Custom Controls -->
+            <div class="row mb-3">
+                <div class="col-md-6 d-flex align-items-center">
+                    <label class="me-2">Show entries:</label>
+                    <select id="monitoringLength" class="form-select" style="width: auto;">
+                    <option value="5">5</option>    
+                    <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end">
+                        <input type="search" id="monitoringSearch" class="form-control" style="width: 200px;" placeholder="Search...">
+                    </div>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table id="monitoringTable" class="table table-striped table-bordered">
                     <thead>
@@ -46,61 +65,19 @@ require_once __DIR__ . '/../models/MonitoringModel.php';
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-</div>
 
-<!-- View Details Modal -->
-<div class="modal fade" id="viewMonitoringModal" tabindex="-1" aria-labelledby="viewMonitoringModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="viewMonitoringModalLabel">Monitoring Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Patient Information</h6>
-                        <p><strong>Patient ID:</strong> <span id="view-patient-id"></span></p>
-                        <p><strong>Family ID:</strong> <span id="view-family-id"></span></p>
-                        <p><strong>Age:</strong> <span id="view-age"></span></p>
-                        <p><strong>Sex:</strong> <span id="view-sex"></span></p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Vital Signs</h6>
-                        <p><strong>Weight:</strong> <span id="view-weight"></span> kg</p>
-                        <p><strong>Height:</strong> <span id="view-height"></span> cm</p>
-                        <p><strong>BP:</strong> <span id="view-bp"></span></p>
-                        <p><strong>Temperature:</strong> <span id="view-temperature"></span>°C</p>
+            <!-- Custom Pagination -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div id="monitoringInfo" class="dataTables_info"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dataTables_paginate paging_simple_numbers" id="monitoringPagination">
+                        <ul class="pagination justify-content-end">
+                            <!-- Pagination will be dynamically populated -->
+                        </ul>
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <h6>Assessment</h6>
-                        <p><strong>Weight Category:</strong> <span id="view-weight-category"></span></p>
-                        <p><strong>BMI Status:</strong> <span id="view-bmi"></span></p>
-                        <p><strong>Growth Status:</strong> <span id="view-growth"></span></p>
-                        <p><strong>Arm Circumference:</strong> <span id="view-arm"></span></p>
-                        <p><strong>Arm Status:</strong> <span id="view-arm-status"></span></p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Appointment Details</h6>
-                        <p><strong>Date:</strong> <span id="view-date"></span></p>
-                        <p><strong>Time:</strong> <span id="view-time"></span></p>
-                        <p><strong>Place:</strong> <span id="view-place"></span></p>
-                        <p><strong>Created At:</strong> <span id="view-created"></span></p>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Findings</h6>
-                        <p id="view-findings"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

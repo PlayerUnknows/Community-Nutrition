@@ -16,6 +16,8 @@ $roleToNumber = [
     'Administrator' => '3'
 ];
 
+$numberToRole = array_flip($roleToNumber);
+
 // Get the user ID from POST
 $userId = isset($_POST['user_id']) ? trim($_POST['user_id']) : '';
 $email = isset($_POST['email']) ? trim($_POST['email']) : '';
@@ -74,14 +76,14 @@ try {
         $stmt->execute([$email, $roleNumber, $userId]);
     }
     
-    // Log the action in audit trail
+    // Log the action in audit trail with role names instead of numbers
     $stmt = $conn->prepare("INSERT INTO audit_trail (username, action, details) VALUES (?, ?, ?)");
     $changes = [
-        'user_id' => $userId,
+        'updated_user_id' => $userId,
         'old_email' => $user['email'],
-        'new_email' => $email,
-        'old_role' => $user['role'],
-        'new_role' => $roleNumber,
+        'updated_user_email' => $email,
+        'old_role' => $numberToRole[$user['role']] ?? $user['role'],
+        'new_role' => $role,
         'password_changed' => !empty($newPassword)
     ];
     $stmt->execute([$_SESSION['email'], 'UPDATED_USER', json_encode($changes)]);

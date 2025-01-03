@@ -264,27 +264,6 @@ if (!empty($auditTrails)) {
                     </div>
                 </div>
 
-                <!-- DataTable Controls -->
-                <div class="row align-items-center mb-3">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            <input type="text" class="form-control" id="auditSearch" placeholder="Search audit trail...">
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <select class="form-select" id="auditsPerPage">
-                            <option value="10">10 per page</option>
-                            <option value="25">25 per page</option>
-                            <option value="50">50 per page</option>
-                            <option value="100">100 per page</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <p id="audit-showing-entries" class="text-muted mb-0 text-end">Showing 0 entries</p>
-                    </div>
-                </div>
-
                 <div class="table-responsive">
                     <table id="auditTable" class="table table-striped table-bordered">
                         <thead>

@@ -9,12 +9,19 @@ class MonitoringController {
     }
 
     public function fetchAllMonitoring() {
+        error_log("Fetching all monitoring records...");
         $records = $this->model->getAllMonitoringRecords();
-        if ($records) {
-            echo json_encode(['status' => 'success', 'data' => $records]);
+        
+        if ($records !== false) {
+            $response = ['status' => 'success', 'data' => $records];
+            error_log("Sending response with " . count($records) . " records");
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to fetch monitoring records']);
+            $response = ['status' => 'error', 'message' => 'Failed to fetch monitoring records'];
+            error_log("Error: Failed to fetch monitoring records");
         }
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
     }
 
     public function getMonitoringDetails() {

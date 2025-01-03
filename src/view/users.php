@@ -20,7 +20,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <p id="users-showing-entries" class="text-muted mb-0 text-end">Showing 0 entries</p>
+                      
                     </div>
                 </div>
 

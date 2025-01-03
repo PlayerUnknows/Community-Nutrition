@@ -225,96 +225,112 @@ if (!empty($auditTrails)) {
 </head>
 
 <body>
-    <div class="audit-container">
-        <div class="page-header d-flex justify-content-between align-items-center">
-            <h1 class="text-primary mb-0">System Audit Trail</h1>
-        </div>
-
-        <!-- Filter Form -->
-        <div class="filter-card">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">System Audit Trail</h5>
+            </div>
             <div class="card-body">
-                <form method="GET" class="row g-3 audit-filter-form">
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">Action Type</label>
-                        <select name="action" class="form-select form-select-sm">
-                            <option value="">All Actions</option>
-                            <option value="LOGIN">Login</option>
-                            <option value="LOGOUT">Logout</option>
-                            <option value="REGISTER">Register</option>
-                            <option value="UPDATED_USER">Update</option>
-                            <option value="DELETED_USER">Delete</option>
-                            <option value="VIEW">View</option>
-                            <option value="SYSTEM_CHANGE">System Change</option>
+                <!-- Filter Form -->
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Action Type</label>
+                                <select name="action" class="form-select">
+                                    <option value="">All Actions</option>
+                                    <option value="LOGIN">Login</option>
+                                    <option value="LOGOUT">Logout</option>
+                                    <option value="REGISTER">Register</option>
+                                    <option value="UPDATED_USER">Update</option>
+                                    <option value="DELETED_USER">Delete</option>
+                                    <option value="VIEW">View</option>
+                                    <option value="SYSTEM_CHANGE">System Change</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date From</label>
+                                <input type="date" name="date_from" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date To</label>
+                                <input type="date" name="date_to" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary d-block w-100">Filter</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- DataTable Controls -->
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="auditSearch" placeholder="Search audit trail...">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="auditsPerPage">
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">Date From</label>
-                        <input type="date" name="date_from" class="form-control form-control-sm">
+                    <div class="col-md-4">
+                        <p id="audit-showing-entries" class="text-muted mb-0 text-end">Showing 0 entries</p>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">Date To</label>
-                        <input type="date" name="date_to" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary btn-sm d-block w-100">Filter</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                </div>
 
-        <!-- Audit Trail Table -->
-        <div class="table-wrapper">
-            <div class="table-scroll">
-                <table id="auditTable" class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>User</th>
-                            <th>Action</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($auditTrails as $audit): ?>
+                <div class="table-responsive">
+                    <table id="auditTable" class="table table-striped table-bordered">
+                        <thead>
                             <tr>
-                                <td>
-                                    <?php 
-                                    echo htmlspecialchars($audit['action_timestamp']);
-                                    if (isset($audit['count']) && $audit['count'] > 1) {
-                                        echo '<br><small class="text-muted">(' . $audit['count'] . ' similar actions)</small>';
-                                    }
-                                    ?>
-                                </td>
-                                <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
-                                <td><?php echo htmlspecialchars($audit['action']); ?></td>
-                                <td>
-                                    <?php
-                                    $details = $audit['details'];
-                                    if ($details) {
-                                        $decodedDetails = json_decode($details, true);
-                                        if (json_last_error() === JSON_ERROR_NONE) {
-                                            echo '<div class="audit-details">';
-                                            // Display all details generically
-                                                foreach ($decodedDetails as $key => $value) {
-                                                    if (is_array($value)) {
-                                                        $value = implode(', ', array_unique((array)$value));
-                                                    }
-                                                    $displayKey = ucwords(str_replace('_', ' ', $key));
-                                                    echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . 
-                                                         htmlspecialchars((string)$value) . "</div>";
-                                                }
-                                            echo '</div>';
-                                        } else {
-                                            echo htmlspecialchars($details);
-                                        }
-                                    }
-                                    ?>
-                                </td>
+                                <th>Username</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>Timestamp</th>
+                                <th>Count</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($auditTrails as $audit): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
+                                    <td><?php echo htmlspecialchars($audit['action']); ?></td>
+                                    <td>
+                                        <?php
+                                        $details = $audit['details'];
+                                        if ($details) {
+                                            $decodedDetails = json_decode($details, true);
+                                            if (json_last_error() === JSON_ERROR_NONE) {
+                                                echo '<div class="audit-details">';
+                                                // Display all details generically
+                                                    foreach ($decodedDetails as $key => $value) {
+                                                        if (is_array($value)) {
+                                                            $value = implode(', ', array_unique((array)$value));
+                                                        }
+                                                        $displayKey = ucwords(str_replace('_', ' ', $key));
+                                                        echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . 
+                                                             htmlspecialchars((string)$value) . "</div>";
+                                                    }
+                                                echo '</div>';
+                                            } else {
+                                                echo htmlspecialchars($details);
+                                            }
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($audit['action_timestamp']); ?></td>
+                                    <td><?php echo htmlspecialchars($audit['count'] ?? 1); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -343,15 +359,12 @@ if (!empty($auditTrails)) {
                 var table = $('#auditTable');
                 if (table.length) {
                     table.DataTable({
-                        order: [[0, 'desc']],
+                        order: [[3, 'desc']],
                         pageLength: 10,
                         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                             "<'row'<'col-sm-12'tr>>" +
+                        dom: "<'row'<'col-sm-12'tr>>" +
                              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
                         language: {
-                            lengthMenu: "Show _MENU_ entries",
-                            search: "Search:",
                             info: "Showing _START_ to _END_ of _TOTAL_ entries (Limited to last 100 records)",
                             paginate: {
                                 first: "First",
@@ -363,6 +376,15 @@ if (!empty($auditTrails)) {
                         drawCallback: function() {
                             $('.dataTables_paginate > .pagination').addClass('pagination-sm');
                         }
+                    });
+
+                    // Connect our custom controls to DataTable
+                    $('#auditSearch').on('keyup', function() {
+                        table.DataTable().search(this.value).draw();
+                    });
+
+                    $('#auditsPerPage').on('change', function() {
+                        table.DataTable().page.len(this.value).draw();
                     });
                 }
             }

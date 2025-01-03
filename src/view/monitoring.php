@@ -13,9 +13,6 @@ require_once __DIR__ . '/../models/MonitoringModel.php';
                 <button type="button" class="btn btn-primary me-2" id="exportMonitoringBtn">
                     <i class="fas fa-file-export"></i> Export Data
                 </button>
-                <button type="button" class="btn btn-success" id="nutritionReportBtn" onclick="window.location.href='report.php'">
-                    <i class="fas fa-chart-bar"></i> Nutrition Report
-                </button>
             </div>
         </div>
         <div class="card-body">

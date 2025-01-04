@@ -1,5 +1,4 @@
 console.log('Monitoring.js loaded');
-
 $(document).ready(function() {
     console.log('Initializing monitoring table...');
     
@@ -16,37 +15,48 @@ $(document).ready(function() {
                 return json.data;
             }
         },
+        scrollX: true,
+        scrollY: '50vh',
+        scrollCollapse: true,
+        autoWidth: false,
+        fixedHeader: {
+            header: true,
+            headerOffset: 0
+        },
         columns: [
-            { data: 'patient_id' },
-            { data: 'patient_fam_id' },
-            { data: 'age' },
-            { data: 'sex' },
-            { data: 'weight' },
-            { data: 'height' },
-            { data: 'bp' },
-            { data: 'temperature' },
-            { data: 'weight_category' },
-            { data: 'finding_bmi' },
-            { data: 'finding_growth' },
-            { data: 'arm_circumference' },
-            { data: 'arm_circumference_status' },
-            { data: 'findings' },
+            { data: 'patient_id', width: '100px' },
+            { data: 'patient_fam_id', width: '100px' },
+            { data: 'age', width: '80px' },
+            { data: 'sex', width: '80px' },
+            { data: 'weight', width: '100px' },
+            { data: 'height', width: '100px' },
+            { data: 'bp', width: '100px' },
+            { data: 'temperature', width: '100px' },
+            { data: 'weight_category', width: '120px' },
+            { data: 'finding_bmi', width: '120px' },
+            { data: 'finding_growth', width: '120px' },
+            { data: 'arm_circumference', width: '120px' },
+            { data: 'arm_circumference_status', width: '120px' },
+            { data: 'findings', width: '150px' },
             { 
                 data: 'date_of_appointment',
+                width: '150px',
                 render: function(data) {
                     return data ? moment(data).format('MMMM D, YYYY') : '';
                 }
             },
-            { data: 'time_of_appointment' },
-            { data: 'place' },
+            { data: 'time_of_appointment', width: '120px' },
+            { data: 'place', width: '150px' },
             { 
                 data: 'created_at',
+                width: '180px',
                 render: function(data) {
                     return data ? moment(data).format('MMMM D, YYYY h:mm A') : '';
                 }
             },
             {
                 data: null,
+                width: '100px',
                 render: function(data) {
                     return `
                         <button class="btn btn-sm btn-info view-monitoring" data-id="${data.checkup_prikey}">
@@ -57,24 +67,16 @@ $(document).ready(function() {
             }
         ],
         order: [[17, 'desc']], // Sort by created_at by default
-        responsive: true,
         dom: 't', // Only show the table
-        lengthChange: false, // Disable built-in length changing
-        searching: false, // Disable built-in search
-        pageLength: 5, // Default page length
-        scrollY: '400px', // Add vertical scroll with fixed height
-        scrollCollapse: true, // Enable scroll collapse
+        lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+        pageLength: 10,
         language: {
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            paginate: {
-                first: '<i class="fas fa-angle-double-left"></i>',
-                previous: '<i class="fas fa-angle-left"></i>',
-                next: '<i class="fas fa-angle-right"></i>',
-                last: '<i class="fas fa-angle-double-right"></i>'
-            }
+            processing: "Loading...",
+            emptyTable: "No monitoring records found",
+            zeroRecords: "No matching records found"
         }
     });
-
+    
     // Custom length change
     $('#monitoringLength').on('change', function() {
         monitoringTable.page.len($(this).val()).draw();

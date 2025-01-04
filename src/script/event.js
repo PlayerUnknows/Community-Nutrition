@@ -1,312 +1,267 @@
-function refreshEventContent() {
-    // Refresh the events table
-    fetch('../controllers/event_controller.php?action=getAll')
-        .then(response => response.json())
-        .then(events => {
-            const tbody = document.querySelector('#event table tbody');
-            tbody.innerHTML = '';
-            
-            events.forEach(event => {
-                const row = document.createElement('tr');
-                const eventTime = event.event_time ? new Date(`1970-01-01T${event.event_time}`) : new Date();
-                const eventDate = event.event_date ? new Date(event.event_date) : new Date();
+// Global variables for table state
+var eventTable = null;
+
+// Namespaced code
+var eventManager = {
+    init: function() {
+        // Wait for document ready
+        $(document).ready(function() {
+            // Initialize DataTable
+            const eventTable = $('#eventTable').DataTable({
+                processing: true,
+                serverSide: false,
+                scrollX: true,
+                scrollY: '50vh',
+                scrollCollapse: true,
+                lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+                pageLength: 10,
+                ajax: {
+                    url: '../backend/event_handler.php',
+                    type: 'POST',
+                    data: function(d) {
+                        d.action = 'getAll';
+                        return d;
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        console.error('Server response:', xhr.responseText);
+                    }
+                },
+                columns: [
+                    { data: 'event_type', width: '120px' },
+                    { data: 'event_name_created', width: '150px' },
+                    { data: 'event_time', width: '100px' },
+                    { data: 'event_place', width: '150px' },
+                    { data: 'event_date', width: '120px' },
+                    { 
+                        data: 'created_by_name',
+                        width: '150px',
+                        render: function(data, type, row) {
+                            return data || 'N/A';
+                        }
+                    },
+                    { 
+                        data: 'raw_edited_by',
+                        width: '150px',
+                        render: function(data, type, row) {
+                            return data || 'N/A';
+                        }
+                    },
+                    {
+                        data: null,
+                        width: '100px',
+                        render: function(data, type, row) {
+                            return `
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary edit-event" data-id="${row.event_prikey}" title="Edit">
+                                        <i class="far fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-event" data-id="${row.event_prikey}" title="Delete">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                ],
+                order: [[4, 'desc']], // Sort by date column by default
+                language: {
+                    processing: "Loading...",
+                    emptyTable: "No events found",
+                    zeroRecords: "No matching events found"
+                }
+            });
+
+            // Function to safely hide modal
+            function hideModal(modalId) {
+                const modalElement = document.querySelector(modalId);
+                if (!modalElement) return;
+
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+            }
+
+            // Add Event Form Submit
+            $('#eventForm').on('submit', function(e) {
+                e.preventDefault();
                 
-                row.innerHTML = `
-                    <td>${event.event_type || ''}</td>
-                    <td>${event.event_name_created || ''}</td>
-                    <td>${eventTime.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true})}</td>
-                    <td>${event.event_place || ''}</td>
-                    <td>${eventDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</td>
-                    <td>${event.created_by || ''}</td>
-                    <td>${event.event_creator_email || ''}</td>
-                    <td>${event.event_editor_email || ''}</td>
-                    <td>
-                        <button class='btn btn-sm btn-outline-primary me-1' onclick='editEvent(${event.event_id}, "${event.event_type || ''}", "${event.event_name_created || ''}", "${event.event_time ? event.event_time.substring(0, 5) : ''}", "${event.event_date || ''}")'>
-                            <i class='far fa-edit'></i>
-                        </button>
-                        <button class='btn btn-sm btn-outline-danger' onclick='confirmDeleteEvent(${event.event_id})'>
-                            <i class='fa fa-trash'></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
+                const formData = new FormData(this);
+                formData.append('action', 'add');
+
+                $.ajax({
+                    url: '../backend/event_handler.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        // Hide modal first
+                        hideModal('#addEventModal');
+                        $('#eventForm')[0].reset();
+
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message
+                            }).then(() => {
+                                eventTable.ajax.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // Hide modal first
+                        hideModal('#addEventModal');
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while processing your request'
+                        });
+                    }
+                });
             });
-        })
-        .catch(error => {
-            console.error('Error refreshing events:', error);
-        });
-}
 
-function reloadParentTab() {
-    // Create form data to maintain the active tab
-    const formData = new FormData();
-    formData.append('active_tab', 'event');
-
-    // Use fetch to post the data
-    fetch('../view/admin.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        // Reload the entire page after successful post
-        window.parent.location.reload();
-    })
-    .catch(error => {
-        console.error('Error reloading:', error);
-    });
-}
-
-function addEvent(formElement) {
-    event.preventDefault();
-    console.log('Adding event...');
-
-    const formData = new FormData(formElement);
-    fetch('../backend/event_handler.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Remove aria-hidden before closing modal
-            const modal = document.getElementById('addEventModal');
-            modal.removeAttribute('aria-hidden');
-            
-            // Hide modal properly
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            if (bsModal) {
-                bsModal.hide();
-            }
-            
-            // Remove modal backdrop and immediately restore scrolling
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            // Ensure scrolling is restored immediately
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.overflow = 'scroll';
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Event added successfully',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                // Reset the form
-                formElement.reset();
-                // Ensure scrolling is restored
-                document.body.classList.remove('modal-open');
-                document.body.style.removeProperty('padding-right');
-                document.body.style.overflow = 'scroll';
-                // Reload the parent page
-                reloadParentTab();
+            // Edit Event Button Click
+            $('#eventTable').on('click', '.edit-event', function() {
+                const eventId = $(this).data('id');
+                const row = eventTable.row($(this).closest('tr')).data();
+                
+                $('#editEventId').val(eventId);
+                $('#editEventType').val(row.event_type);
+                $('#editEventName').val(row.event_name_created);
+                $('#editEventTime').val(row.event_time);
+                $('#editEventPlace').val(row.event_place);
+                $('#editEventDate').val(row.event_date);
+                
+                const editModal = new bootstrap.Modal($('#editEventModal'));
+                editModal.show();
             });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: data.message || 'Failed to add event'
+
+            // Edit Event Form Submit
+            $('#editEventForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                formData.append('action', 'update');
+
+                $.ajax({
+                    url: '../backend/event_handler.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        // Hide modal first
+                        hideModal('#editEventModal');
+                        $('#editEventForm')[0].reset();
+
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message
+                            }).then(() => {
+                                eventTable.ajax.reload(null, false);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // Hide modal first
+                        hideModal('#editEventModal');
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while processing your request'
+                        });
+                    }
+                });
             });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'An unexpected error occurred'
-        });
-    });
-}
 
-function updateEvent(formElement) {
-    event.preventDefault();
-    console.log('Updating event...');
-
-    const formData = new FormData(formElement);
-    fetch('../backend/event_handler.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Remove aria-hidden before closing modal
-            const modal = document.getElementById('editEventModal');
-            modal.removeAttribute('aria-hidden');
-            
-            // Hide modal properly
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            if (bsModal) {
-                bsModal.hide();
-            }
-            
-            // Remove modal backdrop and immediately restore scrolling
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            // Ensure scrolling is restored immediately
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.overflow = 'scroll';
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Event updated successfully',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                // Ensure scrolling is restored
-                document.body.classList.remove('modal-open');
-                document.body.style.removeProperty('padding-right');
-                document.body.style.overflow = 'scroll';
-                // Reload the parent page
-                reloadParentTab();
+            // Delete Event Button Click
+            $('#eventTable').on('click', '.delete-event', function() {
+                const eventId = $(this).data('id');
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '../backend/event_handler.php',
+                            type: 'POST',
+                            data: {
+                                action: 'delete',
+                                event_id: eventId
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Deleted!',
+                                        text: response.message
+                                    }).then(() => {
+                                        eventTable.ajax.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.message
+                                    });
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred while processing your request'
+                                });
+                            }
+                        });
+                    }
+                });
             });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: data.message || 'Failed to update event'
+
+            // Clear form and clean up when modal is hidden
+            $('#addEventModal').on('hidden.bs.modal', function() {
+                $('#eventForm')[0].reset();
             });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'An unexpected error occurred'
-        });
-    });
-}
 
-function deleteEvent(eventId) {
-    const formData = new FormData();
-    formData.append('action', 'delete');
-    formData.append('event_id', eventId);
-
-    fetch('../backend/event_handler.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: 'Event has been deleted.',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                // Reload the parent page
-                reloadParentTab();
+            $('#editEventModal').on('hidden.bs.modal', function() {
+                $('#editEventForm')[0].reset();
             });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: data.message || 'Failed to delete event'
+
+            // Handle ESC key to properly close modals
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hideModal('#addEventModal');
+                    hideModal('#editEventModal');
+                }
             });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'An unexpected error occurred'
-        });
-    });
-}
-
-function editEvent(eventId, eventType, eventName, eventTime, eventDate) {
-    // Populate the edit modal with event data
-    document.getElementById('editEventId').value = eventId;
-    document.getElementById('editEventType').value = eventType;
-    document.getElementById('editEventName').value = eventName;
-    document.getElementById('editEventTime').value = eventTime;
-    document.getElementById('editEventDate').value = eventDate;
-    
-    // Show the edit modal
-    $('#editEventModal').modal('show');
-}
-
-function confirmDeleteEvent(eventId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            deleteEvent(eventId);
-        }
-    });
-}
-
-// Initialize tooltips and handle modal events
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
-        new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Handle modal events
-    const addEventModal = document.getElementById('addEventModal');
-    const editEventModal = document.getElementById('editEventModal');
-    
-    if (addEventModal) {
-        addEventModal.addEventListener('show.bs.modal', function() {
-            this.removeAttribute('aria-hidden');
-        });
-        
-        addEventModal.addEventListener('hide.bs.modal', function() {
-            const focusedElement = document.activeElement;
-            if (focusedElement) {
-                focusedElement.blur();
-            }
-            // Remove modal backdrop and immediately restore scrolling
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            // Ensure scrolling is restored immediately
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.overflow = 'scroll';
         });
     }
-    
-    if (editEventModal) {
-        editEventModal.addEventListener('show.bs.modal', function() {
-            this.removeAttribute('aria-hidden');
-        });
-        
-        editEventModal.addEventListener('hide.bs.modal', function() {
-            const focusedElement = document.activeElement;
-            if (focusedElement) {
-                focusedElement.blur();
-            }
-            // Remove modal backdrop and immediately restore scrolling
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            // Ensure scrolling is restored immediately
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.overflow = 'scroll';
-        });
-    }
-});
+};
+
+// Initialize the event manager
+eventManager.init();

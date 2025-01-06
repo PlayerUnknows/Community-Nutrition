@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+// Prevent caching to stop back button from showing the page
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+require_once __DIR__ . '/src/backend/session_redirect.php';
+?>
 <!-- /app/views/user/login.php -->
 <!DOCTYPE html>
 <html lang="en">

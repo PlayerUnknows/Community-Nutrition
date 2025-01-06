@@ -10,18 +10,12 @@ $(document).ready(function () {
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, logout',
-            cancelButtonText: 'No, cancel',
-            customClass: {
-                title: 'text-sm',
-                popup: 'rounded-lg',
-                confirmButton: 'btn btn-primary',
-                cancelButton: 'btn btn-danger'
-            }
+            cancelButtonText: 'No, cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 // Perform logout
                 $.ajax({
-                    url: '/src/backend/logout_handler.php',
+                    url: '../../src/backend/logout_handler.php',
                     type: 'POST',
                     dataType: 'json',
                     success: function (response) {
@@ -35,7 +29,7 @@ $(document).ready(function () {
                                 timer: 1500
                             }).then(() => {
                                 // Redirect to login page
-                                window.location.href = response.redirect || '/index.php';
+                                window.location.href = '../../index.php';
                             });
                         } else {
                             Swal.fire({
@@ -51,7 +45,6 @@ $(document).ready(function () {
                             text: 'Failed to logout. Please try again.',
                             icon: 'error'
                         });
-                        console.error('Logout error:', error);
                     }
                 });
             }

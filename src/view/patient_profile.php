@@ -72,40 +72,14 @@ include '../models/patient_model.php';
                 </table>
             </div>
         </div>
+        <!-- Scripts -->
         <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
         <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
         <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
         <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
-        <script>
-        $(document).ready(function() {
-            const patientTable = new DataTable('#patientTable', {
-                pageLength: 10,
-                lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                     '<"row"<"col-sm-12"tr>>' +
-                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
-            });
-
-            // Handle view button click
-            $('#patientTable').on('click', '.view-patient', function() {
-                const patientDetails = $(this).data('details');
-                Swal.fire({
-                    title: '<strong>Patient Details</strong>',
-                    html: '<div><strong>Middle Initial:</strong> ' + patientDetails.patient_mi + '</div>' +
-                          '<div><strong>Suffix:</strong> ' + patientDetails.patient_suffix + '</div>' +
-                          '<div><strong>Sex:</strong> ' + patientDetails.sex + '</div>' +
-                          '<div><strong>Date of Birth:</strong> ' + patientDetails.date_of_birth + '</div>' +
-                          '<div><strong>Food Restrictions:</strong> ' + patientDetails.patient_food_restrictions + '</div>' +
-                          '<div><strong>Medical History:</strong> ' + patientDetails.patient_medical_history + '</div>' +
-                          '<div><strong>Dietary Record:</strong> ' + patientDetails.dietary_consumption_record + '</div>',
-                    showCloseButton: true,
-                    focusConfirm: false,
-                    confirmButtonText: 'Close'
-                });
-            });
-        });
-        </script>
+        <!-- Custom Script -->
+        <script src="../../src/script/patient_profile.js"></script>
     </div>
 </div>
 </body>

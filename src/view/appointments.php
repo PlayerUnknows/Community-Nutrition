@@ -8,15 +8,15 @@
         </div>
         <div class="card-body">
             <div class="row align-items-center mb-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text" class="form-control" id="appointmentSearch" placeholder="Search appointments...">
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <select class="form-select" id="appointmentsPerPage">
-                        <option value="5">5 per page</option>
+                        <option value="5" selected>5 per page</option>
                         <option value="10">10 per page</option>
                         <option value="25">25 per page</option>
                         <option value="50">50 per page</option>

@@ -1,4 +1,9 @@
 <?php
+require_once __DIR__ . '/../backend/check_role_access.php';
+
+// Only allow role 3 (Admin) to access this page
+checkUserRole([3]);
+
 require '../../vendor/autoload.php';
 
 use Katzgrau\KLogger\Logger;
@@ -7,7 +12,7 @@ use Psr\Log\LogLevel;
 $logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
 $logger->error('This is an error message');
 
-session_start();
+// Session is already started in check_role_access.php
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -367,12 +372,12 @@ session_start();
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
     <!-- Custom Scripts -->
-    <script src="../script/logout.js"></script>
-    <script src="../script/audit_trail.js"></script>
-    <script src="../script/monitoring.js"></script>
-    <script src="../script/appointments.js"></script>
-    <script src="../script/users.js"></script>
-    <script src="../script/dropdrown.js"></script>
+    <script src="../../src/script/logout.js"></script>
+    <script src="../../src/script/audit_trail.js"></script>
+    <script src="../../src/script/monitoring.js"></script>
+    <script src="../../src/script/appointments.js"></script>
+    <script src="../../src/script/users.js"></script>
+    <script src="../../src/script/dropdrown.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -698,11 +703,11 @@ session_start();
         });
     </script>
      
-    <script src="/src/script/logout.js"></script>
+    <script src="../../src/script/logout.js"></script>
 
-    <script src="/src/script/audit_trail.js"></script>
+    <script src="../../src/script/audit_trail.js"></script>
 
-    <script src="/src/script/loader.js"></script>
+    <script src="../../src/script/loader.js"></script>
 
     <script>
         $(document).ready(function() {

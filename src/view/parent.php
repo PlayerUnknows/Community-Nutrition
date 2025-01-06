@@ -1,3 +1,9 @@
+<?php
+require_once __DIR__ . '/../backend/check_role_access.php';
+
+// Only allow role 1 (Parent/Family) to access this page
+checkUserRole([1]);
+?>
 <!-- /app/views/user/home.php -->
 <!DOCTYPE html>
 <html lang="en">
@@ -6,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome - Community Nutrition Information System</title>
     <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="../../assets/css/parent.css"> <!-- Custom Styles -->
 </head>
 <body>
@@ -14,7 +21,7 @@
         <p>This system will help improve the community's nutrition and health management.</p>
         <p>Here you can manage appointments, track activities, and get personalized nutrition advice.</p>
         <!-- Add more content as necessary -->
-        <a href="../../index.php" class="btn btn-danger logout-button">Logout</a>
+        <button id="logoutButton" class="btn btn-danger logout-button">Logout</button>
     </div>
 
       <!-- Include jQuery library -->
@@ -23,10 +30,10 @@
     <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
     <!-- Include Bootstrap JavaScript -->
     <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-    <!-- Include SweetAlert JavaScript -->
-    <script src="../../node_modules/sweetalert/dist/sweetalert.min.js"></script>
+    <!-- Include SweetAlert2 JavaScript -->
+    <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
     <!-- Link to your separate JS file -->
-    <script src="/src/script/logout.js"></script>
+    <script src="../../src/script/logout.js"></script>
 </body>
 </html>

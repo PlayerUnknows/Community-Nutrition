@@ -103,42 +103,46 @@ $(document).ready(function() {
 
         if (totalItems === 0) return; // Don't show pagination if no entries
 
-        // Calculate range of page numbers to show
+        // First page
+        pageNumbers.append(`
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="1"><i class="fas fa-angle-double-left"></i></a>
+            </li>
+        `);
+
+        // Previous page
+        pageNumbers.append(`
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage - 1}"><i class="fas fa-angle-left"></i></a>
+            </li>
+        `);
+
+        // Page numbers
         let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, startPage + 4);
-        
-        // Adjust start if we're near the end
-        if (endPage - startPage < 4) {
-            startPage = Math.max(1, endPage - 4);
-        }
+        let endPage = Math.min(totalPages, currentPage + 2);
 
-        // Add first page if not in range
-        if (startPage > 1) {
-            pageNumbers.append(`
-                <a class="page-link" href="#" data-page="1">1</a>
-                ${startPage > 2 ? '<span class="page-link">...</span>' : ''}
-            `);
-        }
-
-        // Add page numbers
         for (let i = startPage; i <= endPage; i++) {
             pageNumbers.append(`
-                <a class="page-link ${i === currentPage ? 'active' : ''}" 
-                   href="#" 
-                   data-page="${i}">${i}</a>
+                <li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
             `);
         }
 
-        // Add last page if not in range
-        if (endPage < totalPages) {
-            pageNumbers.append(`
-                ${endPage < totalPages - 1 ? '<span class="page-link">...</span>' : ''}
-                <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
-            `);
-        }
+        // Next page
+        pageNumbers.append(`
+            <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage + 1}"><i class="fas fa-angle-right"></i></a>
+            </li>
+        `);
 
-        $('#prevPage').parent().toggleClass('disabled', currentPage === 1);
-        $('#nextPage').parent().toggleClass('disabled', currentPage >= totalPages);
+        // Last page
+        pageNumbers.append(`
+            <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${totalPages}"><i class="fas fa-angle-double-right"></i></a>
+            </li>
+        `);
+
         $('#appointmentsPagination').parent().parent().toggle(totalPages > 1);
     }
 
@@ -165,32 +169,25 @@ $(document).ready(function() {
         loadAppointments();
     });
 
-    // Add pagination handlers
-    $('#prevPage').on('click', function(e) {
-        e.preventDefault();
-        if (currentPage > 1) {
-            currentPage--;
-            loadAppointments();
-        }
-    });
 
-    $('#nextPage').on('click', function(e) {
-        e.preventDefault();
-        const totalPages = Math.ceil(allAppointments.length / itemsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            loadAppointments();
-        }
-    });
-
-    // Add page number click handler
+    // Handle pagination clicks
     $(document).on('click', '.page-numbers .page-link', function(e) {
         e.preventDefault();
         const page = $(this).data('page');
-        if (page && page !== currentPage) {
-            currentPage = page;
-            loadAppointments();
+        
+        if (page === 'first') {
+            currentPage = 1;
+        } else if (page === 'previous') {
+            currentPage = Math.max(1, currentPage - 1);
+        } else if (page === 'next') {
+            currentPage = Math.min(totalPages, currentPage + 1);
+        } else if (page === 'last') {
+            currentPage = totalPages;
+        } else {
+            currentPage = parseInt(page);
         }
+        
+        loadAppointments();
     });
 
     // Handle appointment cancellation

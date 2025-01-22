@@ -1,5 +1,4 @@
 <?php
-session_start();
 
 function checkUserRole($allowedRoles) {
     // If user is not logged in, redirect to login

@@ -1,5 +1,18 @@
 $(document).ready(function() {
-    let auditTable = null;
+    let auditTable;
+
+    // Function to safely dispose modals
+    function disposeModal(modalId) {
+        const modalElement = document.querySelector(modalId);
+        if (!modalElement) return;
+
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.dispose();
+            document.querySelector('.modal-backdrop')?.remove();
+            document.body.classList.remove('modal-open');
+        }
+    }
 
     // Function to get readable role name
     function getRoleName(role) {
@@ -84,76 +97,91 @@ $(document).ready(function() {
             method: 'GET',
             data: params.toString(),
             success: function(response) {
-                // Clear existing table
+                // First check if DataTable instance exists
                 if ($.fn.DataTable.isDataTable('#auditTable')) {
                     $('#auditTable').DataTable().destroy();
                 }
-                $('#auditTable tbody').empty();
                 
-                // Add new data
-                if (response && response.length > 0) {
-                    response.forEach(function(audit) {
-                        let detailsHtml = '';
-                        if (audit.details) {
-                            try {
-                                const details = JSON.parse(audit.details);
-                                detailsHtml = '<div class="audit-details">';
-                                
-                                if (audit.action === 'UPDATED_USER') {
-                                    // User ID
-                                    const userId = details.updated_user_id || details.user_id;
-                                    if (userId) {
-                                        detailsHtml += `<div><strong>User ID:</strong> ${userId}</div>`;
+                // Reinitialize the table with new data
+                auditTable = $('#auditTable').DataTable({
+                    order: [[3, 'desc']], // Order by timestamp column
+                    pageLength: 5,
+                    lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+                    responsive: true,
+                    scrollY: '400px',
+                    scrollCollapse: true,
+                    data: response,
+                    columns: [
+                        { data: 'username', defaultContent: 'System' },
+                        { data: 'action' },
+                        { 
+                            data: 'details',
+                            render: function(data, type, row) {
+                                if (!data) return '';
+                                try {
+                                    const details = JSON.parse(data);
+                                    let detailsHtml = '<div class="audit-details">';
+                                    
+                                    if (row.action === 'UPDATED_USER') {
+                                        // User ID
+                                        const userId = details.updated_user_id || details.user_id;
+                                        if (userId) {
+                                            detailsHtml += `<div><strong>User ID:</strong> ${userId}</div>`;
+                                        }
+                                        
+                                        // Email Changes
+                                        if (details.old_email) {
+                                            detailsHtml += `<div><strong>Old Email:</strong> ${details.old_email}</div>`;
+                                        }
+                                        if (details.updated_user_email || details.new_email) {
+                                            detailsHtml += `<div><strong>New Email:</strong> ${details.updated_user_email || details.new_email}</div>`;
+                                        }
+                                        
+                                        // Role Changes
+                                        if (details.old_role !== undefined) {
+                                            detailsHtml += `<div><strong>Old Role:</strong> ${getRoleName(details.old_role)}</div>`;
+                                        }
+                                        if (details.new_role !== undefined) {
+                                            detailsHtml += `<div><strong>New Role:</strong> ${getRoleName(details.new_role)}</div>`;
+                                        }
+                                        
+                                        // Password Status
+                                        if (details.password_changed !== undefined) {
+                                            detailsHtml += `<div><strong>Password Status:</strong> ${details.password_changed ? 'Changed' : 'Not Changed'}</div>`;
+                                        }
+                                    } else {
+                                        // For other actions, display all details
+                                        for (const [key, value] of Object.entries(details)) {
+                                            const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                            detailsHtml += `<div><strong>${displayKey}:</strong> ${value}</div>`;
+                                        }
                                     }
                                     
-                                    // Email Changes
-                                    if (details.old_email) {
-                                        detailsHtml += `<div><strong>Old Email:</strong> ${details.old_email}</div>`;
-                                    }
-                                    if (details.updated_user_email || details.new_email) {
-                                        detailsHtml += `<div><strong>New Email:</strong> ${details.updated_user_email || details.new_email}</div>`;
-                                    }
-                                    
-                                    // Role Changes
-                                    if (details.old_role !== undefined) {
-                                        detailsHtml += `<div><strong>Old Role:</strong> ${getRoleName(details.old_role)}</div>`;
-                                    }
-                                    if (details.new_role !== undefined) {
-                                        detailsHtml += `<div><strong>New Role:</strong> ${getRoleName(details.new_role)}</div>`;
-                                    }
-                                    
-                                    // Password Status
-                                    if (details.password_changed !== undefined) {
-                                        detailsHtml += `<div><strong>Password Status:</strong> ${details.password_changed ? 'Changed' : 'Not Changed'}</div>`;
-                                    }
-                                } else {
-                                    // For other actions, display all details
-                                    for (const [key, value] of Object.entries(details)) {
-                                        const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                        detailsHtml += `<div><strong>${displayKey}:</strong> ${value}</div>`;
-                                    }
+                                    detailsHtml += '</div>';
+                                    return detailsHtml;
+                                } catch (e) {
+                                    return data;
                                 }
-                                
-                                detailsHtml += '</div>';
-                            } catch (e) {
-                                detailsHtml = audit.details;
                             }
+                        },
+                        { data: 'action_timestamp' },
+                        { data: 'count', defaultContent: '1' }
+                    ],
+                    dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                         "<'row'<'col-sm-12'tr>>" +
+                         "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                    language: {
+                        lengthMenu: "Show _MENU_ entries",
+                        search: "Search:",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        paginate: {
+                            first: "First",
+                            last: "Last",
+                            next: "Next",
+                            previous: "Previous"
                         }
-                        
-                        $('#auditTable tbody').append(`
-                            <tr>
-                                <td>${audit.username || 'System'}</td>
-                                <td>${audit.action}</td>
-                                <td>${detailsHtml}</td>
-                                <td>${audit.action_timestamp}</td>
-                                <td>${audit.count || 1}</td>
-                            </tr>
-                        `);
-                    });
-                }
-                
-                // Reinitialize DataTable
-                initializeAuditTable();
+                    }
+                });
             },
             error: function(xhr, status, error) {
                 console.error('Error fetching audit trail:', error);
@@ -162,7 +190,13 @@ $(document).ready(function() {
             complete: function() {
                 $('#auditTable').removeClass('loading');
                 $('.btn-primary').prop('disabled', false);
+                disposeModal('.modal');
             }
         });
+    });
+
+    // Add modal cleanup on bootstrap modal hidden event
+    $('.modal').on('hidden.bs.modal', function() {
+        disposeModal(this.id ? `#${this.id}` : '.modal');
     });
 });

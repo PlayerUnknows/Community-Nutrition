@@ -1,5 +1,7 @@
 <?php
+require_once __DIR__ . '/../backend/session_handler.php';
 require_once __DIR__ . '/../backend/check_role_access.php';
+
 
 // Only allow role 3 (Admin) to access this page
 checkUserRole([3]);
@@ -28,6 +30,11 @@ $logger->error('This is an error message');
     <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
 
     <style>
+        /*body {
+            background: linear-gradient(135deg, #007bff, #ffffff) no-repeat center center fixed;
+            min-height: 100vh;
+            background-attachment: fixed; /* This prevents gradient from repeating on scroll */
+        
         :root {
             --primary-blue: #007bff;
             --light-blue: #63a4ff;
@@ -42,7 +49,7 @@ $logger->error('This is an error message');
         }
 
         .bg-primary {
-            background-color: var(--primary-blue) !important;
+            background-color: white !important;
         }
 
         /* Responsive Logo Styling */
@@ -172,7 +179,8 @@ $logger->error('This is an error message');
         }
 
         /* Sub-navigation styling */
-        #monitoring-container, #acc-reg-container {
+        #monitoring-container,
+        #acc-reg-container {
             position: relative;
         }
 
@@ -186,7 +194,7 @@ $logger->error('This is an error message');
             border-radius: 0 0 4px 4px;
             z-index: 1000;
             min-width: 150px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         #monitoring-container:hover .sub-nav,
@@ -212,6 +220,40 @@ $logger->error('This is an error message');
         .sub-content {
             display: none;
         }
+
+        /* Small SweetAlert2 Modal Styles */
+        .small-modal {
+            font-size: 0.9rem !important;
+        }
+
+        .small-modal-title {
+            font-size: 1.1rem !important;
+            padding: 0.5rem 0 !important;
+        }
+
+        .small-modal-content {
+            font-size: 0.9rem !important;
+            margin-top: 0.5rem !important;
+        }
+
+        .small-modal .swal2-icon {
+            width: 3em !important;
+            height: 3em !important;
+            margin: 0.5em auto !important;
+        }
+
+        .small-modal .swal2-icon .swal2-icon-content {
+            font-size: 1.75em !important;
+        }
+
+        .small-modal .swal2-actions {
+            margin: 0.5em auto 0 !important;
+        }
+
+        .small-modal .swal2-styled {
+            padding: 0.25em 0.75em !important;
+            font-size: 0.9em !important;
+        }
     </style>
 </head>
 
@@ -233,13 +275,19 @@ $logger->error('This is an error message');
                         $displayEmail = "Guest";
 
                         if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
-                            $displayEmail = htmlspecialchars($_SESSION['email']);
+                            $email = htmlspecialchars($_SESSION['email']);
                         } elseif (isset($_SESSION['user']['email']) && !empty($_SESSION['user']['email'])) {
-                            $displayEmail = htmlspecialchars($_SESSION['user']['email']);
+                            $email = htmlspecialchars($_SESSION['user']['email']);
+                        }
+
+                        if (isset($email)) {
+                            // Remove '@gmail.com' if it exists
+                            $displayEmail = str_replace('@gmail.com', '', $email);
                         }
 
                         echo $displayEmail;
                         ?>
+
                     </strong></p>
                 <p class="mb-0" id="dateTimeDisplay"></p>
             </div>
@@ -266,7 +314,7 @@ $logger->error('This is an error message');
         </div>
     </div>
 
-   
+
     <!-- Page Content -->
     <div class="container-fluid mt-4">
 
@@ -372,7 +420,7 @@ $logger->error('This is an error message');
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
     <!-- Custom Scripts -->
-    <script src="../../src/script/logout.js"></script>
+ 
     <script src="../../src/script/audit_trail.js"></script>
     <script src="../../src/script/monitoring.js"></script>
     <script src="../../src/script/appointments.js"></script>
@@ -414,13 +462,13 @@ $logger->error('This is an error message');
             $('.sub-nav .dropdown-item').click(function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // Remove active class from all tabs
                 $('.nav-link').removeClass('active');
-                
+
                 // Add active class to parent schedule tab
                 $('#schedule-tab').addClass('active');
-                
+
                 // Show the target tab content
                 const targetId = $(this).attr('data-bs-target');
                 $('.tab-pane').removeClass('show active');
@@ -477,7 +525,7 @@ $logger->error('This is an error message');
             // Handle account tab clicks
             $('#acc-reg').on('click', function() {
                 const currentContent = $('#account .sub-content:visible').attr('id');
-                
+
                 if (currentContent === 'add-account') {
                     $('#add-account').hide();
                     $('#viewer').show();
@@ -589,14 +637,14 @@ $logger->error('This is an error message');
                 }
 
                 // When modal is about to be shown
-                modal.addEventListener('show.bs.modal', function () {
+                modal.addEventListener('show.bs.modal', function() {
                     this.removeAttribute('aria-hidden');
                     triggerElement = document.activeElement;
                     this.removeAttribute('inert');
                 });
 
                 // When modal is hidden
-                modal.addEventListener('hidden.bs.modal', function () {
+                modal.addEventListener('hidden.bs.modal', function() {
                     if (triggerElement) {
                         triggerElement.focus();
                     }
@@ -615,7 +663,7 @@ $logger->error('This is an error message');
                 });
 
                 // Trap focus within modal when open
-                modal.addEventListener('keydown', function (e) {
+                modal.addEventListener('keydown', function(e) {
                     if (e.key === 'Tab') {
                         const focusableElements = modal.querySelectorAll(
                             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -644,7 +692,7 @@ $logger->error('This is an error message');
                 $(this).siblings().removeClass('active');
                 // Add active class to clicked button
                 $(this).addClass('active');
-                
+
                 // Hide all sub-content
                 $('.sub-content').hide();
                 // Show the selected content
@@ -702,7 +750,7 @@ $logger->error('This is an error message');
             }
         });
     </script>
-     
+
     <script src="../../src/script/logout.js"></script>
 
     <script src="../../src/script/audit_trail.js"></script>
@@ -747,7 +795,7 @@ $logger->error('This is an error message');
                 const target = $(this).data('target');
                 $('.sub-content').hide();
                 $(`#${target}`).show();
-                
+
                 // Initialize DataTable when switching to users view
                 if (target === 'view-users') {
                     if (typeof loadUsers === 'function') {
@@ -785,6 +833,8 @@ $logger->error('This is an error message');
             );
         });
     </script>
+    <script src="../../src/script/logout.js"></script>
+    <script src="../../src/script/session.js"></script>
 </body>
 
 </html>

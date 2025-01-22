@@ -49,15 +49,11 @@
                 <div class="col-12">
                     <nav aria-label="Appointments pagination">
                         <ul class="pagination justify-content-end mb-0" id="appointmentsPagination">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" id="prevPage">Previous</a>
-                            </li>
+                            
                             <li class="page-item page-numbers">
                                 <!-- Page numbers will be inserted here -->
                             </li>
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" id="nextPage">Next</a>
-                            </li>
+                            
                         </ul>
                     </nav>
                 </div>

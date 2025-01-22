@@ -9,6 +9,58 @@ include_once("../config/dbcon.php");
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, must-revalidate');
 
+// Function to sanitize input
+function sanitizeInput($data) {
+    if (empty($data)) return '';
+    
+    // Remove any HTML, PHP, or JavaScript
+    $data = strip_tags($data);
+    
+    // Convert special characters to HTML entities
+    $data = htmlspecialchars($data, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    
+    // Remove any potential script injection patterns
+    $data = preg_replace('/(javascript|vbscript|expression|applet|meta|xml|blink|link|style|script|embed|object|iframe|frame|frameset|ilayer|layer|bgsound|title|base|alert|onload|onunload|onchange|onsubmit|onreset|onselect|onblur|onfocus|onabort|onkey|onmouse|onclick|ondblclick|onerror|onresize|onscroll)\s*:/i', '', $data);
+    
+    // Remove any escaped HTML entities
+    $data = preg_replace('/&[#\w]+;/', '', $data);
+    
+    return trim($data);
+}
+
+// Function to validate input
+function validateInput($data) {
+    // Check for empty or non-string input
+    if (empty($data) || !is_string($data)) {
+        return false;
+    }
+    
+    // Check length
+    if (strlen($data) > 255) {
+        return false;
+    }
+    
+    // Check for potentially dangerous patterns
+    $dangerous_patterns = [
+        '/<[^>]*>/',              // HTML tags
+        '/javascript:/i',         // JavaScript protocol
+        '/data:\s*[^\s]*/i',     // Data URLs
+        '/on\w+\s*=/i',          // Event handlers
+        '/\b(alert|confirm|prompt|eval|setTimeout|setInterval)\s*\(/i', // JavaScript functions
+        '/&#x?[0-9a-f]+;?/i',    // Hex entities
+        '/\\\\x[0-9a-f]+/i',     // Hex escape sequences
+        '/\\\\/i'                 // Backslashes
+    ];
+    
+    foreach ($dangerous_patterns as $pattern) {
+        if (preg_match($pattern, $data)) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 // Debug: Log the incoming request
 error_log("Received action: " . (isset($_POST['action']) ? $_POST['action'] : 'none'));
 
@@ -49,8 +101,14 @@ switch ($action) {
             $stmt->execute();
             $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Debug: Log the query results
-            error_log("Found " . count($events) . " events");
+            // Sanitize output data
+            foreach ($events as &$event) {
+                foreach ($event as $key => $value) {
+                    if (is_string($value)) {
+                        $event[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    }
+                }
+            }
             
             $response = [
                 'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
@@ -87,6 +145,23 @@ switch ($action) {
                 exit;
             }
 
+            // Sanitize and validate inputs
+            $event_type = sanitizeInput($_POST['event_type']);
+            $event_name = sanitizeInput($_POST['event_name']);
+            $event_time = sanitizeInput($_POST['event_time']);
+            $event_place = sanitizeInput($_POST['event_place']);
+            $event_date = sanitizeInput($_POST['event_date']);
+
+            // Validate all inputs
+            if (!validateInput($event_type) || !validateInput($event_name) || 
+                !validateInput($event_time) || !validateInput($event_place)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid input detected'
+                ]);
+                exit;
+            }
+
             // Get user's email without @gmail.com
             $userQuery = "SELECT SUBSTRING_INDEX(email, '@', 1) as username FROM account_info WHERE user_id = ?";
             $userStmt = $conn->prepare($userQuery);
@@ -100,11 +175,11 @@ switch ($action) {
             
             $stmt = $conn->prepare($query);
             $stmt->execute([
-                $_POST['event_type'],
-                $_POST['event_name'],
-                $_POST['event_time'],
-                $_POST['event_place'],
-                $_POST['event_date'],
+                $event_type,
+                $event_name,
+                $event_time,
+                $event_place,
+                $event_date,
                 $_SESSION['user_id'],
                 $creatorName
             ]);
@@ -136,6 +211,24 @@ switch ($action) {
                 exit;
             }
 
+            // Sanitize and validate inputs
+            $event_id = sanitizeInput($_POST['event_id']);
+            $event_type = sanitizeInput($_POST['event_type']);
+            $event_name = sanitizeInput($_POST['event_name']);
+            $event_time = sanitizeInput($_POST['event_time']);
+            $event_place = sanitizeInput($_POST['event_place']);
+            $event_date = sanitizeInput($_POST['event_date']);
+
+            // Validate all inputs
+            if (!validateInput($event_type) || !validateInput($event_name) || 
+                !validateInput($event_time) || !validateInput($event_place)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid input detected'
+                ]);
+                exit;
+            }
+
             // Get editor's email without @gmail.com
             $userQuery = "SELECT SUBSTRING_INDEX(email, '@', 1) as username FROM account_info WHERE user_id = ?";
             $userStmt = $conn->prepare($userQuery);
@@ -154,13 +247,13 @@ switch ($action) {
             
             $stmt = $conn->prepare($query);
             $stmt->execute([
-                $_POST['event_type'],
-                $_POST['event_name'],
-                $_POST['event_time'],
-                $_POST['event_place'],
-                $_POST['event_date'],
+                $event_type,
+                $event_name,
+                $event_time,
+                $event_place,
+                $event_date,
                 $editorName,
-                $_POST['event_id']
+                $event_id
             ]);
 
             echo json_encode([
@@ -188,9 +281,11 @@ switch ($action) {
                 exit;
             }
 
+            $event_id = sanitizeInput($_POST['event_id']);
+
             $query = "DELETE FROM event_info WHERE event_prikey = ?";
             $stmt = $conn->prepare($query);
-            $stmt->execute([$_POST['event_id']]);
+            $stmt->execute([$event_id]);
 
             echo json_encode([
                 'success' => true,

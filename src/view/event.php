@@ -1,3 +1,9 @@
+<?php
+// Set security headers
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
+header("X-XSS-Protection: 1; mode=block");
+header("X-Content-Type-Options: nosniff");
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

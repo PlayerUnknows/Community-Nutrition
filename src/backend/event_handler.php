@@ -1,311 +1,183 @@
 <?php
+ob_start();
 session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+require_once("../config/dbcon.php");
 
-include_once("../config/dbcon.php");
-
-// Set headers for JSON response
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, must-revalidate');
 
-// Function to sanitize input
-function sanitizeInput($data) {
-    if (empty($data)) return '';
-    
-    // Remove any HTML, PHP, or JavaScript
-    $data = strip_tags($data);
-    
-    // Convert special characters to HTML entities
-    $data = htmlspecialchars($data, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    
-    // Remove any potential script injection patterns
-    $data = preg_replace('/(javascript|vbscript|expression|applet|meta|xml|blink|link|style|script|embed|object|iframe|frame|frameset|ilayer|layer|bgsound|title|base|alert|onload|onunload|onchange|onsubmit|onreset|onselect|onblur|onfocus|onabort|onkey|onmouse|onclick|ondblclick|onerror|onresize|onscroll)\s*:/i', '', $data);
-    
-    // Remove any escaped HTML entities
-    $data = preg_replace('/&[#\w]+;/', '', $data);
-    
-    return trim($data);
+function sendJSON($data) {
+    ob_clean();
+    echo json_encode($data);
+    ob_end_flush();
+    exit;
 }
 
-// Function to validate input
-function validateInput($data) {
-    // Check for empty or non-string input
-    if (empty($data) || !is_string($data)) {
-        return false;
-    }
-    
-    // Check length
-    if (strlen($data) > 255) {
-        return false;
-    }
-    
-    // Check for potentially dangerous patterns
-    $dangerous_patterns = [
-        '/<[^>]*>/',              // HTML tags
-        '/javascript:/i',         // JavaScript protocol
-        '/data:\s*[^\s]*/i',     // Data URLs
-        '/on\w+\s*=/i',          // Event handlers
-        '/\b(alert|confirm|prompt|eval|setTimeout|setInterval)\s*\(/i', // JavaScript functions
-        '/&#x?[0-9a-f]+;?/i',    // Hex entities
-        '/\\\\x[0-9a-f]+/i',     // Hex escape sequences
-        '/\\\\/i'                 // Backslashes
-    ];
-    
-    foreach ($dangerous_patterns as $pattern) {
-        if (preg_match($pattern, $data)) {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-// Debug: Log the incoming request
-error_log("Received action: " . (isset($_POST['action']) ? $_POST['action'] : 'none'));
-
-if (!isset($_POST['action'])) {
-    echo json_encode([
-        'draw' => 1,
+if (!isset($_SESSION['user_id'])) {
+    sendJSON([
+        'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
         'recordsTotal' => 0,
         'recordsFiltered' => 0,
-        'data' => []
+        'data' => [],
+        'error' => 'Not logged in'
     ]);
-    exit;
+}
+
+if (!isset($_POST['action'])) {
+    sendJSON([
+        'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
+        'recordsTotal' => 0,
+        'recordsFiltered' => 0,
+        'data' => [],
+        'error' => 'No action specified'
+    ]);
 }
 
 $action = $_POST['action'];
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'User not logged in',
-        'redirect' => '../view/login.php'
-    ]);
-    exit;
-}
-
-switch ($action) {
-    case 'getAll':
-        try {
-            $query = "SELECT e.*, 
-                     SUBSTRING_INDEX(u1.email, '@', 1) as created_by_name,
-                     SUBSTRING_INDEX(u2.email, '@', 1) as edited_by,
-                     e.edited_by as raw_edited_by
+try {
+    switch ($action) {
+        case 'getAll':
+            $query = "SELECT 
+                        e.event_prikey,
+                        e.event_type,
+                        e.event_name_created,
+                        e.event_time,
+                        e.event_place,
+                        e.event_date,
+                        e.created_at,
+                        COALESCE(SUBSTRING_INDEX(u1.email, '@', 1), '') as created_by_name,
+                        COALESCE(SUBSTRING_INDEX(u2.email, '@', 1), '') as edited_by,
+                        COALESCE(DATE_FORMAT(e.created_at, '%Y-%m-%d %H:%i:%s'), '') as raw_created_at
                      FROM event_info e
                      LEFT JOIN account_info u1 ON e.created_by = u1.user_id
                      LEFT JOIN account_info u2 ON e.edited_by = u2.user_id
-                     ORDER BY e.event_date DESC";
+                     ORDER BY e.created_at DESC";
+            
             $stmt = $conn->prepare($query);
             $stmt->execute();
             $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Sanitize output data
-            foreach ($events as &$event) {
-                foreach ($event as $key => $value) {
-                    if (is_string($value)) {
-                        $event[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    }
-                }
+            $data = [];
+            foreach ($events as $event) {
+                $data[] = array_map(function($value) {
+                    return $value === null ? '' : $value;
+                }, [
+                    'DT_RowId' => 'row_' . $event['event_prikey'],
+                    'event_prikey' => $event['event_prikey'],
+                    'event_type' => $event['event_type'],
+                    'event_name_created' => $event['event_name_created'],
+                    'event_time' => $event['event_time'],
+                    'event_place' => $event['event_place'],
+                    'event_date' => $event['event_date'],
+                    'created_by_name' => $event['created_by_name'],
+                    'edited_by' => $event['edited_by'],
+                    'raw_created_at' => $event['raw_created_at']
+                ]);
             }
-            
-            $response = [
-                'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
-                'recordsTotal' => count($events),
-                'recordsFiltered' => count($events),
-                'data' => array_values($events)
-            ];
-            
-            echo json_encode($response);
-            exit;
-            
-        } catch (PDOException $e) {
-            error_log("Database error: " . $e->getMessage());
-            echo json_encode([
-                'draw' => 1,
-                'recordsTotal' => 0,
-                'recordsFiltered' => 0,
-                'data' => [],
-                'error' => 'Failed to fetch events: ' . $e->getMessage()
-            ]);
-            exit;
-        }
-        break;
 
-    case 'add':
-        try {
+            sendJSON([
+                'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
+                'recordsTotal' => count($data),
+                'recordsFiltered' => count($data),
+                'data' => $data
+            ]);
+
+        case 'add':
             if (!isset($_POST['event_type']) || !isset($_POST['event_name']) || 
                 !isset($_POST['event_time']) || !isset($_POST['event_date']) ||
                 !isset($_POST['event_place'])) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Missing required fields'
-                ]);
-                exit;
+                throw new Exception('Missing required fields');
             }
 
-            // Sanitize and validate inputs
-            $event_type = sanitizeInput($_POST['event_type']);
-            $event_name = sanitizeInput($_POST['event_name']);
-            $event_time = sanitizeInput($_POST['event_time']);
-            $event_place = sanitizeInput($_POST['event_place']);
-            $event_date = sanitizeInput($_POST['event_date']);
-
-            // Validate all inputs
-            if (!validateInput($event_type) || !validateInput($event_name) || 
-                !validateInput($event_time) || !validateInput($event_place)) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Invalid input detected'
-                ]);
-                exit;
-            }
-
-            // Get user's email without @gmail.com
-            $userQuery = "SELECT SUBSTRING_INDEX(email, '@', 1) as username FROM account_info WHERE user_id = ?";
-            $userStmt = $conn->prepare($userQuery);
-            $userStmt->execute([$_SESSION['user_id']]);
-            $userData = $userStmt->fetch(PDO::FETCH_ASSOC);
-            $creatorName = $userData['username'];
-
-            $query = "INSERT INTO event_info (event_type, event_name_created, event_time, event_place, 
-                     event_date, created_by, event_creator, created_at) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+            $query = "INSERT INTO event_info (
+                event_type, event_name_created, event_time, event_place, 
+                event_date, created_by, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, NOW())";
             
             $stmt = $conn->prepare($query);
-            $stmt->execute([
-                $event_type,
-                $event_name,
-                $event_time,
-                $event_place,
-                $event_date,
-                $_SESSION['user_id'],
-                $creatorName
+            $result = $stmt->execute([
+                $_POST['event_type'],
+                $_POST['event_name'],
+                $_POST['event_time'],
+                $_POST['event_place'],
+                $_POST['event_date'],
+                $_SESSION['user_id']
             ]);
 
-            echo json_encode([
+            if (!$result) {
+                throw new Exception('Failed to add event');
+            }
+
+            sendJSON([
                 'success' => true,
                 'message' => 'Event added successfully'
             ]);
-            exit;
-        } catch (PDOException $e) {
-            error_log("Add event error: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to add event: ' . $e->getMessage()
-            ]);
-            exit;
-        }
-        break;
 
-    case 'update':
-        try {
+        case 'update':
             if (!isset($_POST['event_id']) || !isset($_POST['event_type']) || 
                 !isset($_POST['event_name']) || !isset($_POST['event_time']) || 
                 !isset($_POST['event_date']) || !isset($_POST['event_place'])) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Missing required fields'
-                ]);
-                exit;
+                throw new Exception('Missing required fields');
             }
-
-            // Sanitize and validate inputs
-            $event_id = sanitizeInput($_POST['event_id']);
-            $event_type = sanitizeInput($_POST['event_type']);
-            $event_name = sanitizeInput($_POST['event_name']);
-            $event_time = sanitizeInput($_POST['event_time']);
-            $event_place = sanitizeInput($_POST['event_place']);
-            $event_date = sanitizeInput($_POST['event_date']);
-
-            // Validate all inputs
-            if (!validateInput($event_type) || !validateInput($event_name) || 
-                !validateInput($event_time) || !validateInput($event_place)) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Invalid input detected'
-                ]);
-                exit;
-            }
-
-            // Get editor's email without @gmail.com
-            $userQuery = "SELECT SUBSTRING_INDEX(email, '@', 1) as username FROM account_info WHERE user_id = ?";
-            $userStmt = $conn->prepare($userQuery);
-            $userStmt->execute([$_SESSION['user_id']]);
-            $userData = $userStmt->fetch(PDO::FETCH_ASSOC);
-            $editorName = $userData['username'];
 
             $query = "UPDATE event_info SET 
-                     event_type = ?,
-                     event_name_created = ?,
-                     event_time = ?,
-                     event_place = ?,
-                     event_date = ?,
-                     edited_by = ?
-                     WHERE event_prikey = ?";
+                event_type = ?,
+                event_name_created = ?,
+                event_time = ?,
+                event_place = ?,
+                event_date = ?,
+                edited_by = ?,
+                updated_at = NOW()
+                WHERE event_prikey = ?";
             
             $stmt = $conn->prepare($query);
-            $stmt->execute([
-                $event_type,
-                $event_name,
-                $event_time,
-                $event_place,
-                $event_date,
-                $editorName,
-                $event_id
+            $result = $stmt->execute([
+                $_POST['event_type'],
+                $_POST['event_name'],
+                $_POST['event_time'],
+                $_POST['event_place'],
+                $_POST['event_date'],
+                $_SESSION['user_id'],
+                $_POST['event_id']
             ]);
 
-            echo json_encode([
+            if (!$result) {
+                throw new Exception('Failed to update event');
+            }
+
+            sendJSON([
                 'success' => true,
                 'message' => 'Event updated successfully'
             ]);
-            exit;
-        } catch (PDOException $e) {
-            error_log("Update event error: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to update event: ' . $e->getMessage()
-            ]);
-            exit;
-        }
-        break;
 
-    case 'delete':
-        try {
+        case 'delete':
             if (!isset($_POST['event_id'])) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Event ID is required'
-                ]);
-                exit;
+                throw new Exception('Event ID not provided');
             }
 
-            $event_id = sanitizeInput($_POST['event_id']);
+            $stmt = $conn->prepare("DELETE FROM event_info WHERE event_prikey = ?");
+            $result = $stmt->execute([$_POST['event_id']]);
 
-            $query = "DELETE FROM event_info WHERE event_prikey = ?";
-            $stmt = $conn->prepare($query);
-            $stmt->execute([$event_id]);
+            if (!$result) {
+                throw new Exception('Failed to delete event');
+            }
 
-            echo json_encode([
+            sendJSON([
                 'success' => true,
                 'message' => 'Event deleted successfully'
             ]);
-            exit;
-        } catch (PDOException $e) {
-            error_log("Delete event error: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to delete event: ' . $e->getMessage()
-            ]);
-            exit;
-        }
-        break;
 
-    default:
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid action'
-        ]);
-        exit;
+        default:
+            throw new Exception('Invalid action');
+    }
+} catch (Exception $e) {
+    sendJSON([
+        'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
+        'recordsTotal' => 0,
+        'recordsFiltered' => 0,
+        'data' => [],
+        'error' => $e->getMessage()
+    ]);
 }
+?>

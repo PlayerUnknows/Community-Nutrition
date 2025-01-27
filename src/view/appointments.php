@@ -8,10 +8,17 @@
         </div>
         <div class="card-body">
             <div class="row align-items-center mb-3">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="appointmentSearch" placeholder="Search appointments...">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="search" 
+                               class="form-control" 
+                               id="appointmentSearch" 
+                               placeholder="Search appointments..."
+                               autocomplete="off"
+                               spellcheck="false">
                     </div>
                 </div>
                 <div class="col-md-3">

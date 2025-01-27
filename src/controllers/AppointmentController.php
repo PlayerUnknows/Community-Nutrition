@@ -41,26 +41,42 @@ class AppointmentController {
     }
 
     public function getAppointments() {
-        try {
-            $result = $this->appointment->getAllAppointments();
-            $appointments = array();
-            
-            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                $appointments[] = array(
-                    'appointment_prikey' => $row['appointment_prikey'],
-                    'user_id' => $row['user_id'],
-                    'date' => $row['date'],
-                    'time' => $row['time'],
-                    'description' => $row['description'],
-                    'status' => $row['status']
-                );
+        if ($_POST['action'] === 'getAll') {
+            try {
+                $result = $this->appointment->getAllAppointments();
+                $appointments = array();
+                
+                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                    $appointments[] = array(
+                        'appointment_prikey' => $row['appointment_prikey'],
+                        'user_id' => $row['user_id'],
+                        'date' => $row['date'],
+                        'time' => $row['time'],
+                        'description' => $row['description'],
+                        'status' => $row['status']
+                    );
+                }
+                
+                echo json_encode([
+                    'data' => $appointments,
+                    'recordsTotal' => count($appointments),
+                    'recordsFiltered' => count($appointments),
+                    'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1
+                ]);
+                exit;
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'error' => 'Failed to fetch appointments',
+                    'data' => [],
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                    'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1
+                ]);
+                exit;
             }
-            
-            header('Content-Type: application/json');
-            echo json_encode($appointments);
-        } catch (Exception $e) {
-            error_log("Error in getAppointments: " . $e->getMessage());
-            $this->sendErrorResponse('Failed to fetch appointments: ' . $e->getMessage());
+        } else {
+            $this->getAppointments();
         }
     }
 

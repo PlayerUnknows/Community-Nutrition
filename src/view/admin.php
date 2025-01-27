@@ -1,20 +1,5 @@
-<?php
-require_once __DIR__ . '/../backend/session_handler.php';
-require_once __DIR__ . '/../backend/check_role_access.php';
-
-
-// Only allow role 3 (Admin) to access this page
-checkUserRole([3]);
-
-require '../../vendor/autoload.php';
-
-use Katzgrau\KLogger\Logger;
-use Psr\Log\LogLevel;
-
-$logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
-$logger->error('This is an error message');
-
-// Session is already started in check_role_access.php
+<?php 
+require_once __DIR__ . '/../includes/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

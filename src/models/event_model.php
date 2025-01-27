@@ -15,11 +15,11 @@ function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate
         $eventCreator = $_SESSION['email'] ?? $_SESSION['username'] ?? 'Unknown'; // Adjust based on your session variables
         
         // Debug: Log the SQL and values
-        error_log("Preparing SQL: INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        error_log("Preparing SQL: INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
         error_log("Values: Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, CreatedBy=$createdBy, EventCreator=$eventCreator");
         
-        $sql = "INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator) 
-                VALUES (:type, :name, :time, :place, :date, :created_by, :event_creator)";
+        $sql = "INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator, created_at) 
+                VALUES (:type, :name, :time, :place, :date, :created_by, :event_creator, NOW())";
         
         $stmt = $conn->prepare($sql);
         
@@ -59,9 +59,12 @@ function getAllEvents() {
         error_log("Database connection established");
         
         // Debug: Log the SQL
-        error_log("Preparing SQL: SELECT event_info.*, account_info.email AS event_creator_email, account_info2.email AS event_editor_email FROM event_info LEFT JOIN account_info ON event_info.created_by = account_info.user_id LEFT JOIN account_info AS account_info2 ON event_info.edited_by = account_info2.user_id ORDER BY event_date DESC");
+        error_log("Preparing SQL: SELECT event_info.*, account_info.email AS event_creator_email, account_info2.email AS event_editor_email, DATE_FORMAT(event_info.created_at, '%Y-%m-%d %H:%i:%s') as formatted_created_at FROM event_info LEFT JOIN account_info ON event_info.created_by = account_info.user_id LEFT JOIN account_info AS account_info2 ON event_info.edited_by = account_info2.user_id ORDER BY event_date DESC");
         
-        $sql = "SELECT event_info.*, account_info.email AS event_creator_email, account_info2.email AS event_editor_email 
+        $sql = "SELECT event_info.*, 
+                account_info.email AS event_creator_email, 
+                account_info2.email AS event_editor_email,
+                DATE_FORMAT(event_info.created_at, '%Y-%m-%d %H:%i:%s') as formatted_created_at
                 FROM event_info 
                 LEFT JOIN account_info ON event_info.created_by = account_info.user_id 
                 LEFT JOIN account_info AS account_info2 ON event_info.edited_by = account_info2.user_id 

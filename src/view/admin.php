@@ -4,8 +4,9 @@ require '../../vendor/autoload.php';
 // use Katzgrau\KLogger\Logger;
 // use Psr\Log\LogLevel;
 
-$logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
-$logger->error('This is an error message');
+
+
+session_start();
 ?>
 
 <!DOCTYPE html>

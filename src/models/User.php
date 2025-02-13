@@ -23,7 +23,6 @@ class User
             $sql = "INSERT INTO account_info (email, password, role) VALUES (?, ?, ?)";
             $stmt = $this->conn->prepare($sql);
             $result = $stmt->execute([
-                $userId,
                 $email,
                 password_hash($password, PASSWORD_BCRYPT),
                 $role

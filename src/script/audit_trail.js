@@ -1,116 +1,4 @@
 $(document).ready(function() {
-    // WebSocket connection configuration
-    const WS_URL = 'ws://localhost:8080';
-    let socket = null;
-    let reconnectAttempts = 0;
-    const MAX_RECONNECT_ATTEMPTS = 5;
-
-    function initWebSocket() {
-        // TEMPORARILY DISABLED FOR PROTOTYPE
-        console.log('WebSocket connection temporarily disabled');
-        return;
-
-        // Previous implementation commented out
-        /*
-        // Close existing socket if any
-        if (socket) {
-            socket.close();
-        }
-
-        // Create new WebSocket connection
-        socket = new WebSocket(WS_URL);
-
-        socket.onopen = function(e) {
-            console.log('WebSocket connection established');
-            reconnectAttempts = 0;  // Reset reconnect attempts on successful connection
-
-            // Optional: Send initial ping
-            socket.send(JSON.stringify({
-                type: 'ping'
-            }));
-        };
-
-        socket.onmessage = function(event) {
-            try {
-                const data = JSON.parse(event.data);
-                
-                // Handle different message types
-                switch (data.type) {
-                    case 'connection':
-                        console.log('WebSocket Connection Info:', data.message);
-                        break;
-                    
-                    case 'audit_update':
-                        const newAudits = data.audits;
-                        const auditTable = $('#auditTable').DataTable();
-
-                        newAudits.forEach(audit => {
-                            // Prepend new audit entry to the table
-                            const formattedTimestamp = moment(audit.action_timestamp).format('YYYY-MM-DD HH:mm:ss');
-                            const actionBadge = `<span class="badge bg-primary">${audit.action}</span>`;
-                            
-                            let detailsHtml = '';
-                            try {
-                                const parsedDetails = JSON.parse(audit.details || '{}');
-                                detailsHtml = `<pre class="mb-0 small" style="max-height: 100px; overflow-y: auto; white-space: pre-wrap;">
-                                    ${JSON.stringify(parsedDetails, null, 2)}
-                                </pre>`;
-                            } catch(e) {
-                                detailsHtml = audit.details || '';
-                            }
-
-                            auditTable.row.add([
-                                formattedTimestamp,
-                                audit.username,
-                                actionBadge,
-                                detailsHtml
-                            ]).draw(false);
-                        });
-                        break;
-                }
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
-            }
-        };
-
-        socket.onclose = function(event) {
-            console.log('WebSocket connection closed');
-            
-            // Attempt to reconnect
-            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                reconnectAttempts++;
-                const timeout = Math.pow(2, reconnectAttempts) * 1000; // Exponential backoff
-                
-                console.log(`Attempting to reconnect in ${timeout/1000} seconds...`);
-                
-                setTimeout(initWebSocket, timeout);
-            } else {
-                console.error('Max reconnection attempts reached. Please check the WebSocket server.');
-                
-                // Optional: Show user-friendly notification
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Connection Error',
-                    text: 'Unable to connect to real-time updates. Please refresh the page or contact support.',
-                    confirmButtonText: 'Reload Page',
-                    allowOutsideClick: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        location.reload();
-                    }
-                });
-            }
-        };
-
-        socket.onerror = function(error) {
-            console.error('WebSocket Error:', error);
-        };
-        */
-    }
-
-    // Initialize WebSocket connection (now a no-op)
-    initWebSocket();
-
     // Only initialize if not already initialized
     if ($.fn.DataTable.isDataTable('#auditTable')) {
         return;
@@ -173,48 +61,112 @@ $(document).ready(function() {
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
     });
 
-    // Register the table in the global tables object
-    if (window.tables) {
-        window.tables.auditTable = auditTable;
+    // Initialize if audit tab is active on page load
+    if ($('#audit-tab').hasClass('active')) {
+        setTimeout(initializeAuditTable, 100);
     }
 
     // Handle filter form submission
-    $('#auditFilterForm').on('submit', function(e) {
+    $(document).on('submit', '.audit-filter-form', function(e) {
         e.preventDefault();
         
         // Show loading indicator
         $('#auditTable').addClass('loading');
         
-        // Get filter values
-        var filters = $(this).serializeArray().reduce(function(obj, item) {
-            obj[item.name] = item.value;
-            return obj;
-        }, {});
+        // Get form data
+        const formData = new FormData(this);
+        
+        // Make AJAX request
+        $.ajax({
+            url: '../backend/fetch_audit_trail.php',
+            method: 'GET',
+            data: new URLSearchParams(formData).toString(),
+            success: function(response) {
+                // Clear existing table
+                if ($.fn.DataTable.isDataTable('#auditTable')) {
+                    $('#auditTable').DataTable().destroy();
+                }
+                $('#auditTable tbody').empty();
+                
+                // Add new data
+                if (response && response.length > 0) {
+                    response.forEach(function(audit) {
+                        let detailsHtml = '';
+                        if (audit.details) {
+                            try {
+                                const details = JSON.parse(audit.details);
+                                if (audit.action === 'UPDATED_USER') {
+                                    const roleMap = {
+                                        '1': 'Parent',
+                                        '2': 'Brgy Health Worker',
+                                        '3': 'Administrator'
+                                    };
 
-        // Reload table with filters
-        auditTable.ajax.url('../backend/fetch_audit_trail.php?' + $.param(filters)).load(function() {
-            $('#auditTable').removeClass('loading');
+                                    detailsHtml = '<div class="audit-details">';
+                                    
+                                    // User ID
+                                    if (details.updated_user_id) {
+                                        detailsHtml += `<div><strong>User Id:</strong> ${details.updated_user_id}</div>`;
+                                    }
+                                    
+                                    // Email Changes
+                                    if (details.old_email) {
+                                        detailsHtml += `<div><strong>Old Email:</strong> ${details.old_email}</div>`;
+                                    }
+                                    if (details.updated_user_email) {
+                                        detailsHtml += `<div><strong>New Email:</strong> ${details.updated_user_email}</div>`;
+                                    }
+                                    
+                                    // Role Changes
+                                    if (details.old_role) {
+                                        const oldRole = roleMap[details.old_role] || 'Unknown';
+                                        detailsHtml += `<div><strong>Old Role:</strong> ${oldRole}</div>`;
+                                    }
+                                    if (details.new_role) {
+                                        const newRole = roleMap[details.new_role] || 'Unknown';
+                                        detailsHtml += `<div><strong>New Role:</strong> ${newRole}</div>`;
+                                    }
+                                    
+                                    // Password Status
+                                    if (details.password_changed !== undefined) {
+                                        detailsHtml += `<div><strong>Password Status:</strong> ${details.password_changed ? 'Changed' : 'Not Changed'}</div>`;
+                                    }
+                                    
+                                    detailsHtml += '</div>';
+                                } else {
+                                    detailsHtml = '<div class="audit-details">';
+                                    for (const [key, value] of Object.entries(details)) {
+                                        const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        detailsHtml += `<div><strong>${displayKey}:</strong> ${value}</div>`;
+                                    }
+                                    detailsHtml += '</div>';
+                                }
+                            } catch (e) {
+                                detailsHtml = audit.details;
+                            }
+                        }
+                        
+                        $('#auditTable tbody').append(`
+                            <tr>
+                                <td>${audit.action_timestamp}${audit.count > 1 ? '<br><small class="text-muted">(' + audit.count + ' similar actions)</small>' : ''}</td>
+                                <td>${audit.username || 'System'}</td>
+                                <td>${audit.action}</td>
+                                <td>${detailsHtml}</td>
+                            </tr>
+                        `);
+                    });
+                }
+                
+                // Reinitialize DataTable
+                initializeAuditTable();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching audit trail:', error);
+                alert('Error fetching audit trail data. Please try again.');
+            },
+            complete: function() {
+                $('#auditTable').removeClass('loading');
+            }
         });
     });
-
-    // Add loading indicator styles
-    $('<style>')
-        .text(`
-            .loading {
-                position: relative;
-                pointer-events: none;
-            }
-            .loading:after {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255,255,255,0.8) url('../../assets/img/loading.gif') center no-repeat;
-                background-size: 50px;
-                z-index: 1;
-            }
-        `)
-        .appendTo('head');
 });

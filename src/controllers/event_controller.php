@@ -30,8 +30,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit();
-    } elseif ($action === 'edit' && isset($_POST['event_id'])) {
-        $eventId = $_POST['event_id'];
+    } elseif ($action === 'edit' && isset($_POST['event_prikey'])) {
+        $eventId = $_POST['event_prikey'];
         $eventType = $_POST['event_type'] ?? '';
         $eventName = $_POST['event_name'] ?? '';
         $eventTime = $_POST['event_time'] ?? '';

@@ -11,27 +11,27 @@ $response = array(
 
 try {
     // Base query
-    $baseQuery = "SELECT * FROM patients";
+    $baseQuery = "SELECT patient_fam_id, patient_id, patient_fname, patient_mi, patient_lname, patient_suffix, age, sex, date_of_birth, patient_food_restrictions, patient_medical_history, dietary_consumption_record FROM patient_info";
     $searchQuery = "";
 
     // Search functionality
     if (isset($_POST['search']['value']) && !empty($_POST['search']['value'])) {
         $searchValue = $_POST['search']['value'];
-        $searchQuery = " WHERE name LIKE '%$searchValue%' 
-                        OR contact LIKE '%$searchValue%'
-                        OR family_record LIKE '%$searchValue%'
-                        OR medical_history LIKE '%$searchValue%'
-                        OR restrictions LIKE '%$searchValue%'";
+        $searchQuery = " WHERE patient_fname LIKE '%$searchValue%' 
+                        OR patient_lname LIKE '%$searchValue%' 
+                        OR patient_id LIKE '%$searchValue%' 
+                        OR patient_food_restrictions LIKE '%$searchValue%' 
+                        OR patient_medical_history LIKE '%$searchValue%'";
     }
 
     // Get total records count
-    $stmt = mysqli_query($con, "SELECT COUNT(*) as total FROM patients");
+    $stmt = mysqli_query($con, "SELECT COUNT(*) as total FROM patient_info");
     $totalRecords = mysqli_fetch_assoc($stmt)['total'];
     $response['recordsTotal'] = intval($totalRecords);
 
     // Get filtered records count
     if (!empty($searchQuery)) {
-        $stmt = mysqli_query($con, "SELECT COUNT(*) as total FROM patients" . $searchQuery);
+        $stmt = mysqli_query($con, "SELECT COUNT(*) as total FROM patient_info" . $searchQuery);
         $filteredRecords = mysqli_fetch_assoc($stmt)['total'];
         $response['recordsFiltered'] = intval($filteredRecords);
     } else {
@@ -41,7 +41,7 @@ try {
     // Ordering
     $orderColumn = isset($_POST['order'][0]['column']) ? intval($_POST['order'][0]['column']) : 0;
     $orderDir = isset($_POST['order'][0]['dir']) ? $_POST['order'][0]['dir'] : 'ASC';
-    $columns = array('id', 'name', 'age', 'contact', 'family_record', 'medical_history', 'restrictions');
+    $columns = array('patient_fam_id', 'patient_id', 'patient_fname', 'patient_mi', 'patient_lname', 'patient_suffix', 'age', 'sex', 'date_of_birth', 'patient_food_restrictions', 'patient_medical_history', 'dietary_consumption_record');
     $orderBy = " ORDER BY " . $columns[$orderColumn] . " " . $orderDir;
 
     // Pagination
@@ -57,13 +57,18 @@ try {
     $data = array();
     while ($row = mysqli_fetch_assoc($result)) {
         $data[] = array(
-            'id' => $row['id'],
-            'name' => htmlspecialchars($row['name']),
+            'patient_fam_id' => $row['patient_fam_id'],
+            'patient_id' => $row['patient_id'],
+            'patient_fname' => htmlspecialchars($row['patient_fname']),
+            'patient_mi' => htmlspecialchars($row['patient_mi']),
+            'patient_lname' => htmlspecialchars($row['patient_lname']),
+            'patient_suffix' => htmlspecialchars($row['patient_suffix']),
             'age' => $row['age'],
-            'contact' => htmlspecialchars($row['contact']),
-            'family_record' => htmlspecialchars($row['family_record']),
-            'medical_history' => htmlspecialchars($row['medical_history']),
-            'restrictions' => htmlspecialchars($row['restrictions'])
+            'sex' => htmlspecialchars($row['sex']),
+            'date_of_birth' => $row['date_of_birth'],
+            'patient_food_restrictions' => htmlspecialchars($row['patient_food_restrictions']),
+            'patient_medical_history' => htmlspecialchars($row['patient_medical_history']),
+            'dietary_consumption_record' => htmlspecialchars($row['dietary_consumption_record'])
         );
     }
     $response['data'] = $data;

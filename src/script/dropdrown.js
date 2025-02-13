@@ -106,7 +106,7 @@ $(document).ready(function () {
                 } catch {}
             }
             profileDropdown = reinitializeProfileDropdown();
-        }, 200);
+        }, 150);
     });
 
     // Fallback global dropdown initialization

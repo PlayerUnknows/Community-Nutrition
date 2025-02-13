@@ -2,8 +2,8 @@
 //TEMPORARY DISABLED FOR NO LONGER NEEDED
 /*
 session_start();
-require_once 'dbcon.php';
-require_once 'audit_trail.php';
+require_once __DIR__ . '/../config/dbcon.php';
+require_once __DIR__ . '/../models/AuditTrail.php';
 
 header('Content-Type: application/json');
 

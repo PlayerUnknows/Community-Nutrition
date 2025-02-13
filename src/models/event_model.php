@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/../backend/dbcon.php');
+require_once(__DIR__ . '/../config/dbcon.php');
 
 function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate) {
     try {
@@ -106,8 +106,7 @@ function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, 
                     event_name_created = :name, 
                     event_time = :time,
                     event_place = :place,
-                    event_date = :date,
-                    edited_by = :edited_by
+                    event_date = :date 
                 WHERE event_id = :id";
         
         $stmt = $conn->prepare($sql);
@@ -148,10 +147,10 @@ function deleteEvent($eventId) {
         error_log("Database connection established");
         
         // Debug: Log the SQL and values
-        error_log("Preparing SQL: DELETE FROM event_info WHERE event_id = ?");
+        error_log("Preparing SQL: DELETE FROM event_info WHERE event_prikey = ?");
         error_log("Values: Id=$eventId");
         
-        $sql = "DELETE FROM event_info WHERE event_id = :id";
+        $sql = "DELETE FROM event_info WHERE event_prikey = :id";
         $stmt = $conn->prepare($sql);
         
         // Bind parameters

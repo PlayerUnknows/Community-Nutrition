@@ -8,8 +8,8 @@
     <title>Login - Community Nutrition Information System</title>
     <!-- Link to CSS -->
     <link rel="stylesheet" href="/assets/css/index.css">
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/css/sweetalert2.css">
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/node_modules/sweetalert2/dist/sweetalert2.css">
 
 
 </head>
@@ -35,16 +35,16 @@
 
 
     <!-- Include jQuery library -->
-    <script src="assets/dist/jquery.js"></script>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
 
     <!-- Include Popper.js for Bootstrap tooltips -->
-    <script src="assets/dist/popper.js"></script>
+    <script src="node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
 
     <!-- Include Bootstrap JavaScript -->
-    <script src="assets/dist/bootstrap.min.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
 
     <!-- Include SweetAlert for alert modals -->
-    <script src="assets/dist/sweetalert.js"></script>
+    <script src="node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
     <!-- Link to your separate JS file -->
     <script src="/src/script/login.js"></script>

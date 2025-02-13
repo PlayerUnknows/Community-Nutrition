@@ -23,7 +23,7 @@ $(document).ready(function() {
             { 
                 data: 'role',
                 render: function(data) {
-                    return `<span class="badge bg-${data === 'Administrator' ? 'primary' : data === 'Health Worker' ? 'success' : 'info'}">${data}</span>`;
+                    return `<span class="badge bg-${data === 'Administrator' ? 'primary' : data === 'Brgy Health Worker' ? 'success' : 'info'}">${data}</span>`;
                 }
             },
             { data: 'created_at' },
@@ -32,22 +32,22 @@ $(document).ready(function() {
                 orderable: false,
                 render: function(data) {
                     return `
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-info view-user" data-id="${data.user_id}">
-                                <i class="fas fa-eye"></i> View
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-info view-user" data-id="${data.user_id}" title="View">
+                                <i class="far fa-eye"></i>
                             </button>
-                            <button class="btn btn-sm btn-primary edit-user" data-id="${data.user_id}">
-                                <i class="fas fa-edit"></i> Edit
+                            <button class="btn btn-sm btn-outline-primary edit-user" data-id="${data.user_id}" title="Edit">
+                                <i class="far fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger delete-user" data-id="${data.user_id}">
-                                <i class="fas fa-trash"></i> Delete
+                            <button class="btn btn-sm btn-outline-danger delete-user" data-id="${data.user_id}" title="Delete">
+                                <i class="fa fa-trash"></i>
                             </button>
                         </div>
                     `;
                 }
             }
         ],
-        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center"lip>',
+        dom: '<"row align-items-center"<"col-md-6"l><"col-md-6"f>><"row"<"col-sm-12"tr>><"row align-items-center"<"col-md-5"i><"col-md-7"p>>',
         buttons: [
             {
                 extend: 'collection',
@@ -119,9 +119,9 @@ $(document).ready(function() {
                                 </div>
                                 <div class="mb-3">
                                     <label for="editRole" class="form-label">Role</label>
-                                    <select class="form-control" id="editRole" required>
+                                    <select class="form-control" id="editRole" required>    
                                         <option value="Parent">Parent</option>
-                                        <option value="Health Worker">Health Worker</option>
+                                        <option value="Brgy Health Worker">Brgy Health Worker</option>
                                         <option value="Administrator">Administrator</option>
                                     </select>
                                 </div>
@@ -135,7 +135,7 @@ $(document).ready(function() {
                             const userId = $('#editUserId').val();
 
                             return $.ajax({
-                                url: '../backend/update_user.php',
+                                url: '../backend/edit_user.php',
                                 type: 'POST',
                                 data: { 
                                     user_id: userId, 

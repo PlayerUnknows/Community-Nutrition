@@ -2,20 +2,66 @@
 require_once '../backend/audit_trail.php';
 session_start();
 
-/* Check if user is logged in and has admin privileges
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: login.php');
-    exit();
-}
-*/
+// Set default limit for records
+$limit = 100; // Default limit of records to fetch
+
 // Get filter parameters
-$filters = [];
+$filters = [
+    'limit' => $limit // Add limit to filters
+];
 if (isset($_GET['user_id'])) $filters['user_id'] = $_GET['user_id'];
 if (isset($_GET['action'])) $filters['action'] = $_GET['action'];
 if (isset($_GET['date_from'])) $filters['date_from'] = $_GET['date_from'];
 if (isset($_GET['date_to'])) $filters['date_to'] = $_GET['date_to'];
 
 $auditTrails = getAuditTrails($filters);
+
+// Function to generate a unique key for each audit entry
+function getAuditKey($audit) {
+    return $audit['username'] . '_' . $audit['action'] . '_' . date('Y-m-d H:i', strtotime($audit['action_timestamp']));
+}
+
+// Merge duplicate entries
+$mergedAuditTrails = [];
+foreach ($auditTrails as $audit) {
+    $key = getAuditKey($audit);
+    
+    if (!isset($mergedAuditTrails[$key])) {
+        $mergedAuditTrails[$key] = $audit;
+        $mergedAuditTrails[$key]['count'] = 1;
+    } else {
+        // Increment count for duplicate actions
+        $mergedAuditTrails[$key]['count']++;
+        
+        // Keep the latest timestamp
+        if (strtotime($audit['action_timestamp']) > strtotime($mergedAuditTrails[$key]['action_timestamp'])) {
+            $mergedAuditTrails[$key]['action_timestamp'] = $audit['action_timestamp'];
+        }
+        
+        // Merge details if they're different
+        if ($audit['details'] !== $mergedAuditTrails[$key]['details']) {
+            $currentDetails = json_decode($mergedAuditTrails[$key]['details'], true) ?? [];
+            $newDetails = json_decode($audit['details'], true) ?? [];
+            
+            if (is_array($currentDetails) && is_array($newDetails)) {
+                $mergedDetails = array_merge_recursive($currentDetails, $newDetails);
+                $mergedAuditTrails[$key]['details'] = json_encode($mergedDetails);
+            }
+        }
+    }
+}
+
+// Convert back to indexed array and sort by timestamp
+$auditTrails = array_values($mergedAuditTrails);
+usort($auditTrails, function($a, $b) {
+    return strtotime($b['action_timestamp']) - strtotime($a['action_timestamp']);
+});
+
+// Debug output
+error_log("Merged Audit Trails Count: " . count($auditTrails));
+if (!empty($auditTrails)) {
+    error_log("First Merged Record: " . print_r($auditTrails[0], true));
+}
 
 ?>
 
@@ -28,60 +74,40 @@ $auditTrails = getAuditTrails($filters);
     <title>Audit Trail - Community Nutrition System</title>
     <link rel="stylesheet" href="../../assets/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../assets/dist/datatable.css">
-    <style>
-        .audit-details {
-            font-size: 0.9rem;
-            line-height: 1.4;
-            max-height: 120px;
-            overflow-y: auto;
-            padding: 8px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-        }
-
-        .audit-details div {
-            margin-bottom: 4px;
-        }
-
-        .audit-details strong {
-            color: #495057;
-        }
-    </style>
 </head>
 
 <body>
     <div class="container-fluid mt-4">
         <h2>System Audit Trail</h2>
-
+        
         <!-- Filter Form -->
-        <div class="card mb-4">
+        <div class="filter-card">
             <div class="card-body">
-                <form method="GET" class="row g-3">
+                <form method="GET" class="row g-3 audit-filter-form">
                     <div class="col-md-3">
-                        <label class="form-label">Action Type</label>
-                        <select name="action" class="form-select">
+                        <label class="form-label small mb-1">Action Type</label>
+                        <select name="action" class="form-select form-select-sm">
                             <option value="">All Actions</option>
                             <option value="LOGIN">Login</option>
                             <option value="LOGOUT">Logout</option>
                             <option value="REGISTER">Register</option>
-                            <option value="CREATE">Create</option>
-                            <option value="UPDATE">Update</option>
-                            <option value="DELETE">Delete</option>
+                            <option value="UPDATED_USER">Update</option>
+                            <option value="DELETED_USER">Delete</option>
                             <option value="VIEW">View</option>
                             <option value="SYSTEM_CHANGE">System Change</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Date From</label>
-                        <input type="date" name="date_from" class="form-control">
+                        <label class="form-label small mb-1">Date From</label>
+                        <input type="date" name="date_from" class="form-control form-control-sm">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Date To</label>
-                        <input type="date" name="date_to" class="form-control">
+                        <label class="form-label small mb-1">Date To</label>
+                        <input type="date" name="date_to" class="form-control form-control-sm">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary d-block">Filter</button>
+                        <label class="form-label small mb-1">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary btn-sm d-block w-100">Filter</button>
                     </div>
                 </form>
             </div>
@@ -100,93 +126,47 @@ $auditTrails = getAuditTrails($filters);
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $details = $audit['details'];
-                    if ($details) {
-                        $decodedDetails = json_decode($details, true);
-                        if (json_last_error() === JSON_ERROR_NONE) {
-                            // Handle UPDATE_USER action more comprehensively
-                            if ($audit['action'] === 'UPDATE_USER') {
-                                echo '<div class="audit-details">';
-
-                                // Display User ID being updated
-                                if (isset($decodedDetails['updated_user_id'])) {
-                                    echo "<div><strong>User ID:</strong> {$decodedDetails['updated_user_id']}</div>";
-                                }
-
-                                // Prepare role mapping
-                                $roleMap = [
-                                    '1' => 'Admin',
-                                    '2' => 'Staff',
-                                    '3' => 'User'
-                                ];
-
-                                // Display changes
-                                $changes = [];
-
-                                // Check email change
-                                if (
-                                    isset($decodedDetails['old_email']) && isset($decodedDetails['updated_user_email'])
-                                    && $decodedDetails['old_email'] !== $decodedDetails['updated_user_email']
-                                ) {
-                                    $changes[] = "<strong>Email:</strong> {$decodedDetails['old_email']} → {$decodedDetails['updated_user_email']}";
-                                }
-
-                                // Check role change
-                                if (
-                                    isset($decodedDetails['old_role']) && isset($decodedDetails['new_role'])
-                                    && $decodedDetails['old_role'] !== $decodedDetails['new_role']
-                                ) {
-                                    $oldRole = $roleMap[$decodedDetails['old_role']] ?? 'Unknown';
-                                    $newRole = $roleMap[$decodedDetails['new_role']] ?? 'Unknown';
-                                    $changes[] = "<strong>Role:</strong> {$oldRole} → {$newRole}";
-                                }
-
-                                // Display changes if any
-                                if (!empty($changes)) {
-                                    echo implode('<br>', $changes);
+                    <?php foreach ($auditTrails as $audit): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($audit['action_timestamp']); ?></td>
+                        <td><?php echo htmlspecialchars($audit['username']); ?></td>
+                        <td><?php echo htmlspecialchars($audit['action']); ?></td>
+                        <td><?php echo htmlspecialchars($audit['ip_address']); ?></td>
+                        <td>
+                            <?php 
+                            $details = $audit['details'];
+                            if ($details) {
+                                $decodedDetails = json_decode($details, true);
+                                if ($decodedDetails) {
+                                    $logger->info('mama mo!');
+                                    echo '<pre class="mb-0" style="max-height: 100px; overflow-y: auto;">';
+                                    echo htmlspecialchars(json_encode($decodedDetails, JSON_PRETTY_PRINT));
+                                    echo '</pre>';
                                 } else {
-                                    echo "No significant changes";
+                                    echo htmlspecialchars($details);
                                 }
-
-                                echo '</div>';
                             }
-                            // Handle other actions as before
-                            else if ($audit['action'] === 'LOGIN' || $audit['action'] === 'LOGOUT') {
-                                echo "<div class='audit-details'>";
-                                echo "<div>" . ($audit['action'] === 'LOGIN' ? 'User logged in' : 'User logged out') . "</div>";
-                                echo "</div>";
-                            } else {
-                                echo '<div class="audit-details">';
-                                foreach ($decodedDetails as $key => $value) {
-                                    $label = ucwords(str_replace('_', ' ', $key));
-                                    echo "<div><strong>{$label}:</strong> {$value}</div>";
-                                }
-                                echo '</div>';
-                            }
-                        } else {
-                            echo htmlspecialchars($details);
-                        }
-                    } else {
-                        echo "-";
-                    }
-                    ?>
+                            ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <script src="../../assets/dist/bootstrap.min.js"></script>
-    <script src="../../assets/dist/datatable.js"></script>
+    <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#auditTable').DataTable({
-                order: [
-                    [0, 'desc']
-                ]
+                order: [[0, 'desc']]
             });
         });
     </script>
+    <script src="../script/audit_trail.js"></script>
 </body>
 
 </html>

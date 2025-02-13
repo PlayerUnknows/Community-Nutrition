@@ -4,10 +4,8 @@ require '../../vendor/autoload.php';
 // use Katzgrau\KLogger\Logger;
 // use Psr\Log\LogLevel;
 
-// $logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
-// $logger->error('This is an error message');
-
-session_start();
+$logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
+$logger->error('This is an error message');
 ?>
 
 <!DOCTYPE html>
@@ -18,11 +16,9 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../assets/css/sweetalert2.css">
-    <link rel="stylesheet" href="../../assets/css/datatable.css">
-
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
+    <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
 
     <!-- Core JS - Order is important -->
     <script src="../../assets/dist/jquery.js"></script>
@@ -34,12 +30,22 @@ session_start();
     <script src="../../assets/dist/chart.js"></script>
 
 
-    <script src="/src/script/dropdrown.js"></script>
-    
+
+
+
+
     <style>
         :root {
             --primary-blue: #007bff;
             --light-blue: #63a4ff;
+            --logo-width: 50px;
+            /* Default logo width */
+            --logo-height: 60px;
+            /* Slightly increased logo height */
+            --profile-img-width: 40px;
+            /* Default profile image width */
+            --profile-img-height: 70px;
+            /* Slightly increased profile image height */
         }
 
         .bg-primary {
@@ -53,8 +59,8 @@ session_start();
         }
 
         .responsive-logo {
-            width: 100px;
-            height: 100px;
+            width: var(--logo-width);
+            height: var(--logo-height);
             object-fit: cover;
             transition: all 0.3s ease;
         }
@@ -67,8 +73,8 @@ session_start();
         }
 
         .profile-dropdown img.dropdown-toggle {
-            width: 85px;
-            height: 85px;
+            width: var(--profile-img-width);
+            height: var(--profile-img-height);
             border-radius: 40%;
             object-fit: cover;
             cursor: pointer;
@@ -172,7 +178,7 @@ session_start();
             display: block;
         }
 
-        #signupFormContainer .signup-container {
+        /*#signupFormContainer .signup-container {
             background-color: #ffffff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -205,7 +211,7 @@ session_start();
         #signupFormContainer .signup-container:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
-        }
+        }*/
 
         /* Sub-navigation styles */
         .sub-nav {
@@ -248,17 +254,42 @@ session_start();
         #acc-reg-container {
             position: relative;
         }
+
+        /* Adjustments for smaller screens */
+        .header-section {
+            padding: 0.25rem 0;
+            /* Further reduced padding */
+        }
+
+        .header-section .responsive-logo {
+            width: 40px;
+            /* Smaller logo size */
+            height: auto;
+        }
+
+        .header-section .text-center p {
+            font-size: 0.8rem;
+            /* Smaller font size */
+            margin-bottom: 0;
+            /* Remove bottom margin */
+        }
+
+        .header-section .profile-dropdown img {
+            width: 30px;
+            /* Smaller profile image size */
+            height: auto;
+        }
     </style>
 </head>
 
 <body>
 
     <!-- Header Section -->
-    <div class="bg-white py-2 shadow-sm h-1">
+    <div class="bg-white py-1 shadow-sm h-1 header-section">
         <div class="container d-flex align-items-center justify-content-between">
             <!-- Logo -->
             <div class="d-flex align-items-center logo-container">
-                <img src="../../assets/img/md.png" alt="San Andres Logo" class="responsive-logo">
+                <img src="../../assets/img/SanAndres.svg" alt="San Andres Logo" class="responsive-logo" style="width: 65px; height: 65px;">
             </div>
 
 
@@ -286,7 +317,8 @@ session_start();
                     class="dropdown-toggle"
                     id="profileDropdown"
                     data-bs-toggle="dropdown"
-                    aria-expanded="false">
+                    aria-expanded="false"
+                    style="width: 65px; height: 65px;">
 
                 <!-- Dropdown menu -->
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
@@ -301,7 +333,7 @@ session_start();
         </div>
     </div>
 
-
+   
     <!-- Page Content -->
     <div class="container-fluid mt-4">
 
@@ -311,16 +343,17 @@ session_start();
                 <button class="nav-link active" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab" aria-controls="patients" aria-selected="true" tabindex="0">Patients Profile</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false" tabindex="-1">Nutrition Monitoring and schedule</button>
+                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false">Check-Up Schedule</button>
             </li>
 
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="false" tabindex="-1">Event information</button>
+                <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="false">Event information</button>
             </li>
 
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="nutrition-report-tab" data-bs-toggle="tab" data-bs-target="#nutrition-report" type="button" role="tab" aria-controls="nutrition-report" aria-selected="false" tabindex="-1">Nutrition Report</button>
+                <button class="nav-link" id="nutrition-report-tab" data-bs-toggle="tab" data-bs-target="#nutrition-report" type="button" role="tab" aria-controls="nutrition-report" aria-selected="false">Nutrition Report</button>
             </li>
+
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit" type="button" role="tab" aria-controls="audit" aria-selected="false" tabindex="-1">Audit Trail</button>
             </li>
@@ -335,280 +368,198 @@ session_start();
 
         <div class="tab-content" id="myTabContent" role="tabpanel">
             <!-- Patient Profile Section -->
-            <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
+            <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab">
                 <h2 class="mt-4">Patient Profile</h2>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-sm">
-                        <thead>
-                            <tr>
-                                <th style="width: 8%">PAT ID</th>
-                                <th style="width: 7%">FAM ID</th>
-                                <th style="width: 12%">Name</th>
-                                <th style="width: 5%">Age</th>
-                                <th style="width: 15%">Address</th>
-                                <th style="width: 10%">Contact</th>
-                                <th style="width: 8%">Income</th>
-                                <th style="width: 10%">Family</th>
-                                <th style="width: 15%">Occupation</th>
-                                <th style="width: 8%">Medical</th>
-                                <th style="width: 7%">Diet</th>
-                                <th style="width: 8%">Food Restriction</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-
-            </div>
-
-            <!-- Check-Up Details Section -->
-            <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
-                <h2 class="mt-4">Nutrition Monitoring (Ages 0-14)</h2>
-
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Upcoming Check-ups</h5>
-                                <div class="col-md-4">
-                                    <input type="text" id="upcomingSearch" class="form-control form-control-sm" placeholder="Search upcoming check-ups...">
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-sm" id="upcomingTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Patient ID</th>
-                                                <th>Name</th>
-                                                <th>Age</th>
-                                                <th>Accompanied By</th>
-                                                <th>Date</th>
-                                                <th>Time</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>P001</td>
-                                                <td>Juan Dela Cruz</td>
-                                                <td>2 yrs</td>
-                                                <td>Maria Dela Cruz (Mother)</td>
-                                                <td>2024-12-10</td>
-                                                <td>09:30 AM</td>
-                                            </tr>
-                                            <tr>
-                                                <td>P002</td>
-                                                <td>Maria Santos</td>
-                                                <td>5 yrs</td>
-                                                <td>Roberto Santos (Father)</td>
-                                                <td>2024-12-11</td>
-                                                <td>10:00 AM</td>
-                                            </tr>
-                                            <tr>
-                                                <td>P003</td>
-                                                <td>Pedro Reyes</td>
-                                                <td>8 mos</td>
-                                                <td>Ana Reyes (Mother)</td>
-                                                <td>2024-12-12</td>
-                                                <td>11:30 AM</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3>Nutrition Check-up History</h3>
-                            <div class="col-md-4">
-                                <input type="text" id="historySearch" class="form-control form-control-sm" placeholder="Search nutrition history...">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-sm" id="historyTable">
-                        <thead>
-                            <tr>
-                                <th>Patient ID</th>
-                                <th>Name</th>
-                                <th>Age</th>
-                                <th>Accompanied By</th>
-                                <th>Weight (kg)</th>
-                                <th>Height (cm)</th>
-                                <th>Weight-for-Age</th>
-                                <th>Height-for-Age</th>
-                                <th>Weight-for-Height</th>
-                                <th>Last Check-up</th>
-                                <th>Nutritional Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>P001</td>
-                                <td>Juan Dela Cruz</td>
-                                <td>2 yrs</td>
-                                <td>Maria Dela Cruz (Mother)</td>
-                                <td>12.5</td>
-                                <td>86</td>
-                                <td>Normal</td>
-                                <td>Normal</td>
-                                <td>Normal</td>
-                                <td>2024-12-01</td>
-                                <td>Well-nourished</td>
-                            </tr>
-                            <tr>
-                                <td>P002</td>
-                                <td>Maria Santos</td>
-                                <td>5 yrs</td>
-                                <td>Roberto Santos (Father)</td>
-                                <td>15.2</td>
-                                <td>105</td>
-                                <td>Underweight</td>
-                                <td>Stunted</td>
-                                <td>Wasted</td>
-                                <td>2024-12-02</td>
-                                <td>Needs intervention</td>
-                            </tr>
-                            <tr>
-                                <td>P003</td>
-                                <td>Pedro Reyes</td>
-                                <td>8 mos</td>
-                                <td>Ana Reyes (Mother)</td>
-                                <td>8.3</td>
-                                <td>70</td>
-                                <td>Normal</td>
-                                <td>Normal</td>
-                                <td>Normal</td>
-                                <td>2024-12-03</td>
-                                <td>Well-nourished</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Add JavaScript for search functionality for check-ups and history tables -->
-                <script>
-                    document.getElementById('upcomingSearch').addEventListener('keyup', function() {
-                        searchTable('upcomingTable', this.value);
-                    });
-
-                    document.getElementById('historySearch').addEventListener('keyup', function() {
-                        searchTable('historyTable', this.value);
-                    });
-
-                    function searchTable(tableId, searchText) {
-                        const table = document.getElementById(tableId);
-                        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-                        searchText = searchText.toLowerCase();
-
-                        for (let row of rows) {
-                            let text = row.textContent || row.innerText;
-                            text = text.toLowerCase();
-                            row.style.display = text.includes(searchText) ? '' : 'none';
-                        }
-                    }
-                </script>
-            </div>
-
-            <!-- Check-Up Schedule Section -->
-            <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
-                <h2 class="mt-4">Check-Up Schedule</h2>
-                <table class="table table-bordered">
+                <table class="table table-striped table-hover">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Patient Name</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Doctor</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Contact</th>
+                            <th>Family Record</th>
+                            <th>Parents' Occupation</th>
+                            <th>Medical History</th>
+                            <th>Restrictions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>1</td>
                             <td>John Doe</td>
-                            <td>2024-11-25</td>
-                            <td>10:00 AM</td>
-                            <td>Dr. Adams</td>
+                            <td>35</td>
+                            <td>(555) 123-4567</td>
+                            <td>Family: Father - John Doe Sr.</td>
+                            <td>Father: Engineer<br>Mother: Teacher</td>
+                            <td>Asthma, Hypertension</td>
+                            <td>Low Salt Diet</td>
                         </tr>
                         <tr>
                             <td>2</td>
                             <td>Jane Smith</td>
-                            <td>2024-11-26</td>
-                            <td>11:30 AM</td>
-                            <td>Dr. Baker</td>
+                            <td>28</td>
+                            <td>(555) 765-4321</td>
+                            <td>Family: Mother - Emma Smith</td>
+                            <td>Father: Business Owner<br>Mother: Doctor</td>
+                            <td>None</td>
+                            <td>None</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Event information Section -->
-            <div class="tab-pane fade" id="event" role="tabpanel" aria-labelledby="event-tab">
-                <div id="eventFormContainer" class="container mt-4">
-                    <!-- Event form will be loaded here -->
-                </div>
-            </div>
-            <!-- Nutrition Report Section -->
-            <div class="tab-pane fade" id="nutrition-report" role="tabpanel" aria-labelledby="nutrition-report-tab">
+            <!-- Nutrition Monitoring Section -->
+            <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
                 <div class="container mt-4">
-                    <h2>Nutrition Report - Barangay San Andres Centers</h2>
+                    <!-- Monitoring Records Content -->
+                    <div id="monitoring-records" class="sub-content">
+                        <h2>Nutrition Monitoring Records</h2>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h3>Nutrition Check-up History</h3>
+                                    <div class="col-md-4">
+                                        <input type="text" id="historySearch" class="form-control form-control-sm" placeholder="Search nutrition history...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Bar Graph Section -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h4>Current Nutrition Status by Center (Ages 0-14)</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-sm" id="historyTable">
+                                <thead>
+                                    <tr>
+                                        <th>Patient ID</th>
+                                        <th>Name</th>
+                                        <th>Age</th>
+                                        <th>Accompanied By</th>
+                                        <th>Weight (kg)</th>
+                                        <th>Height (cm)</th>
+                                        <th>Weight-for-Age</th>
+                                        <th>Height-for-Age</th>
+                                        <th>Weight-for-Height</th>
+                                        <th>Last Check-up</th>
+                                        <th>Nutritional Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>P001</td>
+                                        <td>Juan Dela Cruz</td>
+                                        <td>2 yrs</td>
+                                        <td>Maria Dela Cruz (Mother)</td>
+                                        <td>12.5</td>
+                                        <td>86</td>
+                                        <td>Normal</td>
+                                        <td>Normal</td>
+                                        <td>Normal</td>
+                                        <td>2024-12-01</td>
+                                        <td>Well-nourished</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P002</td>
+                                        <td>Maria Santos</td>
+                                        <td>5 yrs</td>
+                                        <td>Roberto Santos (Father)</td>
+                                        <td>15.2</td>
+                                        <td>105</td>
+                                        <td>Underweight</td>
+                                        <td>Stunted</td>
+                                        <td>Wasted</td>
+                                        <td>2024-12-02</td>
+                                        <td>Needs intervention</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P003</td>
+                                        <td>Pedro Reyes</td>
+                                        <td>8 mos</td>
+                                        <td>Ana Reyes (Mother)</td>
+                                        <td>8.3</td>
+                                        <td>70</td>
+                                        <td>Normal</td>
+                                        <td>Normal</td>
+                                        <td>Normal</td>
+                                        <td>2024-12-03</td>
+                                        <td>Well-nourished</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="card-body">
-                            <canvas id="nutritionBarGraph"></canvas>
-                        </div>
+
+                        <!-- Add JavaScript for search functionality for check-ups and history tables -->
+                        <script>
+                            document.getElementById('historySearch').addEventListener('keyup', function() {
+                                searchTable('historyTable', this.value);
+                            });
+
+                            function searchTable(tableId, searchText) {
+                                const table = document.getElementById(tableId);
+                                const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                                searchText = searchText.toLowerCase();
+                                for (let row of rows) {
+                                    let text = row.textContent || row.innerText;
+                                    text = text.toLowerCase();
+                                    row.style.display = text.includes(searchText) ? '' : 'none';
+                                }
+                            }
+                        </script>
                     </div>
 
-                    <!-- Line Graph Section -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h4>Historical Nutrition Trends</h4>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="nutritionLineGraph"></canvas>
-                        </div>
-                    </div>
+                    <!-- Nutrition Report Content -->
+                    <div id="nutrition-report" class="sub-content" style="display: none;">
+                        <h2>Nutrition Report - Barangay San Andres Centers</h2>
 
-                    <!-- Progress Details Section -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h4>Progress Analysis by Age Group</h4>
+                        <!-- Bar Graph Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4>Current Nutrition Status by Center (Ages 0-14)</h4>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="nutritionBarGraph"></canvas>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <h5>Age Group: 0-4 years</h5>
-                                    <ul class="list-group">
-                                        <li class="list-group-item">Average Weight Improvement: +15%</li>
-                                        <li class="list-group-item">Height Progress: On track</li>
-                                        <li class="list-group-item">Nutrition Status: Good</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-4">
-                                    <h5>Age Group: 5-9 years</h5>
-                                    <ul class="list-group">
-                                        <li class="list-group-item">Average Weight Improvement: +12%</li>
-                                        <li class="list-group-item">Height Progress: Above average</li>
-                                        <li class="list-group-item">Nutrition Status: Excellent</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-4">
-                                    <h5>Age Group: 10-14 years</h5>
-                                    <ul class="list-group">
-                                        <li class="list-group-item">Average Weight Improvement: +10%</li>
-                                        <li class="list-group-item">Height Progress: Normal</li>
-                                        <li class="list-group-item">Nutrition Status: Good</li>
-                                    </ul>
+
+                        <!-- Line Graph Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4>Historical Nutrition Trends</h4>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="nutritionLineGraph"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Progress Details Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Progress Analysis by Age Group</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h5>Age Group: 0-4 years</h5>
+                                        <ul class="list-group">
+                                            <li class="list-group-item">Average Weight Improvement: +15%</li>
+                                            <li class="list-group-item">Height Progress: On track</li>
+                                            <li class="list-group-item">Nutrition Status: Good</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5>Age Group: 5-9 years</h5>
+                                        <ul class="list-group">
+                                            <li class="list-group-item">Average Weight Improvement: +12%</li>
+                                            <li class="list-group-item">Height Progress: Above average</li>
+                                            <li class="list-group-item">Nutrition Status: Excellent</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5>Age Group: 10-14 years</h5>
+                                        <ul class="list-group">
+                                            <li class="list-group-item">Average Weight Improvement: +10%</li>
+                                            <li class="list-group-item">Height Progress: Normal</li>
+                                            <li class="list-group-item">Nutrition Status: Good</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -616,57 +567,26 @@ session_start();
                 </div>
             </div>
 
+            <!-- Appointments Section -->
+            <div class="tab-pane fade" id="appointments" role="tabpanel" aria-labelledby="appointments-tab">
+                <?php include __DIR__ . '/appointments.php'; ?>
+            </div>
+
+            <!-- Event information Section -->
+            <div class="tab-pane fade" id="event" role="tabpanel" aria-labelledby="event-tab">
+                <div id="eventFormContainer" class="container mt-4">
+                    <!-- Event form will be loaded here -->
+                    <?php include 'event.php'; ?>
+                </div>
+            </div>
+
             <!-- Audit Trail Section -->
             <div class="tab-pane fade" id="audit" role="tabpanel" aria-labelledby="audit-tab">
-                <div class="container-fluid mt-4">
-                    <h2>System Audit Trail</h2>
-
-                    <!-- Filter Form -->
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <form id="auditFilterForm" class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Action Type</label>
-                                    <select name="action" class="form-select">
-                                        <option value="">All Actions</option>
-                                        <option value="LOGIN">Login</option>
-                                        <option value="LOGOUT">Logout</option>
-                                        <option value="REGISTER">Register</option>
-                                        <option value="CREATE">Create</option>
-                                        <option value="UPDATE">Update</option>
-                                        <option value="DELETE">Delete</option>
-                                        <option value="VIEW">View</option>
-                                        <option value="SYSTEM_CHANGE">System Change</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Date From</label>
-                                    <input type="date" name="date_from" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Date To</label>
-                                    <input type="date" name="date_to" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary d-block w-100">Filter</button>
-                                </div>
-                            </form>
+                <div class="container mt-4">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+                            <?php include 'audit_trail.php'; ?>
                         </div>
-                    </div>
-
-                    <!-- Audit Trail Table -->
-                    <div class="table-responsive">
-                        <table id="auditTable" class="table table-striped display responsive nowrap" width="100%">
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -677,6 +597,7 @@ session_start();
                 <div id="add-account" class="sub-content" style="display: none;">
                     <div id="signupFormContainer" class="container mt-4">
                         <!-- Signup form will be loaded here -->
+                        <?php include 'signup.php'; ?>
                     </div>
                 </div>
 
@@ -694,8 +615,125 @@ session_start();
     </div>
 
     <!-- Scripts -->
+  
+    <script src="/src/script/dropdrown.js"></script>
     <script>
         $(document).ready(function() {
+            // Track loaded state for each tab
+            const loadedTabs = {
+                patients: false,
+                monitoring: false,
+                'nutrition-report': false,
+                appointments: false
+            };
+
+            // Handle sub-navigation clicks
+            $('.sub-nav .dropdown-item').click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Remove active class from all tabs
+                $('.nav-link').removeClass('active');
+                
+                // Add active class to parent schedule tab
+                $('#schedule-tab').addClass('active');
+                
+                // Show the target tab content
+                const targetId = $(this).attr('data-bs-target');
+                $('.tab-pane').removeClass('show active');
+                $(targetId).addClass('show active');
+            });
+
+            // Load patient profile content immediately on page load
+            if (!loadedTabs.patients) {
+                $('#patientProfileContainer').load('/src/view/patient_profile.php', function() {
+                    loadedTabs.patients = true;
+                });
+            }
+
+            // Load signup form content once when the document is ready
+            if (!loadedTabs.account) {
+                $('#signupFormContainer').load('/src/view/signup.php', function() {
+                    loadedTabs.account = true;
+                });
+            }
+
+            // Event tab click handler
+            $('#event-tab').on('click', function() {
+                if (!loadedTabs.event) {
+                    $('#eventFormContainer').load('/src/view/event.php', function() {
+                        loadedTabs.event = true;
+                    });
+                }
+            });
+
+            // Audit trail tab click handler
+            $('#audit-tab').on('click', function() {
+                if (!loadedTabs.audit) {
+                    $('.container', '#audit').load('/src/view/audit_trail.php', function() {
+                        loadedTabs.audit = true;
+                    });
+                }
+            });
+
+            // Refresh table only when viewing users for the first time
+            $('.sub-nav-button[data-target="view-users"]').click(function() {
+                $('.sub-content').hide();
+                $('#viewer').show();
+
+                if (!loadedTabs.users) {
+                    $('#UsersFormContainer').load('../../src/view/users.php', function() {
+                        loadedTabs.users = true;
+                    });
+                }
+
+                // Hide sub-nav after clicking
+                $('.sub-nav').hide();
+            });
+
+            // Create Account tab click handler
+            $('#acc-reg').on('click', function() {
+                $('.sub-content').hide();
+                $('#add-account').show();
+            });
+
+            // Show sub-nav on hover
+            $('#acc-reg-container').hover(
+                function() {
+                    $(this).find('.sub-nav').show();
+                },
+                function() {
+                    if (!$('#viewer').is(':visible')) {
+                        $(this).find('.sub-nav').hide();
+                    }
+                }
+            );
+
+            // Handle sub-navigation clicks for monitoring
+            $('#monitoring-container').hover(
+                function() {
+                    $(this).find('.sub-nav').show();
+                },
+                function() {
+                    if (!$('#nutrition-report').is(':visible')) {
+                        $(this).find('.sub-nav').hide();
+                    }
+                }
+            );
+
+            // Show monitoring records by default when clicking main tab
+            $('#schedule-tab').on('click', function() {
+                $('.sub-content').hide();
+                $('#monitoring-records').show();
+            });
+
+            // Handle nutrition report button click
+            $('.sub-nav-button[data-target="nutrition-report"]').click(function() {
+                $('.sub-content').hide();
+                $('#nutrition-report').show();
+                $(this).closest('.sub-nav').hide();
+            });
+
             // Update date and time
             function updateDateTime() {
                 const now = new Date();
@@ -716,45 +754,80 @@ session_start();
             updateDateTime();
             setInterval(updateDateTime, 1000);
 
-            // Refresh table when viewing users
-            $('.sub-nav-button[data-target="view-users"]').click(function() {
-                $('.sub-content').hide();
-                $('#viewer').show();
+            // Modal accessibility improvements
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                // Store the element that triggered the modal
+                let triggerElement = null;
+                const modalInstance = new bootstrap.Modal(modal);
 
-                // Load content without affecting other elements
-                $('#UsersFormContainer').load('../../src/view/users.php', function() {});
-
-                // Hide sub-nav after clicking
-                $('.sub-nav').hide();
-            });
-
-            // Show sub-nav on hover
-            $('#acc-reg-container').hover(
-                function() {
-                    $('.sub-nav').show();
-                },
-                function() {
-                    if (!$('#viewer').is(':visible')) {
-                        $('.sub-nav').hide();
+                // Function to properly hide modal and clean up
+                function hideModalAndCleanup() {
+                    modalInstance.hide();
+                    // Remove backdrop
+                    const backdrops = document.getElementsByClassName('modal-backdrop');
+                    while (backdrops.length > 0) {
+                        backdrops[0].remove();
                     }
+                    // Clean up body classes
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                    // Reset modal state
+                    modal.style.display = 'none';
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.setAttribute('inert', '');
                 }
-            );
 
-            // Create Account tab click handler
-            $('#acc-reg').on('click', function() {
-                $('.sub-content').hide();
-                $('#add-account').show();
-                $('#signupFormContainer').load('/src/view/signup.php', function() {
+                // When modal is about to be shown
+                modal.addEventListener('show.bs.modal', function () {
+                    this.removeAttribute('aria-hidden');
+                    triggerElement = document.activeElement;
+                    this.removeAttribute('inert');
+                });
 
+                // When modal is hidden
+                modal.addEventListener('hidden.bs.modal', function () {
+                    if (triggerElement) {
+                        triggerElement.focus();
+                    }
+                    hideModalAndCleanup();
+                });
+
+                // Add cleanup to all close buttons in this modal
+                const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', hideModalAndCleanup);
+                });
+
+                // Cleanup after successful transactions
+                modal.addEventListener('transactionComplete', function() {
+                    hideModalAndCleanup();
+                });
+
+                // Trap focus within modal when open
+                modal.addEventListener('keydown', function (e) {
+                    if (e.key === 'Tab') {
+                        const focusableElements = modal.querySelectorAll(
+                            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                        );
+                        const firstFocusable = focusableElements[0];
+                        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstFocusable) {
+                                lastFocusable.focus();
+                                e.preventDefault();
+                            }
+                        } else {
+                            if (document.activeElement === lastFocusable) {
+                                firstFocusable.focus();
+                                e.preventDefault();
+                            }
+                        }
+                    }
                 });
             });
-
-            $('#event-tab').on('click', function() {
-                $('#eventFormContainer').load('/src/view/event.php', function() {
-                    // Optional callback for any post-load processing
-                });
-            });
-
+            
             // Bar Graph Data
             const nutritionBarCtx = document.getElementById('nutritionBarGraph').getContext('2d');
             new Chart(nutritionBarCtx, {
@@ -822,10 +895,12 @@ session_start();
             });
         });
     </script>
-    
+    <script src="/src/script/dropdrown.js"></script>
     <script src="/src/script/logout.js"></script>
 
     <script src="/src/script/audit_trail.js"></script>
+
+    <script src="/src/script/loader.js"></script>
 
 </body>
 

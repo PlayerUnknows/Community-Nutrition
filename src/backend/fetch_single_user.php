@@ -1,12 +1,12 @@
 <?php
-require_once 'dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
 
 header('Content-Type: application/json');
 
 // Role mapping
 $roleMap = [
     '1' => 'Parent',
-    '2' => 'Health Worker', 
+    '2' => 'Brgy Health Worker', 
     '3' => 'Administrator'
 ];
 
@@ -32,7 +32,7 @@ try {
               WHERE user_id = :user_id";
     
     $stmt = $conn->prepare($query);
-    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR); 
     $stmt->execute();
     
     $user = $stmt->fetch(PDO::FETCH_ASSOC);

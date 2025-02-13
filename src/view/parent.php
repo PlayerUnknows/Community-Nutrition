@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome - Community Nutrition Information System</title>
-    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../assets/css/parent.css"> <!-- Custom Styles -->
 </head>
 <body>
@@ -18,13 +18,13 @@
     </div>
 
       <!-- Include jQuery library -->
-      <script src="../../assets/dist/jquery.js"></script>
+      <script src="../../node_modules/jquery/dist/jquery.js"></script>
     <!-- Include Popper.js for Bootstrap tooltips-->
-    <script src="../../assets/dist/popper.js"></script>
+    <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
     <!-- Include Bootstrap JavaScript -->
-    <script src="../../assets/dist/bootstrap.min.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <!-- Include SweetAlert JavaScript -->
-    <script src="../../assets/dist/sweetalert.js"></script>
+    <script src="../../node_modules/sweetalert/dist/sweetalert.min.js"></script>
 
     <!-- Link to your separate JS file -->
     <script src="/src/script/logout.js"></script>

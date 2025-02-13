@@ -48,6 +48,56 @@ assets/
 [structure as shown above]
 ```
 
+## WebSocket Real-Time Audit Trail
+
+### Setup Instructions
+1. Ensure PHP and Composer are installed
+2. Run `composer install` to install dependencies
+3. Start WebSocket server:
+   - On Windows: Run `start_websocket.bat`
+   - On Linux/Mac: `php src/websocket/audit_trail_server.php`
+
+### Requirements
+- PHP 7.4+
+- Composer
+- Ratchet WebSocket Library
+
+### Configuration
+- WebSocket runs on `localhost:8080`
+- Modify `src/script/audit_trail.js` to change WebSocket URL if needed
+
+### WebSocket Troubleshooting
+
+#### Common Issues
+1. **WebSocket Server Not Running**
+   - Ensure WebSocket server is started using `start_websocket.bat`
+   - Check PHP process is running and not blocked by firewall
+
+2. **Connection Errors**
+   - Verify localhost is accessible
+   - Check port 8080 is not in use by another application
+   - Ensure PHP has socket extension enabled
+
+3. **Diagnostic Steps**
+   - Run `php src/backend/websocket_test.php` to check environment
+   - Check server logs in `error_log` or console output
+
+#### Firewall Configuration
+- Allow PHP and WebSocket server through Windows Firewall
+- Check antivirus software for potential blocking
+
+#### Recommended PHP Settings
+```ini
+; In php.ini
+extension=php_sockets.dll
+```
+
+#### Manual Verification
+1. Start WebSocket server
+2. Open browser console
+3. Check for any connection or parsing errors
+4. Verify real-time updates are received
+
 ## Note
 - The `assets/images/` directory can contain your custom images
 - Make sure to maintain the file structure for proper functionality

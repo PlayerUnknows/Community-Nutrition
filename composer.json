@@ -1,5 +1,6 @@
 {
     "require": {
-        "katzgrau/klogger": "^1.2"
+        "katzgrau/klogger": "^1.2",
+        "cboden/ratchet": "0.4.0"
     }
 }

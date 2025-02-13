@@ -8,15 +8,18 @@ function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate
         // Debug: Log connection status
         error_log("Database connection established");
         
-        // Get the username from session or use default
-        $createdBy = isset($_SESSION['username']) ? $_SESSION['username'] : 'System';
+        // Get the user_id from session or use default
+        $createdBy = $_SESSION['user_id'] ?? 1; // Default to first admin user if not set
+        
+        // Get the user's email or username for event_creator
+        $eventCreator = $_SESSION['email'] ?? $_SESSION['username'] ?? 'Unknown'; // Adjust based on your session variables
         
         // Debug: Log the SQL and values
-        error_log("Preparing SQL: INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by) VALUES (?, ?, ?, ?, ?, ?)");
-        error_log("Values: Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, CreatedBy=$createdBy");
+        error_log("Preparing SQL: INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        error_log("Values: Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, CreatedBy=$createdBy, EventCreator=$eventCreator");
         
-        $sql = "INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by) 
-                VALUES (:type, :name, :time, :place, :date, :created_by)";
+        $sql = "INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator) 
+                VALUES (:type, :name, :time, :place, :date, :created_by, :event_creator)";
         
         $stmt = $conn->prepare($sql);
         
@@ -26,7 +29,8 @@ function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate
         $stmt->bindValue(':time', $eventTime);
         $stmt->bindValue(':place', $eventPlace);
         $stmt->bindValue(':date', $eventDate);
-        $stmt->bindValue(':created_by', $createdBy);
+        $stmt->bindValue(':created_by', $createdBy, PDO::PARAM_INT);
+        $stmt->bindValue(':event_creator', $eventCreator);
         
         // Execute and return result
         $result = $stmt->execute();
@@ -55,10 +59,13 @@ function getAllEvents() {
         error_log("Database connection established");
         
         // Debug: Log the SQL
-        error_log("Preparing SQL: SELECT event_id, event_type, event_name_created, event_time, event_date, created_at, created_by FROM event_info ORDER BY event_date DESC");
+        error_log("Preparing SQL: SELECT event_info.*, account_info.email AS event_creator_email, account_info2.email AS event_editor_email FROM event_info LEFT JOIN account_info ON event_info.created_by = account_info.user_id LEFT JOIN account_info AS account_info2 ON event_info.edited_by = account_info2.user_id ORDER BY event_date DESC");
         
-        $sql = "SELECT event_id, event_type, event_name_created, event_time, event_date, created_at, created_by 
-                FROM event_info ORDER BY event_date DESC";
+        $sql = "SELECT event_info.*, account_info.email AS event_creator_email, account_info2.email AS event_editor_email 
+                FROM event_info 
+                LEFT JOIN account_info ON event_info.created_by = account_info.user_id 
+                LEFT JOIN account_info AS account_info2 ON event_info.edited_by = account_info2.user_id 
+                ORDER BY event_date DESC";
         $stmt = $conn->query($sql);
         
         // Execute and return result
@@ -87,16 +94,20 @@ function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, 
         // Debug: Log connection status
         error_log("Database connection established");
         
+        // Get the user_id from session or use default
+        $editedBy = $_SESSION['user_id'] ?? 1; // Default to first admin user if not set
+        
         // Debug: Log the SQL and values
-        error_log("Preparing SQL: UPDATE event_info SET event_type = ?, event_name_created = ?, event_time = ?, event_place = ?, event_date = ? WHERE event_id = ?");
-        error_log("Values: Id=$eventId, Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate");
+        error_log("Preparing SQL: UPDATE event_info SET event_type = ?, event_name_created = ?, event_time = ?, event_place = ?, event_date = ?, edited_by = ? WHERE event_id = ?");
+        error_log("Values: Id=$eventId, Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, EditedBy=$editedBy");
         
         $sql = "UPDATE event_info 
                 SET event_type = :type, 
                     event_name_created = :name, 
                     event_time = :time,
                     event_place = :place,
-                    event_date = :date 
+                    event_date = :date,
+                    edited_by = :edited_by
                 WHERE event_id = :id";
         
         $stmt = $conn->prepare($sql);
@@ -107,6 +118,7 @@ function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, 
         $stmt->bindValue(':time', $eventTime);
         $stmt->bindValue(':place', $eventPlace);
         $stmt->bindValue(':date', $eventDate);
+        $stmt->bindValue(':edited_by', $editedBy, PDO::PARAM_INT);
         $stmt->bindValue(':id', $eventId);
         
         // Execute and return result

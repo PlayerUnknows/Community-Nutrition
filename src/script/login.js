@@ -2,7 +2,7 @@ $(document).ready(function () {
     $('#loginForm').submit(function (e) {
         e.preventDefault(); // Prevent the default form submission
 
-        let email = $('#email').val();
+        let login = $('#email').val();
         let password = $('#password').val();
 
         // Perform AJAX request
@@ -10,7 +10,7 @@ $(document).ready(function () {
             url: '../src/controllers/UserController.php?action=login', // URL where the login is processed
             type: 'POST',
             data: {
-                email: email,
+                login: login,
                 password: password
             },
             success: function (response) {
@@ -44,12 +44,10 @@ $(document).ready(function () {
                     // Show error message
                     Swal.fire({
                         title: 'Login Failed!',
-                        text: response.message || 'Invalid email or password.',
+                        text: response.message || 'Invalid login credentials.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
-
-                    // Keep form fields intact - nothing to do here since we don't clear them
                 }
             },
             error: function (xhr, status, error) {
@@ -62,7 +60,5 @@ $(document).ready(function () {
                 console.error('Error:', error);
             }
         });
-
-        // No clearing of form fields here
     });
 });

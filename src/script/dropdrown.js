@@ -1,54 +1,80 @@
-// Make initializeDropdowns available globally
-window.initializeDropdowns = function() {
-    const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-    dropdowns.forEach(dropdown => {
-        // Dispose existing dropdown if any
-        const instance = bootstrap.Dropdown.getInstance(dropdown);
-        if (instance) {
-            instance.dispose();
-        }
-        // Create new dropdown instance
-        new bootstrap.Dropdown(dropdown);
-    });
-};
-
 $(document).ready(function () {
-    // Function to reinitialize profile dropdown
+    // Global dropdown initialization function
+    window.initializeDropdowns = function() {
+        const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+        dropdowns.forEach(dropdown => {
+            // Dispose existing dropdown if any
+            const existingInstance = bootstrap.Dropdown.getInstance(dropdown);
+            if (existingInstance) {
+                existingInstance.dispose();
+            }
+            // Create new dropdown instance
+            new bootstrap.Dropdown(dropdown);
+        });
+    };
+
+    // Robust profile dropdown reinitialization
     function reinitializeProfileDropdown() {
         const dropdownEl = document.getElementById('profileDropdown');
-        if (!dropdownEl) return;
+        if (!dropdownEl) return null;
 
         // Clean up existing instance
         const oldDropdown = bootstrap.Dropdown.getInstance(dropdownEl);
         if (oldDropdown) {
-            oldDropdown.dispose();
+            try {
+                oldDropdown.dispose();
+            } catch (error) {
+                console.warn('Error disposing dropdown:', error);
+            }
         }
 
-        // Create new instance
-        return new bootstrap.Dropdown(dropdownEl);
+        // Create and return new instance
+        try {
+            return new bootstrap.Dropdown(dropdownEl);
+        } catch (error) {
+            console.error('Failed to reinitialize dropdown:', error);
+            return null;
+        }
     }
 
     // Initialize on page load
     let profileDropdown = reinitializeProfileDropdown();
 
-    // Handle tab changes
+    // Handle tab changes with more robust reinitialization
     $(document).on('shown.bs.tab', 'button[data-bs-toggle="tab"]', function () {
-        profileDropdown = reinitializeProfileDropdown();
-    });
-
-    // Handle Create Account tab specifically
-    $('#acc-reg').on('click', function() {
-        // Force dropdown cleanup and reinit after a short delay
+        // Ensure any existing dropdown is properly cleaned up
+        if (profileDropdown) {
+            try {
+                profileDropdown.dispose();
+            } catch {}
+        }
+        
+        // Reinitialize with a slight delay to ensure DOM is stable
         setTimeout(() => {
             profileDropdown = reinitializeProfileDropdown();
-        }, 150);
+        }, 200);
     });
 
-    // Handle profile actions with proper dropdown control
+    // Handle Create Account tab with additional safeguards
+    $('#acc-reg').on('click', function() {
+        // Force dropdown cleanup and reinit with longer delay
+        setTimeout(() => {
+            if (profileDropdown) {
+                try {
+                    profileDropdown.dispose();
+                } catch {}
+            }
+            profileDropdown = reinitializeProfileDropdown();
+        }, 250);
+    });
+
+    // Profile and settings actions
     $(document).on('click', '#profileButton', function(e) {
         e.preventDefault();
         if (profileDropdown) {
-            profileDropdown.hide();
+            try {
+                profileDropdown.hide();
+            } catch {}
         }
         Swal.fire({
             title: "Profile",
@@ -60,7 +86,9 @@ $(document).ready(function () {
     $(document).on('click', '#settingsButton', function(e) {
         e.preventDefault();
         if (profileDropdown) {
-            profileDropdown.hide();
+            try {
+                profileDropdown.hide();
+            } catch {}
         }
         Swal.fire({
             title: "Settings",
@@ -69,10 +97,18 @@ $(document).ready(function () {
         });
     });
 
-    // Reinitialize after any AJAX call
+    // Reinitialize after any AJAX call with error handling
     $(document).ajaxComplete(function() {
         setTimeout(() => {
+            if (profileDropdown) {
+                try {
+                    profileDropdown.dispose();
+                } catch {}
+            }
             profileDropdown = reinitializeProfileDropdown();
-        }, 150);
+        }, 200);
     });
+
+    // Fallback global dropdown initialization
+    window.initializeDropdowns();
 });

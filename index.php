@@ -19,8 +19,8 @@
         <h1 class="login-title">Login</h1>
         <form id="loginForm" class="login-form">
             <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" name="email" id="email" required class="form-control glow-input">
+                <label for="email">Email or User ID</label>
+                <input type="text" name="email" id="email" required class="form-control glow-input">
             </div>
 
             <div class="form-group">

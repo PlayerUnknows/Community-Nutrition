@@ -63,6 +63,22 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit();
+    } elseif ($_GET['action'] == 'getAll') {
+        header('Content-Type: application/json');
+        try {
+            $events = getAllEvents();
+            // Debug log
+            error_log("Fetched events: " . print_r($events, true));
+            if ($events === false) {
+                throw new Exception("Failed to fetch events");
+            }
+            echo json_encode($events, JSON_PRETTY_PRINT);
+        } catch (Exception $e) {
+            error_log("Error fetching events: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to fetch events: ' . $e->getMessage()]);
+        }
+        exit();
     }
 }
 ?>

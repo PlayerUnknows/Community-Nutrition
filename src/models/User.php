@@ -13,18 +13,22 @@ class User
     public function createUser($email, $password, $role)
     {
         try {
-            $sql = "INSERT INTO account_info (email, password, role) VALUES (?, ?, ?)";
+            // Generate a unique 4-digit user ID
+            do {
+                $userId = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                $checkUnique = $this->checkUserIdUnique($userId);
+            } while (!$checkUnique);
+
+            $sql = "INSERT INTO account_info (user_id, email, password, role) VALUES (?, ?, ?, ?)";
             $stmt = $this->conn->prepare($sql);
             $result = $stmt->execute([
+                $userId,
                 $email,
                 password_hash($password, PASSWORD_BCRYPT),
                 $role
             ]);
 
             if ($result) {
-                // Get the newly created user's ID
-                $userId = $this->conn->lastInsertId();
-                
                 // Log the account creation in audit trail
                 require_once __DIR__ . '/../backend/audit_trail.php';
                 logUserAuth($userId, $email, AUDIT_REGISTER);
@@ -41,12 +45,22 @@ class User
         }
     }
 
-    // Login user
-    public function login($email, $password)
+    // Helper method to check if user ID is unique
+    private function checkUserIdUnique($userId)
     {
-        $sql = "SELECT * FROM account_info WHERE email = ?";
+        $sql = "SELECT COUNT(*) FROM account_info WHERE user_id = ?";
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$email]);
+        $stmt->execute([$userId]);
+        return $stmt->fetchColumn() == 0;
+    }
+
+    // Login user
+    public function login($loginIdentifier, $password)
+    {
+        // Check if the login identifier is a valid email or user ID
+        $sql = "SELECT * FROM account_info WHERE email = ? OR user_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$loginIdentifier, $loginIdentifier]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($password, $user['password'])) {

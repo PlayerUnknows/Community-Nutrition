@@ -19,7 +19,7 @@ if (isset($dbcon) && isset($user)) {
                     }
                     break;
                 case 'login':
-                    if (isset($_POST['email']) && isset($_POST['password'])) {
+                    if (isset($_POST['login']) || isset($_POST['email']) && isset($_POST['password'])) {
                         login($dbcon, $user, $auditTrail); // Pass the auditTrail object
                     }
                     break;
@@ -63,14 +63,14 @@ function signup($dbcon, $user, $auditTrail)
 function login($dbcon, $user, $auditTrail)
 {
     try {
-        $email = $_POST['email'];
+        $login = $_POST['login'] ?? $_POST['email']; // Support both login and email keys
         $password = $_POST['password'];
 
         // Authenticate user
-        $authenticatedUser = $user->login($email, $password);
+        $authenticatedUser = $user->login($login, $password);
 
         if ($authenticatedUser) {
-            $auditTrail->log('login', 'User logged in with email ' . $email); // Log the login event
+            $auditTrail->log('login', 'User logged in with login identifier ' . $login); // Log the login event
             echo json_encode([
                 'success' => true,
                 'message' => 'Login successful!',
@@ -80,7 +80,7 @@ function login($dbcon, $user, $auditTrail)
         } else {
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid email or password.'
+                'message' => 'Invalid login credentials.'
             ]);
         }
     } catch (Exception $e) {

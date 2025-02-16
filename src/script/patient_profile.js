@@ -1,262 +1,155 @@
+console.log('Patient Profile JS loaded');
+
 $(document).ready(function() {
-    const patientTable = new DataTable('#patientTable', {
-        pageLength: 5,
-        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-             '<"row"<"col-sm-12"tr>>' +
-             '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-        scrollY: '50vh',
-        scrollCollapse: true
-    });
-
-    // Handle view button click
-    $('#patientTable').on('click', '.view-patient', async function() {
-        const patientDetails = $(this).data('details');
-        
-        // Fetch family information
-        let familyInfoHtml = '<div class="mt-3"><strong>Family Information:</strong></div>';
-        try {
-            const response = await fetch(`../controllers/family_controller.php?action=getFamilyInfo&patient_fam_id=${patientDetails.patient_fam_id}`);
-            const result = await response.json();
-            
-            if (result.success && result.data) {
-                const familyInfo = result.data;
-                familyInfoHtml += `
-                    <div class="table-responsive mt-2">
-                        <table class="table table-sm table-bordered">
-                            <tr>
-                                <th colspan="2">Parents' Information</th>
-                            </tr>
-                            <tr>
-                                <td><strong>Father:</strong></td>
-                                <td>${familyInfo.father_fname} ${familyInfo.father_mi} ${familyInfo.father_lname} ${familyInfo.father_suffix || ''}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Father's Occupation:</strong></td>
-                                <td>${familyInfo.father_occupation || 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Mother:</strong></td>
-                                <td>${familyInfo.mother_fname} ${familyInfo.mother_mi} ${familyInfo.mother_lname} ${familyInfo.mother_suffix || ''}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Mother's Occupation:</strong></td>
-                                <td>${familyInfo.mother_occupation || 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Contact:</strong></td>
-                                <td>${familyInfo.contact_no || 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Address:</strong></td>
-                                <td>${[
-                                    familyInfo.house_no,
-                                    familyInfo.street_address,
-                                    familyInfo.subdivision_sitio,
-                                    familyInfo.baranggay
-                                ].filter(Boolean).join(', ') || 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Food Budget:</strong></td>
-                                <td>₱${parseFloat(familyInfo.family_food_budget || 0).toLocaleString()}</td>
-                            </tr>
-                        </table>
-                    </div>`;
-            } else {
-                familyInfoHtml += '<div class="text-muted">No family information recorded</div>';
-            }
-        } catch (error) {
-            console.error('Error fetching family information:', error);
-            familyInfoHtml += '<div class="text-danger">Error loading family information</div>';
-        }
-
-        Swal.fire({
-            title: '<strong>Patient Details</strong>',
-            html: '<div><strong>Middle Initial:</strong> ' + patientDetails.patient_mi + '</div>' +
-                  '<div><strong>Suffix:</strong> ' + patientDetails.patient_suffix + '</div>' +
-                  '<div><strong>Sex:</strong> ' + patientDetails.sex + '</div>' +
-                  '<div><strong>Date of Birth:</strong> ' + patientDetails.date_of_birth + '</div>' +
-                  '<div><strong>Food Restrictions:</strong> ' + patientDetails.patient_food_restrictions + '</div>' +
-                  '<div><strong>Medical History:</strong> ' + patientDetails.patient_medical_history + '</div>' +
-                  '<div><strong>Dietary Record:</strong> ' + patientDetails.dietary_consumption_record + '</div>' +
-                  familyInfoHtml,
-            showCloseButton: true,
-            focusConfirm: false,
-            confirmButtonText: 'Close',
-            width: '400px',
-            customClass: {
-                container: 'small-modal',
-                popup: 'small-modal',
-                header: 'small-modal-header',
-                title: 'small-modal-title',
-                content: 'small-modal-content'
-            }
-        });
-    });
-
-    // Add/Edit Family Information button handler
-    $('#patientTable').on('click', '.edit-family-info', async function() {
-        const patientFamId = $(this).data('patient-fam-id');
-        let familyInfo = null;
-        
-        try {
-            const response = await fetch(`../controllers/family_controller.php?action=getFamilyInfo&patient_fam_id=${patientFamId}`);
-            const result = await response.json();
-            if (result.success) {
-                familyInfo = result.data;
-            }
-        } catch (error) {
-            console.error('Error fetching family information:', error);
-        }
-        
-        const { value: formValues } = await Swal.fire({
-            title: familyInfo ? 'Edit Family Info' : 'Add Family Info',
-            html: `
-                <form id="familyInfoForm" class="text-start">
-                    <div class="mb-2">
-                        <h6 class="mb-2">Father's Information</h6>
-                        <div class="row g-1">
-                            <div class="col-6">
-                                <input type="text" class="form-control form-control-sm" id="father_fname" placeholder="First Name" value="${familyInfo?.father_fname || ''}" required>
-                            </div>
-                            <div class="col-2">
-                                <input type="text" class="form-control form-control-sm" id="father_mi" placeholder="MI" value="${familyInfo?.father_mi || ''}">
-                            </div>
-                            <div class="col-4">
-                                <input type="text" class="form-control form-control-sm" id="father_lname" placeholder="Last Name" value="${familyInfo?.father_lname || ''}" required>
-                            </div>
-                        </div>
-                        <div class="row g-1 mt-1">
-                            <div class="col-4">
-                                <input type="text" class="form-control form-control-sm" id="father_suffix" placeholder="Suffix" value="${familyInfo?.father_suffix || ''}">
-                            </div>
-                            <div class="col-8">
-                                <input type="text" class="form-control form-control-sm" id="father_occupation" placeholder="Occupation" value="${familyInfo?.father_occupation || ''}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <h6 class="mb-2">Mother's Information</h6>
-                        <div class="row g-1">
-                            <div class="col-6">
-                                <input type="text" class="form-control form-control-sm" id="mother_fname" placeholder="First Name" value="${familyInfo?.mother_fname || ''}" required>
-                            </div>
-                            <div class="col-2">
-                                <input type="text" class="form-control form-control-sm" id="mother_mi" placeholder="MI" value="${familyInfo?.mother_mi || ''}">
-                            </div>
-                            <div class="col-4">
-                                <input type="text" class="form-control form-control-sm" id="mother_lname" placeholder="Last Name" value="${familyInfo?.mother_lname || ''}" required>
-                            </div>
-                        </div>
-                        <div class="row g-1 mt-1">
-                            <div class="col-4">
-                                <input type="text" class="form-control form-control-sm" id="mother_suffix" placeholder="Suffix" value="${familyInfo?.mother_suffix || ''}">
-                            </div>
-                            <div class="col-8">
-                                <input type="text" class="form-control form-control-sm" id="mother_occupation" placeholder="Occupation" value="${familyInfo?.mother_occupation || ''}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <h6 class="mb-2">Contact Information</h6>
-                        <input type="text" class="form-control form-control-sm mb-1" id="contact_no" placeholder="Contact Number" value="${familyInfo?.contact_no || ''}">
-                        <input type="text" class="form-control form-control-sm mb-1" id="house_no" placeholder="House Number" value="${familyInfo?.house_no || ''}">
-                        <input type="text" class="form-control form-control-sm mb-1" id="street_address" placeholder="Street Address" value="${familyInfo?.street_address || ''}">
-                        <input type="text" class="form-control form-control-sm mb-1" id="subdivision_sitio" placeholder="Subdivision/Sitio" value="${familyInfo?.subdivision_sitio || ''}">
-                        <input type="text" class="form-control form-control-sm mb-1" id="baranggay" placeholder="Barangay" value="${familyInfo?.baranggay || ''}">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text">₱</span>
-                            <input type="number" class="form-control form-control-sm" id="family_food_budget" placeholder="Food Budget" value="${familyInfo?.family_food_budget || '0'}" step="0.01">
-                        </div>
-                    </div>
-                </form>`,
-            focusConfirm: false,
-            showCancelButton: true,
-            confirmButtonText: familyInfo ? 'Update' : 'Add',
-            cancelButtonText: 'Cancel',
-            width: '400px',
-            customClass: {
-                container: 'small-modal',
-                popup: 'small-modal',
-                header: 'small-modal-header',
-                title: 'small-modal-title',
-                content: 'small-modal-content'
-            },
-            preConfirm: () => {
-                const data = {
-                    patient_fam_id: patientFamId,
-                    father_fname: document.getElementById('father_fname').value,
-                    father_mi: document.getElementById('father_mi').value,
-                    father_lname: document.getElementById('father_lname').value,
-                    father_suffix: document.getElementById('father_suffix').value,
-                    father_occupation: document.getElementById('father_occupation').value,
-                    mother_fname: document.getElementById('mother_fname').value,
-                    mother_mi: document.getElementById('mother_mi').value,
-                    mother_lname: document.getElementById('mother_lname').value,
-                    mother_suffix: document.getElementById('mother_suffix').value,
-                    mother_occupation: document.getElementById('mother_occupation').value,
-                    contact_no: document.getElementById('contact_no').value,
-                    house_no: document.getElementById('house_no').value,
-                    street_address: document.getElementById('street_address').value,
-                    subdivision_sitio: document.getElementById('subdivision_sitio').value,
-                    baranggay: document.getElementById('baranggay').value,
-                    family_food_budget: document.getElementById('family_food_budget').value
-                };
-                
-                if (familyInfo) {
-                    data.family_prikey = familyInfo.family_prikey;
-                }
-                
-                return data;
-            }
-        });
-
-        if (formValues) {
-            try {
-                const formData = new FormData();
-                Object.entries(formValues).forEach(([key, value]) => {
-                    formData.append(key, value);
-                });
-                formData.append('action', familyInfo ? 'updateFamilyInfo' : 'addFamilyInfo');
-
-                const response = await fetch('../controllers/family_controller.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: result.message,
-                        width: '400px',
-                        customClass: {
-                            container: 'small-modal',
-                            popup: 'small-modal',
-                            header: 'small-modal-header',
-                            title: 'small-modal-title',
-                            content: 'small-modal-content'
-                        }
-                    });
+    console.log('Initializing DataTable...');
+    
+    // Remove any existing DataTable instance
+    if ($.fn.DataTable.isDataTable('#patientTable')) {
+        $('#patientTable').DataTable().destroy();
+    }
+    
+    var table = $('#patientTable').DataTable({
+        processing: true,
+        pageLength: 5, // Default display 5 entries
+        lengthChange: false, // Hide the default length menu since we're using our custom one
+        searching: true, // Enable searching
+        search: {
+            return: true, // Enable search on Enter key
+            smart: true // Enable smart search
+        },
+        scrollX: true, // Enable horizontal scrolling
+        scrollY: '50vh', // Enable vertical scrolling with 50% viewport height
+        scrollCollapse: true, // Enable scroll collapse
+        ajax: {
+            url: '../controllers/patient_controller.php?action=getAllPatients',
+            dataSrc: function(json) {
+                console.log('Server response:', json);
+                if (json.status === 'success') {
+                    return json.data;
                 } else {
-                    throw new Error(result.message);
+                    console.error('Server error:', json.message);
+                    return [];
                 }
-            } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to save family information',
-                    width: '400px',
-                    customClass: {
-                        container: 'small-modal',
-                        popup: 'small-modal',
-                        header: 'small-modal-header',
-                        title: 'small-modal-title',
-                        content: 'small-modal-content'
-                    }
-                });
+            },
+            error: function(xhr, error, thrown) {
+                console.error('Ajax error:', error, thrown);
+                alert('Error loading data. Please check the console for details.');
+            }
+        },
+        columns: [
+            { 
+                data: 'patient_fam_id',
+                className: 'font-monospace'
+            },
+            { 
+                data: 'patient_id',
+                className: 'font-monospace'
+            },
+            { 
+                data: 'patient_fname',
+                className: 'text-start'
+            },
+            { 
+                data: 'patient_lname',
+                className: 'text-start'
+            },
+            { 
+                data: 'age',
+                className: 'text-center'
+            },
+            {
+                data: null,
+                className: 'text-center',
+                orderable: false,
+                render: function(data, type, row) {
+                    return '<button class="btn btn-sm btn-info view-patient" data-id="' + row.patient_id + '">' +
+                           '<i class="fas fa-eye"></i> View</button>';
+                }
+            }
+        ],
+        order: [[0, 'asc']],
+        dom: 't<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>', // Only show table, info and pagination
+        language: {
+            emptyTable: 'No patients found',
+            loadingRecords: 'Loading...',
+            processing: 'Processing...',
+            zeroRecords: 'No matching records found',
+            info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+            infoEmpty: 'Showing 0 to 0 of 0 entries',
+            infoFiltered: '(filtered from _MAX_ total entries)',
+            search: '',
+            paginate: {
+                first: 'First',
+                last: 'Last',
+                next: 'Next',
+                previous: 'Previous'
             }
         }
+    });
+
+    // Handle search input
+    $('#patientSearch').on('input', function() {
+        console.log('Search input:', this.value);
+        table.search(this.value).draw();
+    });
+
+    // Handle entries per page change
+    $('#patientPerPage').on('change', function() {
+        console.log('Entries per page:', $(this).val());
+        table.page.len(parseInt($(this).val())).draw();
+    });
+
+    // Handle view patient details
+    $('#patientTable').on('click', '.view-patient', function() {
+        var patientId = $(this).data('id');
+        console.log('View patient:', patientId);
+        
+        $.ajax({
+            url: '../controllers/patient_controller.php',
+            method: 'GET',
+            data: {
+                action: 'getPatientDetails',
+                patient_id: patientId
+            },
+            success: function(response) {
+                console.log('Patient details response:', response);
+                if (response.status === 'success' && response.data) {
+                    var patient = response.data;
+                    var detailsHtml = `
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5>${patient.patient_fname} ${patient.patient_lname}</h5>
+                                    <hr>
+                                    <p><strong>ID:</strong> ${patient.patient_id}</p>
+                                    <p><strong>Family ID:</strong> ${patient.patient_fam_id}</p>
+                                    <p><strong>Age:</strong> ${patient.age}</p>
+                                    <p><strong>Sex:</strong> ${patient.sex}</p>
+                                    <p><strong>Birth Date:</strong> ${patient.date_of_birth}</p>
+                                    <p><strong>Food Restrictions:</strong> ${patient.patient_food_restrictions || 'None'}</p>
+                                    <p><strong>Medical History:</strong> ${patient.patient_medical_history || 'None'}</p>
+                                    <p><strong>Dietary Record:</strong> ${patient.dietary_consumption_record || 'None'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    $('#patientDetailsModal .modal-body').html(detailsHtml);
+                    $('#patientDetailsModal').modal('show');
+                } else {
+                    console.error('Failed to load patient details:', response.message);
+                    alert('Failed to load patient details. Please try again.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading patient details:', error);
+                alert('Failed to load patient details. Please try again.');
+            }
+        });
+    });
+
+    // Handle window resize
+    $(window).on('resize', function() {
+        table.columns.adjust().draw();
     });
 });

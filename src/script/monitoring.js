@@ -1,223 +1,310 @@
 console.log('Monitoring.js loaded');
+
 $(document).ready(function() {
-    console.log('Initializing monitoring table...');
-    
-    // Initialize DataTable
-    const monitoringTable = $('#monitoringTable').DataTable({
-        ajax: {
-            url: '../backend/fetch_monitoring.php',
-            dataSrc: function(json) {
-                console.log('Received data:', json);
-                if (!json || !json.data) {
-                    console.error('Invalid response format:', json);
-                    return [];
-                }
-                return json.data;
-            }
-        },
-        scrollX: true,
-        scrollY: '50vh',
-        scrollCollapse: true,
+    var table = $('#monitoringTable').DataTable({
+        processing: true,
+        serverSide: false,
+        pageLength: 5,
+        lengthChange: true,
+        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+        dom: "<'row'<'col-sm-12'tr>>" +
+             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        searching: true,
+        responsive: false,
         autoWidth: false,
-        fixedHeader: {
-            header: true,
-            headerOffset: 0
-        },
+        scrollY: '50vh',
+        scrollCollapse: false,
+        scroller: false,
+        fixedHeader: false,
         columns: [
-            { data: 'patient_id', width: '100px' },
-            { data: 'patient_fam_id', width: '100px' },
-            { data: 'age', width: '80px' },
-            { data: 'sex', width: '80px' },
-            { data: 'weight', width: '100px' },
-            { data: 'height', width: '100px' },
-            { data: 'bp', width: '100px' },
-            { data: 'temperature', width: '100px' },
-            { data: 'weight_category', width: '120px' },
-            { data: 'finding_bmi', width: '120px' },
-            { data: 'finding_growth', width: '120px' },
-            { data: 'arm_circumference', width: '120px' },
-            { data: 'arm_circumference_status', width: '120px' },
-            { data: 'findings', width: '150px' },
             { 
-                data: 'date_of_appointment',
-                width: '150px',
+                data: 'patient_id',
+                className: 'dt-left',
+                width: '150px'
+            },
+            { 
+                data: 'patient_fam_id',
+                className: 'dt-left',
+                width: '150px'
+            },
+            { 
+                data: 'age',
+                className: 'dt-center',
+                width: '60px'
+            },
+            { 
+                data: 'sex',
+                className: 'dt-center',
+                width: '60px'
+            },
+            { 
+                data: 'weight',
+                className: 'dt-right',
+                width: '100px',
                 render: function(data) {
-                    return data ? moment(data).format('MMMM D, YYYY') : '';
+                    return data ? parseFloat(data).toFixed(2) + ' kg' : '';
                 }
             },
-            { data: 'time_of_appointment', width: '120px' },
-            { data: 'place', width: '150px' },
             { 
-                data: 'created_at',
-                width: '180px',
+                data: 'height',
+                className: 'dt-right',
+                width: '100px',
                 render: function(data) {
-                    return data ? moment(data).format('MMMM D, YYYY h:mm A') : '';
+                    return data ? parseFloat(data).toFixed(2) + ' cm' : '';
+                }
+            },
+            { 
+                data: 'bp',
+                className: 'dt-center',
+                width: '80px'
+            },
+            { 
+                data: 'temperature',
+                className: 'dt-right',
+                width: '100px',
+                render: function(data) {
+                    return data ? parseFloat(data).toFixed(1) + ' °C' : '';
                 }
             },
             {
                 data: null,
-                width: '100px',
-                render: function(data) {
-                    return `
-                        <button class="btn btn-sm btn-info view-monitoring" data-id="${data.checkup_prikey}">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    `;
+                className: 'dt-center',
+                width: '80px',
+                render: function(data, type, row) {
+                    return '<button class="btn btn-primary btn-sm btn-view" data-patient-id="' + row.patient_id + '"><i class="fas fa-eye"></i> View</button>';
                 }
             }
         ],
-        order: [[17, 'desc']], // Sort by created_at by default
-        dom: 't', // Only show the table
-        lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
-        pageLength: 10,
-        language: {
-            processing: "Loading...",
-            emptyTable: "No monitoring records found",
-            zeroRecords: "No matching records found"
+        ajax: {
+            url: '../backend/fetch_monitoring.php',
+            dataSrc: function(json) {
+                if (json.status === 'success') {
+                    return json.data;
+                } else {
+                    console.error('Server error:', json.message);
+                    return [];
+                }
+            }
+        },
+        order: [[0, 'desc']],
+        initComplete: function() {
+            table.columns.adjust();
         }
     });
-    
-    // Custom length change
-    $('#monitoringLength').on('change', function() {
-        monitoringTable.page.len($(this).val()).draw();
-        updatePagination();
+
+    // Handle entries per page change
+    $('#monitoringPerPage').on('change', function() {
+        var val = parseInt($(this).val());
+        table.page.len(val).draw();
     });
 
-    // Custom search
-    $('#monitoringSearch').on('keyup', function() {
-        monitoringTable.search(this.value).draw();
-        updatePagination();
+    // Handle search input
+    var searchTimeout;
+    $('#monitoringSearch').on('input', function() {
+        clearTimeout(searchTimeout);
+        var searchValue = this.value;
+        searchTimeout = setTimeout(function() {
+            table.search(searchValue).draw();
+        }, 300);
     });
 
-    // Update pagination and info
-    function updatePagination() {
-        const info = monitoringTable.page.info();
-        $('#monitoringInfo').html(
-            'Showing ' + (info.start + 1) + ' to ' + info.end + ' of ' + info.recordsTotal + ' entries'
-        );
+    // Store the current patient ID globally
+    let currentPatientId = null;
 
-        const $pagination = $('#monitoringPagination .pagination');
-        $pagination.empty();
-
-        // First page
-        $pagination.append(`
-            <li class="page-item ${info.page === 0 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="first"><i class="fas fa-angle-double-left"></i></a>
-            </li>
-        `);
-
-        // Previous page
-        $pagination.append(`
-            <li class="page-item ${info.page === 0 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="previous"><i class="fas fa-angle-left"></i></a>
-            </li>
-        `);
-
-        // Page numbers
-        let startPage = Math.max(0, info.page - 2);
-        let endPage = Math.min(info.pages - 1, info.page + 2);
-
-        for (let i = startPage; i <= endPage; i++) {
-            $pagination.append(`
-                <li class="page-item ${info.page === i ? 'active' : ''}">
-                    <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
-                </li>
-            `);
-        }
-
-        // Next page
-        $pagination.append(`
-            <li class="page-item ${info.page === info.pages - 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="next"><i class="fas fa-angle-right"></i></a>
-            </li>
-        `);
-
-        // Last page
-        $pagination.append(`
-            <li class="page-item ${info.page === info.pages - 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="last"><i class="fas fa-angle-double-right"></i></a>
-            </li>
-        `);
-    }
-
-    // Handle pagination clicks
-    $('#monitoringPagination').on('click', '.page-link', function(e) {
-        e.preventDefault();
-        const page = $(this).data('page');
+    // Handle view details button click
+    $('#monitoringTable').on('click', '.btn-view', function() {
+        var row = $(this).closest('tr');
+        currentPatientId = row.find('td:first').text(); // Get the patient ID from the first column
+        console.log('Viewing details for patient:', currentPatientId);
         
-        switch(page) {
-            case 'first':
-                monitoringTable.page('first').draw(false);
-                break;
-            case 'previous':
-                monitoringTable.page('previous').draw(false);
-                break;
-            case 'next':
-                monitoringTable.page('next').draw(false);
-                break;
-            case 'last':
-                monitoringTable.page('last').draw(false);
-                break;
-            default:
-                monitoringTable.page(parseInt(page)).draw(false);
-        }
-        
-        updatePagination();
-    });
-
-    // Initial pagination setup
-    monitoringTable.on('draw', function() {
-        updatePagination();
-    });
-
-    // View Monitoring Details
-    $('#monitoringTable').on('click', '.view-monitoring', function() {
-        const id = $(this).data('id');
         $.ajax({
             url: '../backend/get_monitoring_details.php',
             method: 'GET',
-            data: { id: id },
+            data: { id: currentPatientId },
             success: function(response) {
-                if (!response.data) {
-                    console.error('Invalid response:', response);
-                    return;
+                if (response.status === 'success' && response.data) {
+                    var details = response.data;
+                    
+                    $('#weightCategory').text(details.weight_category || 'N/A');
+                    $('#bmiStatus').text(details.finding_bmi || 'N/A');
+                    $('#growthStatus').text(details.finding_growth || 'N/A');
+                    $('#armCircumference').text(details.arm_circumference || 'N/A');
+                    $('#armStatus').text(details.arm_circumference_status || 'N/A');
+                    $('#findings').text(details.findings || 'N/A');
+                    
+                    var appointmentDate = details.date_of_appointment ? 
+                        new Date(details.date_of_appointment).toLocaleDateString() : 'N/A';
+                    var appointmentTime = details.time_of_appointment || 'N/A';
+                    var createdAt = details.created_at ? 
+                        new Date(details.created_at).toLocaleString() : 'N/A';
+                    
+                    $('#appointmentDate').text(appointmentDate);
+                    $('#appointmentTime').text(appointmentTime);
+                    $('#place').text(details.place || 'N/A');
+                    $('#createdAt').text(createdAt);
+                    
+                    $('#monitoringDetailsModal').modal('show');
+                } else {
+                    alert('Failed to load details: ' + (response.message || 'Unknown error'));
                 }
-
-                const data = response.data;
-                $('#view-patient-id').text(data.patient_id || '');
-                $('#view-family-id').text(data.patient_fam_id || '');
-                $('#view-age').text(data.age || '');
-                $('#view-sex').text(data.sex || '');
-                $('#view-weight').text(data.weight || '');
-                $('#view-height').text(data.height || '');
-                $('#view-bp').text(data.bp || '');
-                $('#view-temperature').text(data.temperature || '');
-                $('#view-weight-category').text(data.weight_category || '');
-                $('#view-bmi').text(data.finding_bmi || '');
-                $('#view-growth').text(data.finding_growth || '');
-                $('#view-arm').text(data.arm_circumference || '');
-                $('#view-arm-status').text(data.arm_circumference_status || '');
-                $('#view-findings').text(data.findings || '');
-                $('#view-date').text(data.date_of_appointment ? moment(data.date_of_appointment).format('MMMM D, YYYY') : '');
-                $('#view-time').text(data.time_of_appointment || '');
-                $('#view-place').text(data.place || '');
-                $('#view-created').text(data.created_at ? moment(data.created_at).format('MMMM D, YYYY h:mm A') : '');
-
-                $('#viewMonitoringModal').modal('show');
             },
-            error: function(xhr, error) {
-                console.error('AJAX Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to load monitoring details'
-                });
+            error: function(xhr, status, error) {
+                console.error('Error loading details:', error);
+                alert('Failed to load details. Please try again.');
             }
         });
     });
 
-    // Export Data
+    // Handle export button click
     $('#exportMonitoringBtn').click(function() {
         window.location.href = '../backend/export_monitoring.php';
+        // Add a small delay before reloading to allow the download to start
+        setTimeout(function() {
+            window.location.reload();
+        }, 1000);
+    });
+
+    // Handle history button click
+    $('#viewHistoryBtn').on('click', function() {
+        console.log('History button clicked');
+        console.log('Current patient ID:', currentPatientId);
+        
+        if (!currentPatientId) {
+            console.error('No patient ID available');
+            return;
+        }
+
+        // First hide the details modal
+        $('#monitoringDetailsModal').modal('hide');
+        
+        $.ajax({
+            url: '../backend/get_patient_checkups.php',
+            method: 'GET',
+            data: { id: currentPatientId },
+            success: function(response) {
+                console.log('History response:', response);
+                
+                // Show the history modal
+                $('#checkupHistoryModal').modal('show');
+                
+                if (response.status === 'success') {
+                    if (response.data && response.data.length > 0) {
+                        // Show table, hide no history message
+                        $('#historyTableContainer').removeClass('d-none');
+                        $('#noHistoryMessage').addClass('d-none');
+                        populateHistoryTable(response.data);
+                    } else {
+                        // Hide table, show no history message
+                        $('#historyTableContainer').addClass('d-none');
+                        $('#noHistoryMessage').removeClass('d-none');
+                    }
+                } else {
+                    // Handle error
+                    $('#historyTableContainer').addClass('d-none');
+                    $('#noHistoryMessage').removeClass('d-none').find('h5').text('Error loading history');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Ajax error:', error);
+                // Show error in modal
+                $('#historyTableContainer').addClass('d-none');
+                $('#noHistoryMessage').removeClass('d-none').find('h5').text('Error loading history');
+                $('#checkupHistoryModal').modal('show');
+            }
+        });
+    });
+
+    function populateHistoryTable(history) {
+        console.log('Populating history table with:', history);
+        const tbody = $('#historyTableBody');
+        tbody.empty();
+
+        history.forEach(record => {
+            const row = `
+                <tr>
+                    <td>${formatDate(record.date_of_appointment)}</td>
+                    <td>${record.weight_category || 'N/A'}</td>
+                    <td>${record.finding_bmi || 'N/A'}</td>
+                    <td>${record.finding_growth || 'N/A'}</td>
+                    <td>${record.arm_circumference || 'N/A'} (${record.arm_circumference_status || 'N/A'})</td>
+                    <td>${record.findings || 'N/A'}</td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+
+    // Modal event handlers
+    $('#checkupHistoryModal').on('show.bs.modal', function () {
+        console.log('History modal is showing');
+    });
+
+    $('#checkupHistoryModal').on('hidden.bs.modal', function () {
+        console.log('History modal is hidden, showing details modal');
+        $('#monitoringDetailsModal').modal('show');
+    });
+
+    $('#monitoringDetailsModal').on('hidden.bs.modal', function () {
+        console.log('Details modal is hidden, clearing patient ID');
+        currentPatientId = null;
+    });
+
+    // Download Template button
+    $('#downloadTemplateBtn').click(function() {
+        window.location.href = '../backend/download_template.php';
+        // Add a small delay before reloading to allow the download to start
+        setTimeout(function() {
+            window.location.reload();
+        }, 1000);
+    });
+
+    // Import Data button
+    $('#importDataBtn').click(function() {
+        const importModal = new bootstrap.Modal(document.getElementById('importModal'));
+        importModal.show();
+    });
+
+    // Handle file import
+    $('#confirmImportBtn').click(function() {
+        const fileInput = $('#importFile')[0];
+        if (!fileInput.files.length) {
+            alert('Please select a file to import');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('importFile', fileInput.files[0]);
+
+        $.ajax({
+            url: '../backend/import_monitoring.php',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.status === 'success') {
+                    alert(response.message);
+                    const importModal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+                    importModal.hide();
+                    // First reload the table data
+                    table.ajax.reload();
+                    // Then reload the whole page after a short delay
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    alert('Import failed: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Import failed. Please try again.');
+            }
+        });
     });
 });

@@ -29,6 +29,68 @@
         .pagination {
             margin: 0;
         }
+        
+        /* Add these new styles */
+        #eventTable th, 
+        #eventTable td {
+            white-space: normal;
+            word-wrap: break-word;
+            min-width: 100px; /* Minimum width for draggable columns */
+            max-width: 300px; /* Maximum width to prevent excessive stretching */
+        }
+
+        #eventTable td {
+            vertical-align: middle;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            /* Enable smooth scrolling on iOS */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Style for draggable columns */
+        .dragging {
+            opacity: 0.5;
+            background-color: #f8f9fa;
+        }
+
+        /* Custom width for specific columns */
+        #eventTable th:nth-child(1), /* Event Type */
+        #eventTable td:nth-child(1) {
+            min-width: 120px;
+        }
+
+        #eventTable th:nth-child(2), /* Event Name */
+        #eventTable td:nth-child(2) {
+            min-width: 150px;
+        }
+
+        #eventTable th:nth-child(3), /* Time */
+        #eventTable td:nth-child(3) {
+            min-width: 100px;
+        }
+
+        #eventTable th:nth-child(4), /* Place */
+        #eventTable td:nth-child(4) {
+            min-width: 150px;
+        }
+
+        #eventTable th:nth-child(5), /* Date */
+        #eventTable td:nth-child(5) {
+            min-width: 100px;
+        }
+
+        #eventTable th:nth-child(6), /* Age Range */
+        #eventTable td:nth-child(6) {
+            min-width: 100px;
+        }
+
+        #eventTable th:last-child, /* Actions */
+        #eventTable td:last-child {
+            min-width: 120px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -78,13 +140,10 @@
                                 <tr>
                                     <th>Event Type</th>
                                     <th>Event Name</th>
-                                    <th>Event Time</th>
-                                    <th>Event Place</th>
-                                    <th>Event Date</th>
-                                    <th>Created By</th>
-                                    <th>Editor Email</th>
-                                    <th>Created At</th>
-                                    <th>Updated At</th>
+                                    <th>Time</th>
+                                    <th>Place</th>
+                                    <th>Date</th>
+                                    <th>Age Range</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -140,6 +199,20 @@
                             <label for="event_date" class="form-label">Event Date</label>
                             <input type="date" class="form-control" id="event_date" name="event_date" required>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="min_age" class="form-label">Minimum Age</label>
+                                    <input type="number" class="form-control" id="min_age" name="min_age" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="max_age" class="form-label">Maximum Age</label>
+                                    <input type="number" class="form-control" id="max_age" name="max_age" min="0" required>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -193,12 +266,65 @@
                             <label for="edit_event_date" class="form-label">Event Date</label>
                             <input type="date" class="form-control" id="edit_event_date" name="event_date" required>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_min_age" class="form-label">Minimum Age</label>
+                                    <input type="number" class="form-control" id="edit_min_age" name="min_age" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_max_age" class="form-label">Maximum Age</label>
+                                    <input type="number" class="form-control" id="edit_max_age" name="max_age" min="0" required>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Update Event</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Event Modal -->
+    <div class="modal fade" id="viewEventModal" tabindex="-1" aria-labelledby="viewEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewEventModalLabel">Event Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th>Created By</th>
+                                    <td id="view_created_by"></td>
+                                </tr>
+                                <tr>
+                                    <th>Edited By</th>
+                                    <td id="view_edited_by"></td>
+                                </tr>
+                                <tr>
+                                    <th>Created At</th>
+                                    <td id="view_created_at"></td>
+                                </tr>
+                                <tr>
+                                    <th>Updated At</th>
+                                    <td id="view_updated_at"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>

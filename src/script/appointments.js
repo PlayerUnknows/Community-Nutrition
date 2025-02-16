@@ -14,8 +14,10 @@ var appointmentManager = {
             responsive: true,
             ajax: {
                 url: "/src/controllers/AppointmentController.php",
-                type: 'POST',
-                data: { action: 'getAll' },
+                type: 'GET',
+                data: {
+                    action: 'getAll'
+                },
                 dataSrc: function(response) {
                     if (!response || !response.data) {
                         console.error('Invalid response format:', response);

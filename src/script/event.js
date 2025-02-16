@@ -7,6 +7,9 @@ $(document).ready(function() {
     let eventTable = $('#eventTable').DataTable({
         processing: true,
         serverSide: false,
+        pageLength: 5,
+        lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+        order: [[4, 'desc']],
         ajax: {
             url: '../backend/event_handler.php',
             type: 'POST',
@@ -18,19 +21,25 @@ $(document).ready(function() {
             { data: 'event_time' },
             { data: 'event_place' },
             { data: 'event_date' },
-            { data: 'created_by_name' },
-            { data: 'edited_by' },
-            { data: 'raw_created_at' },
-            { data: 'raw_updated_at' },
+            { 
+                data: null,
+                render: function(data, type, row) {
+                    return `${row.min_age} - ${row.max_age}`;
+                },
+                title: 'Age Range'
+            },
             {
-                data: 'event_prikey',
+                data: null,
                 render: function(data, type, row) {
                     return `
-                        <button onclick="editEvent(${data})" class="btn btn-sm btn-outline-primary">
-                            Edit
+                        <button onclick="viewEventDetails(${row.event_prikey})" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger delete-event" data-id="${data}">
-                            Delete
+                        <button onclick="editEvent(${row.event_prikey})" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-event" data-id="${row.event_prikey}">
+                            <i class="fas fa-trash"></i>
                         </button>
                     `;
                 }
@@ -40,24 +49,57 @@ $(document).ready(function() {
 
     // Define editEvent function in global scope
     window.editEvent = function(eventId) {
-
-        // Get the data from DataTable
         const data = eventTable.rows().data().toArray()
             .find(row => row.event_prikey == eventId);
             
         if (data) {
-            // Populate form fields
+            // Get modal element
+            const modalEl = document.getElementById('editEventModal');
+            
+            // Dispose any existing modal instance
+            const existingModal = bootstrap.Modal.getInstance(modalEl);
+            if (existingModal) {
+                existingModal.dispose();
+            }
+            
+            // Create new modal instance
+            const editEventModal = new bootstrap.Modal(modalEl, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            
+            // Set form values
             $('#edit_event_prikey').val(data.event_prikey);
             $('#edit_event_type').val(data.event_type);
             $('#edit_event_name').val(data.event_name_created);
             $('#edit_event_time').val(data.event_time);
             $('#edit_event_place').val(data.event_place);
             $('#edit_event_date').val(data.event_date);
+            $('#edit_min_age').val(data.min_age);
+            $('#edit_max_age').val(data.max_age);
 
-            // Show modal
+            // Show the modal
             editEventModal.show();
         } else {
             console.error('No data found for ID:', eventId);
+        }
+    };
+
+    // Add this new function for viewing event details
+    window.viewEventDetails = function(eventId) {
+        const data = eventTable.rows().data().toArray()
+            .find(row => row.event_prikey == eventId);
+            
+        if (data) {
+            // Populate modal with event details
+            $('#view_created_by').text(data.created_by_name);
+            $('#view_edited_by').text(data.edited_by || 'N/A');
+            $('#view_created_at').text(data.raw_created_at);
+            $('#view_updated_at').text(data.raw_updated_at || 'N/A');
+            
+            // Show the modal
+            const viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
+            viewEventModal.show();
         }
     };
 
@@ -67,27 +109,89 @@ $(document).ready(function() {
             const modalEl = document.querySelector(modalId);
             if (!modalEl) return;
             
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) {
-                modal.hide();
-                // Wait for modal to finish hiding before cleanup
-                modalEl.addEventListener('hidden.bs.modal', function() {
-                    document.querySelector('.modal-backdrop')?.remove();
-                    document.body.classList.remove('modal-open');
-                    document.body.style.removeProperty('padding-right');
-                }, { once: true });
-            } else {
-                // Clean up if no modal instance found
-                document.querySelector('.modal-backdrop')?.remove();
+            // Create a promise to handle modal hiding
+            const hideModalPromise = new Promise((resolve) => {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modalEl.addEventListener('hidden.bs.modal', function handler() {
+                        modalEl.removeEventListener('hidden.bs.modal', handler);
+                        resolve();
+                    });
+                    modal.hide();
+                } else {
+                    resolve();
+                }
+            });
+
+            // After modal is hidden, clean up
+            hideModalPromise.then(() => {
+                // Clean up modal elements
+                if (modalEl) {
+                    modalEl.style.cssText = 'display: none !important';
+                    modalEl.classList.remove('show', 'modal-open', 'fade');
+                    modalEl.setAttribute('aria-hidden', 'true');
+                    modalEl.removeAttribute('aria-modal');
+                    modalEl.removeAttribute('role');
+                }
+
+                // Super aggressive backdrop removal
+                const removeBackdrops = () => {
+                    document.querySelectorAll('.modal-backdrop').forEach(el => {
+                        if (el) {
+                            el.style.cssText = 'display: none !important';
+                            el.remove();
+                            if (el.parentElement) {
+                                el.parentElement.removeChild(el);
+                            }
+                        }
+                    });
+
+                    const backdrops = document.getElementsByClassName('modal-backdrop');
+                    while (backdrops.length > 0 && backdrops[0]) {
+                        backdrops[0].style.cssText = 'display: none !important';
+                        backdrops[0].remove();
+                        if (backdrops[0] && backdrops[0].parentElement) {
+                            backdrops[0].parentElement.removeChild(backdrops[0]);
+                        }
+                    }
+                };
+
+                // Clean up body
                 document.body.classList.remove('modal-open');
                 document.body.style.removeProperty('padding-right');
-            }
+                document.body.style.overflow = '';
+
+                // Remove modal-open class from all elements
+                document.querySelectorAll('.modal-open').forEach(el => {
+                    if (el) {
+                        el.classList.remove('modal-open');
+                    }
+                });
+
+                // Execute backdrop removal multiple times
+                removeBackdrops();
+                setTimeout(removeBackdrops, 50);
+                setTimeout(removeBackdrops, 150);
+
+                // Dispose modal instance after cleanup
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) {
+                    modalInstance.dispose();
+                }
+            });
+
         } catch (error) {
             console.error('Error hiding modal:', error);
-            // Fallback cleanup
-            document.querySelector('.modal-backdrop')?.remove();
+            // Fallback aggressive cleanup
+            document.querySelectorAll('.modal-backdrop').forEach(el => {
+                if (el) {
+                    el.style.cssText = 'display: none !important';
+                    el.remove();
+                }
+            });
             document.body.classList.remove('modal-open');
             document.body.style.removeProperty('padding-right');
+            document.body.style.overflow = '';
         }
     }
 
@@ -111,7 +215,7 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                addEventModal.hide();
+                hideModal('#addEventModal');
                 $('#addEventForm')[0].reset();
 
                 if (response.success) {
@@ -131,7 +235,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr, status, error) {
-                addEventModal.hide();
+                hideModal('#addEventModal');
                 
                 Swal.fire({
                     icon: 'error',
@@ -157,7 +261,8 @@ $(document).ready(function() {
         }
 
         // Validate required fields
-        const requiredFields = ['event_prikey', 'event_type', 'event_name', 'event_time', 'event_place', 'event_date'];
+        const requiredFields = ['event_prikey', 'event_type', 'event_name', 'event_time', 
+                               'event_place', 'event_date', 'min_age', 'max_age'];
         let missingFields = [];
         
         requiredFields.forEach(field => {
@@ -185,7 +290,7 @@ $(document).ready(function() {
             success: function(response) {
                 console.log('Success Response:', response);
                 if (response.success) {
-                    editEventModal.hide();
+                    hideModal('#editEventModal');
                     $('#editEventForm')[0].reset();
                     Swal.fire({
                         icon: 'success',
@@ -220,7 +325,7 @@ $(document).ready(function() {
                     console.error('Error parsing response:', e);
                 }
                 
-                editEventModal.hide();
+                hideModal('#editEventModal');
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -249,7 +354,7 @@ $(document).ready(function() {
                     type: 'POST',
                     data: {
                         action: 'delete',
-                        event_id: eventId
+                        event_prikey: eventId
                     },
                     success: function(response) {
                         if (response.success) {

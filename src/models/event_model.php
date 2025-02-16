@@ -1,7 +1,7 @@
 <?php
 require_once(__DIR__ . '/../config/dbcon.php');
 
-function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate) {
+function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate, $minAge, $maxAge) {
     try {
         $conn = connect();
         
@@ -15,11 +15,11 @@ function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate
         $eventCreator = $_SESSION['email'] ?? $_SESSION['username'] ?? 'Unknown'; // Adjust based on your session variables
         
         // Debug: Log the SQL and values
-        error_log("Preparing SQL: INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-        error_log("Values: Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, CreatedBy=$createdBy, EventCreator=$eventCreator");
+        error_log("Preparing SQL: INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, min_age, max_age, created_by, event_creator, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        error_log("Values: Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, MinAge=$minAge, MaxAge=$maxAge, CreatedBy=$createdBy, EventCreator=$eventCreator");
         
-        $sql = "INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, created_by, event_creator, created_at) 
-                VALUES (:type, :name, :time, :place, :date, :created_by, :event_creator, NOW())";
+        $sql = "INSERT INTO event_info (event_type, event_name_created, event_time, event_place, event_date, min_age, max_age, created_by, event_creator, created_at) 
+                VALUES (:type, :name, :time, :place, :date, :min_age, :max_age, :created_by, :event_creator, NOW())";
         
         $stmt = $conn->prepare($sql);
         
@@ -29,6 +29,8 @@ function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate
         $stmt->bindValue(':time', $eventTime);
         $stmt->bindValue(':place', $eventPlace);
         $stmt->bindValue(':date', $eventDate);
+        $stmt->bindValue(':min_age', $minAge);
+        $stmt->bindValue(':max_age', $maxAge);
         $stmt->bindValue(':created_by', $createdBy, PDO::PARAM_INT);
         $stmt->bindValue(':event_creator', $eventCreator);
         
@@ -90,7 +92,7 @@ function getAllEvents() {
     }
 }
 
-function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, $eventDate) {
+function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, $eventDate, $minAge, $maxAge) {
     try {
         $conn = connect();
         
@@ -101,8 +103,8 @@ function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, 
         $editedBy = $_SESSION['user_id'] ?? 1; // Default to first admin user if not set
         
         // Debug: Log the SQL and values
-        error_log("Preparing SQL: UPDATE event_info SET event_type = ?, event_name_created = ?, event_time = ?, event_place = ?, event_date = ?, edited_by = ? WHERE event_id = ?");
-        error_log("Values: Id=$eventId, Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, EditedBy=$editedBy");
+        error_log("Preparing SQL: UPDATE event_info SET event_type = ?, event_name_created = ?, event_time = ?, event_place = ?, event_date = ?, min_age = ?, max_age = ?, edited_by = ? WHERE event_id = ?");
+        error_log("Values: Id=$eventId, Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate, MinAge=$minAge, MaxAge=$maxAge, EditedBy=$editedBy");
         
         $sql = "UPDATE event_info 
                 SET event_type = :type, 
@@ -110,6 +112,8 @@ function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, 
                     event_time = :time,
                     event_place = :place,
                     event_date = :date,
+                    min_age = :min_age,
+                    max_age = :max_age,
                     edited_by = :edited_by
                 WHERE event_prikey = :id";
         
@@ -121,6 +125,8 @@ function updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, 
         $stmt->bindValue(':time', $eventTime);
         $stmt->bindValue(':place', $eventPlace);
         $stmt->bindValue(':date', $eventDate);
+        $stmt->bindValue(':min_age', $minAge);
+        $stmt->bindValue(':max_age', $maxAge);
         $stmt->bindValue(':edited_by', $editedBy, PDO::PARAM_INT);
         $stmt->bindValue(':id', $eventId);
         

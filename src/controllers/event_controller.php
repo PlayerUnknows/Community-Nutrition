@@ -1,4 +1,9 @@
 <?php
+ini_set('log_errors', 1);
+ini_set('error_log', '/path/to/your/php-error.log'); // Update this path
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 require_once('../models/event_model.php');
 
@@ -23,7 +28,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         error_log("Adding event with values: Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate");
         
         try {
-            $result = createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate);
+            $result = createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate, 
+                $_SESSION['user_id'] ?? 1, 'active');
             echo json_encode(['success' => $result]);
         } catch (Exception $e) {
             error_log("Error in event creation: " . $e->getMessage());
@@ -42,7 +48,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         error_log("Editing event with values: ID=$eventId, Type=$eventType, Name=$eventName, Time=$eventTime, Place=$eventPlace, Date=$eventDate");
         
         try {
-            $result = updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, $eventDate);
+            $result = updateEvent($eventId, $eventType, $eventName, $eventTime, $eventPlace, $eventDate,
+                $_SESSION['user_id'] ?? 1, 'active');
             echo json_encode(['success' => $result]);
         } catch (Exception $e) {
             error_log("Error in event editing: " . $e->getMessage());
@@ -53,13 +60,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
-    if ($_GET['action'] == 'delete' && isset($_GET['id'])) {
-        $eventId = $_GET['id'];
+    if ($_GET['action'] == 'delete') {
+        // Super detailed debugging
+        error_log("Full SERVER array: " . print_r($_SERVER, true));
+        error_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);
+        error_log("QUERY_STRING: " . $_SERVER['QUERY_STRING']);
+        error_log("GET array: " . print_r($_GET, true));
+        
+        // Use event_prikey instead of event_id
+        $eventId = isset($_GET['event_prikey']) ? trim($_GET['event_prikey']) : '';
+        
+        error_log("Extracted eventId: '" . $eventId . "'");
+        error_log("isset() check: " . (isset($_GET['event_prikey']) ? 'true' : 'false'));
+        error_log("empty() check: " . (empty($eventId) ? 'true' : 'false'));
+        
+        // Validate event ID
+        if (empty($eventId)) {
+            error_log("Delete attempt with empty event ID");
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Event ID not provided']);
+            exit();
+        }
+        
         try {
+            error_log("Attempting to delete event with ID: " . $eventId);
+            
             $result = deleteEvent($eventId);
-            echo json_encode(['success' => $result]);
+            
+            if ($result === false) {
+                throw new Exception("Failed to delete event");
+            }
+            
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Event deleted successfully']);
         } catch (Exception $e) {
             error_log("Error in event deletion: " . $e->getMessage());
+            header('Content-Type: application/json');
+            http_response_code(500);
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit();

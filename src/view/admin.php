@@ -131,27 +131,6 @@ require_once __DIR__ . '/../includes/header.php';
             margin: 0;
         }
 
-        /* Spinner for Loading */
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
         .error {
             border-color: #dc3545 !important;
         }
@@ -239,10 +218,70 @@ require_once __DIR__ . '/../includes/header.php';
             padding: 0.25em 0.75em !important;
             font-size: 0.9em !important;
         }
+
+        /* Update loading screen styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8); /* transparent white background */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: #007bff;
+            border-radius: 50%;
+            animation: bounce 0.5s ease-in-out infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Update loading screen div -->
+    <div id="loading-screen">
+        <img src="../../assets/img/SanAndres.svg" alt="Logo" class="loading-logo">
+        <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
 
     <!-- Header Section -->
     <div class="bg-white py-1 shadow-sm h-1 header-section">
@@ -407,7 +446,6 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Custom Scripts -->
  
     <script src="../../src/script/audit_trail.js"></script>
-    <script src="../../src/script/monitoring.js"></script>
     <script src="../../src/script/appointments.js"></script>
     <script src="../../src/script/users.js"></script>
     <script src="../../src/script/dropdrown.js"></script>
@@ -736,11 +774,8 @@ require_once __DIR__ . '/../includes/header.php';
         });
     </script>
 
-    <script src="../../src/script/logout.js"></script>
 
-    <script src="../../src/script/audit_trail.js"></script>
-
-    <script src="../../src/script/loader.js"></script>
+    <!-- <script src="../../src/script/loader.js"></script> -->
 
     <script>
         $(document).ready(function() {
@@ -820,6 +855,15 @@ require_once __DIR__ . '/../includes/header.php';
     </script>
     <script src="../../src/script/logout.js"></script>
     <script src="../../src/script/session.js"></script>
+
+    <script>
+        // Add this loading screen script right before the closing body tag
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loading-screen').style.display = 'none';
+            }, 3000);
+        });
+    </script>
 </body>
 
 </html>

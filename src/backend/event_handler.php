@@ -45,6 +45,8 @@ try {
                         e.event_time,
                         e.event_place,
                         e.event_date,
+                        e.min_age,
+                        e.max_age,
                         e.created_at,
                         e.updated_at,
                         COALESCE(SUBSTRING_INDEX(u1.email, '@', 1), '') as created_by_name,
@@ -72,6 +74,8 @@ try {
                     'event_time' => $event['event_time'],
                     'event_place' => $event['event_place'],
                     'event_date' => $event['event_date'],
+                    'min_age' => $event['min_age'],
+                    'max_age' => $event['max_age'],
                     'created_by_name' => $event['created_by_name'],
                     'edited_by' => $event['edited_by'],
                     'raw_created_at' => $event['raw_created_at'],
@@ -89,14 +93,15 @@ try {
         case 'add':
             if (!isset($_POST['event_type']) || !isset($_POST['event_name']) || 
                 !isset($_POST['event_time']) || !isset($_POST['event_date']) ||
-                !isset($_POST['event_place'])) {
+                !isset($_POST['event_place']) || !isset($_POST['min_age']) ||
+                !isset($_POST['max_age'])) {
                 throw new Exception('Missing required fields');
             }
 
             $query = "INSERT INTO event_info (
                 event_type, event_name_created, event_time, event_place, 
-                event_date, created_by, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+                event_date, min_age, max_age, created_by, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
             
             $stmt = $conn->prepare($query);
             $result = $stmt->execute([
@@ -105,6 +110,8 @@ try {
                 $_POST['event_time'],
                 $_POST['event_place'],
                 $_POST['event_date'],
+                $_POST['min_age'],
+                $_POST['max_age'],
                 $_SESSION['user_id']
             ]);
 
@@ -123,7 +130,8 @@ try {
             
             if (!isset($_POST['event_prikey']) || !isset($_POST['event_type']) || 
                 !isset($_POST['event_name']) || !isset($_POST['event_time']) || 
-                !isset($_POST['event_date']) || !isset($_POST['event_place'])) {
+                !isset($_POST['event_date']) || !isset($_POST['event_place']) ||
+                !isset($_POST['min_age']) || !isset($_POST['max_age'])) {
                 $missing = [];
                 if (!isset($_POST['event_prikey'])) $missing[] = 'event_prikey';
                 if (!isset($_POST['event_type'])) $missing[] = 'event_type';
@@ -131,6 +139,8 @@ try {
                 if (!isset($_POST['event_time'])) $missing[] = 'event_time';
                 if (!isset($_POST['event_date'])) $missing[] = 'event_date';
                 if (!isset($_POST['event_place'])) $missing[] = 'event_place';
+                if (!isset($_POST['min_age'])) $missing[] = 'min_age';
+                if (!isset($_POST['max_age'])) $missing[] = 'max_age';
                 throw new Exception('Missing required fields: ' . implode(', ', $missing));
             }
 
@@ -140,6 +150,8 @@ try {
                 event_time = ?,
                 event_place = ?,
                 event_date = ?,
+                min_age = ?,
+                max_age = ?,
                 edited_by = ?,
                 updated_at = NOW()
                 WHERE event_prikey = ?";
@@ -152,6 +164,8 @@ try {
                     $_POST['event_time'],
                     $_POST['event_place'],
                     $_POST['event_date'],
+                    $_POST['min_age'],
+                    $_POST['max_age'],
                     $_SESSION['user_id'],
                     $_POST['event_prikey']
                 ];

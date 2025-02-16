@@ -71,7 +71,7 @@
 
 <style>
     .table-container {
-        max-height: 300px;
+        max-height: 500px;
         overflow-y: auto;
         border: 1px solid #dee2e6;
         border-radius: 4px;

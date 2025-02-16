@@ -41,42 +41,38 @@ class AppointmentController {
     }
 
     public function getAppointments() {
-        if ($_POST['action'] === 'getAll') {
-            try {
-                $result = $this->appointment->getAllAppointments();
-                $appointments = array();
-                
-                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                    $appointments[] = array(
-                        'appointment_prikey' => $row['appointment_prikey'],
-                        'user_id' => $row['user_id'],
-                        'date' => $row['date'],
-                        'time' => $row['time'],
-                        'description' => $row['description'],
-                        'status' => $row['status']
-                    );
-                }
-                
-                echo json_encode([
-                    'data' => $appointments,
-                    'recordsTotal' => count($appointments),
-                    'recordsFiltered' => count($appointments),
-                    'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1
-                ]);
-                exit;
-            } catch (Exception $e) {
-                http_response_code(500);
-                echo json_encode([
-                    'error' => 'Failed to fetch appointments',
-                    'data' => [],
-                    'recordsTotal' => 0,
-                    'recordsFiltered' => 0,
-                    'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1
-                ]);
-                exit;
+        try {
+            $result = $this->appointment->getAllAppointments();
+            $appointments = array();
+            
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                $appointments[] = array(
+                    'appointment_prikey' => $row['appointment_prikey'],
+                    'user_id' => $row['user_id'],
+                    'date' => $row['date'],
+                    'time' => $row['time'],
+                    'description' => $row['description'],
+                    'status' => $row['status']
+                );
             }
-        } else {
-            $this->getAppointments();
+            
+            echo json_encode([
+                'data' => $appointments,
+                'recordsTotal' => count($appointments),
+                'recordsFiltered' => count($appointments),
+                'draw' => isset($_REQUEST['draw']) ? intval($_REQUEST['draw']) : 1
+            ]);
+            exit;
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'error' => 'Failed to fetch appointments',
+                'data' => [],
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'draw' => isset($_REQUEST['draw']) ? intval($_REQUEST['draw']) : 1
+            ]);
+            exit;
         }
     }
 
@@ -225,16 +221,16 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
-if (isset($_GET['action'])) {
+if (isset($_REQUEST['action'])) {
     $controller = new AppointmentController();
-    $action = $_GET['action'];
+    $action = $_REQUEST['action'];
 
     switch ($action) {
+        case 'getAll':
+            $controller->getAppointments();
+            break;
         case 'getUpcoming':
             $controller->getUpcomingAppointments();
-            break;
-        case 'getAppointments':
-            $controller->getAppointments();
             break;
         case 'getAppointment':
             $controller->getAppointment();

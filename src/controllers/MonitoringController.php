@@ -25,18 +25,35 @@ class MonitoringController {
     }
 
     public function getMonitoringDetails() {
+        header('Content-Type: application/json');
+        
         if (!isset($_GET['id'])) {
             echo json_encode(['status' => 'error', 'message' => 'ID not provided']);
             return;
         }
 
-        $id = $_GET['id'];
-        $record = $this->model->getMonitoringById($id);
-        
-        if ($record) {
-            echo json_encode(['status' => 'success', 'data' => $record]);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Record not found']);
+        try {
+            $id = trim($_GET['id']);
+            error_log("Controller - Raw ID from GET: " . $id);
+            
+            // Check if the ID is numeric or a PAT format
+            if (is_numeric($id)) {
+                // Search by checkup_prikey
+                $record = $this->model->getMonitoringByPrikey($id);
+            } else {
+                // Search by checkup_unique_id
+                $record = $this->model->getMonitoringByUniqueId($id);
+            }
+            
+            if ($record) {
+                echo json_encode(['status' => 'success', 'data' => $record]);
+            } else {
+                error_log("Controller - No record found for ID: " . $id);
+                echo json_encode(['status' => 'error', 'message' => 'Record not found']);
+            }
+        } catch (Exception $e) {
+            error_log("Error in getMonitoringDetails: " . $e->getMessage());
+            echo json_encode(['status' => 'error', 'message' => 'Failed to fetch record details']);
         }
     }
 
@@ -59,7 +76,105 @@ class MonitoringController {
             
             fclose($output);
         } else {
+            header('Content-Type: application/json');
             echo json_encode(['status' => 'error', 'message' => 'Failed to export data']);
+        }
+    }
+
+    public function getPatientCheckups() {
+        header('Content-Type: application/json');
+        
+        if (!isset($_GET['id'])) {
+            echo json_encode(['status' => 'error', 'message' => 'ID not provided']);
+            return;
+        }
+
+        try {
+            $id = trim($_GET['id']);
+            $records = $this->model->getPatientCheckups($id);
+            
+            if ($records) {
+                echo json_encode(['status' => 'success', 'data' => $records]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'No checkup history found']);
+            }
+        } catch (Exception $e) {
+            error_log("Error in getPatientCheckups: " . $e->getMessage());
+            echo json_encode(['status' => 'error', 'message' => 'Failed to fetch checkup history']);
+        }
+    }
+
+    public function downloadTemplate() {
+        $filename = 'monitoring_template.csv';
+        $headers = [
+            'patient_id',
+            'patient_fam_id',
+            'age',
+            'sex',
+            'weight',
+            'height',
+            'bp',
+            'temperature',
+            'weight_category',
+            'findings',
+            'date_of_appointment',
+            'time_of_appointment',
+            'place',
+            'finding_growth',
+            'finding_bmi',
+            'arm_circumference',
+            'arm_circumference_status'
+        ];
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        $output = fopen('php://output', 'w');
+        fputcsv($output, $headers);
+        
+        // Add a sample row
+        $sampleRow = [
+            'PAT123',
+            'FAM123',
+            '5',
+            'M',
+            '20.5',
+            '110.2',
+            '90/60',
+            '36.5',
+            'Normal',
+            'Healthy',
+            date('Y-m-d'),
+            '09:00',
+            'Health Center',
+            'Normal',
+            'Normal',
+            '15.5',
+            'Normal'
+        ];
+        fputcsv($output, $sampleRow);
+        fclose($output);
+    }
+
+    public function importData() {
+        header('Content-Type: application/json');
+        
+        if (!isset($_FILES['importFile']) || $_FILES['importFile']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['status' => 'error', 'message' => 'No file uploaded or upload error']);
+            return;
+        }
+
+        $file = $_FILES['importFile']['tmp_name'];
+        
+        try {
+            $result = $this->model->importMonitoringData($file);
+            if ($result['status'] === 'success') {
+                echo json_encode(['status' => 'success', 'message' => $result['message']]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => $result['message']]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Import failed: ' . $e->getMessage()]);
         }
     }
 }

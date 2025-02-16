@@ -46,9 +46,11 @@ try {
                         e.event_place,
                         e.event_date,
                         e.created_at,
+                        e.updated_at,
                         COALESCE(SUBSTRING_INDEX(u1.email, '@', 1), '') as created_by_name,
                         COALESCE(SUBSTRING_INDEX(u2.email, '@', 1), '') as edited_by,
-                        COALESCE(DATE_FORMAT(e.created_at, '%Y-%m-%d %H:%i:%s'), '') as raw_created_at
+                        COALESCE(DATE_FORMAT(e.created_at, '%Y-%m-%d %H:%i:%s'), '') as raw_created_at,
+                        COALESCE(DATE_FORMAT(e.updated_at, '%Y-%m-%d %H:%i:%s'), '') as raw_updated_at
                      FROM event_info e
                      LEFT JOIN account_info u1 ON e.created_by = u1.user_id
                      LEFT JOIN account_info u2 ON e.edited_by = u2.user_id
@@ -72,7 +74,8 @@ try {
                     'event_date' => $event['event_date'],
                     'created_by_name' => $event['created_by_name'],
                     'edited_by' => $event['edited_by'],
-                    'raw_created_at' => $event['raw_created_at']
+                    'raw_created_at' => $event['raw_created_at'],
+                    'raw_updated_at' => $event['raw_updated_at']
                 ]);
             }
 
@@ -115,10 +118,20 @@ try {
             ]);
 
         case 'update':
-            if (!isset($_POST['event_id']) || !isset($_POST['event_type']) || 
+            // Debug: Log received data
+            error_log('Received POST data: ' . print_r($_POST, true));
+            
+            if (!isset($_POST['event_prikey']) || !isset($_POST['event_type']) || 
                 !isset($_POST['event_name']) || !isset($_POST['event_time']) || 
                 !isset($_POST['event_date']) || !isset($_POST['event_place'])) {
-                throw new Exception('Missing required fields');
+                $missing = [];
+                if (!isset($_POST['event_prikey'])) $missing[] = 'event_prikey';
+                if (!isset($_POST['event_type'])) $missing[] = 'event_type';
+                if (!isset($_POST['event_name'])) $missing[] = 'event_name';
+                if (!isset($_POST['event_time'])) $missing[] = 'event_time';
+                if (!isset($_POST['event_date'])) $missing[] = 'event_date';
+                if (!isset($_POST['event_place'])) $missing[] = 'event_place';
+                throw new Exception('Missing required fields: ' . implode(', ', $missing));
             }
 
             $query = "UPDATE event_info SET 
@@ -131,33 +144,49 @@ try {
                 updated_at = NOW()
                 WHERE event_prikey = ?";
             
-            $stmt = $conn->prepare($query);
-            $result = $stmt->execute([
-                $_POST['event_type'],
-                $_POST['event_name'],
-                $_POST['event_time'],
-                $_POST['event_place'],
-                $_POST['event_date'],
-                $_SESSION['user_id'],
-                $_POST['event_id']
-            ]);
+            try {
+                $stmt = $conn->prepare($query);
+                $params = [
+                    $_POST['event_type'],
+                    $_POST['event_name'],
+                    $_POST['event_time'],
+                    $_POST['event_place'],
+                    $_POST['event_date'],
+                    $_SESSION['user_id'],
+                    $_POST['event_prikey']
+                ];
+                
+                // Debug: Log query and parameters
+                error_log('Update query: ' . $query);
+                error_log('Parameters: ' . print_r($params, true));
+                
+                $result = $stmt->execute($params);
 
-            if (!$result) {
-                throw new Exception('Failed to update event');
+                if (!$result) {
+                    $error = $stmt->errorInfo();
+                    throw new Exception('Failed to update event: ' . implode(', ', $error));
+                }
+
+                if ($stmt->rowCount() === 0) {
+                    throw new Exception('No rows were updated. Event may not exist.');
+                }
+
+                sendJSON([
+                    'success' => true,
+                    'message' => 'Event updated successfully'
+                ]);
+            } catch (PDOException $e) {
+                error_log('Database error: ' . $e->getMessage());
+                throw new Exception('Database error: ' . $e->getMessage());
             }
 
-            sendJSON([
-                'success' => true,
-                'message' => 'Event updated successfully'
-            ]);
-
         case 'delete':
-            if (!isset($_POST['event_id'])) {
+            if (!isset($_POST['event_prikey'])) {
                 throw new Exception('Event ID not provided');
             }
 
             $stmt = $conn->prepare("DELETE FROM event_info WHERE event_prikey = ?");
-            $result = $stmt->execute([$_POST['event_id']]);
+            $result = $stmt->execute([$_POST['event_prikey']]);
 
             if (!$result) {
                 throw new Exception('Failed to delete event');

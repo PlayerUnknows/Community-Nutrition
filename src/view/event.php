@@ -84,6 +84,7 @@
                                     <th>Created By</th>
                                     <th>Editor Email</th>
                                     <th>Created At</th>
+                                    <th>Updated At</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -158,7 +159,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editEventForm">
-                    <input type="hidden" id="edit_event_id" name="event_id">
+                    <input type="hidden" id="edit_event_prikey" name="event_prikey">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="edit_event_type" class="form-label">Event Type</label>
@@ -203,13 +204,18 @@
     </div>
 
     <!-- Scripts -->
-    <script src="../../node_modules/moment/min/moment.min.js"></script>
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+    
+    <script src="../../node_modules/moment/min/moment.min.js"></script>
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
     <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
     <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
-    <script src="../script/event.js"></script>
+    
+  
+    <script src="../script/event.js?v=<?php echo time(); ?>"></script>
+    
+   
 </body>
 </html>

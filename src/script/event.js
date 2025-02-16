@@ -3,6 +3,64 @@ $(document).ready(function() {
     const addEventModal = new bootstrap.Modal(document.getElementById('addEventModal'));
     const editEventModal = new bootstrap.Modal(document.getElementById('editEventModal'));
 
+    // Initialize DataTable with simplified configuration
+    let eventTable = $('#eventTable').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: '../backend/event_handler.php',
+            type: 'POST',
+            data: { action: 'getAll' }
+        },
+        columns: [
+            { data: 'event_type' },
+            { data: 'event_name_created' },
+            { data: 'event_time' },
+            { data: 'event_place' },
+            { data: 'event_date' },
+            { data: 'created_by_name' },
+            { data: 'edited_by' },
+            { data: 'raw_created_at' },
+            { data: 'raw_updated_at' },
+            {
+                data: 'event_prikey',
+                render: function(data, type, row) {
+                    return `
+                        <button onclick="editEvent(${data})" class="btn btn-sm btn-outline-primary">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-event" data-id="${data}">
+                            Delete
+                        </button>
+                    `;
+                }
+            }
+        ]
+    });
+
+    // Define editEvent function in global scope
+    window.editEvent = function(eventId) {
+
+        // Get the data from DataTable
+        const data = eventTable.rows().data().toArray()
+            .find(row => row.event_prikey == eventId);
+            
+        if (data) {
+            // Populate form fields
+            $('#edit_event_prikey').val(data.event_prikey);
+            $('#edit_event_type').val(data.event_type);
+            $('#edit_event_name').val(data.event_name_created);
+            $('#edit_event_time').val(data.event_time);
+            $('#edit_event_place').val(data.event_place);
+            $('#edit_event_date').val(data.event_date);
+
+            // Show modal
+            editEventModal.show();
+        } else {
+            console.error('No data found for ID:', eventId);
+        }
+    };
+
     // Helper function to hide modal
     function hideModal(modalId) {
         try {
@@ -38,90 +96,6 @@ $(document).ready(function() {
         if (typeof input !== 'string') return input;
         return input.replace(/[<>]/g, '');
     }
-
-    // Initialize DataTable
-    let eventTable = $('#eventTable').DataTable({
-        processing: true,
-        serverSide: false,
-        responsive: true,
-        ajax: {
-            url: '../backend/event_handler.php',
-            type: 'POST',
-            dataSrc: function(response) {
-                // Check if response has data property
-                return response.data || [];
-            },
-            data: function(d) {
-                return {
-                    ...d,
-                    action: 'getAll'
-                };
-            },
-            error: function(xhr, error, thrown) {
-                console.error('DataTables error:', error);
-                console.error('Server response:', xhr.responseText);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to load event data'
-                });
-            }
-        },
-        columns: [
-            { data: 'event_type', defaultContent: '' },
-            { data: 'event_name_created', defaultContent: '' },
-            { data: 'event_time', defaultContent: '' },
-            { data: 'event_place', defaultContent: '' },
-            { data: 'event_date', defaultContent: '' },
-            { data: 'created_by_name', defaultContent: '' },
-            { data: 'edited_by', defaultContent: '' },
-            { 
-                data: 'raw_created_at',
-                defaultContent: '',
-                render: function(data) {
-                    return data ? moment(data).format('MMM D, YYYY HH:mm') : '';
-                }
-            },
-            {
-                data: 'event_prikey',
-                orderable: false,
-                searchable: false,
-                render: function(data) {
-                    return `
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-primary edit-event" data-id="${data}">
-                                <i class="far fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger delete-event" data-id="${data}">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        ],
-        order: [[7, 'desc']], // Order by created_at column
-        pageLength: 5,
-        lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
-        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-             "<'row'<'col-sm-12'tr>>" +
-             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-        language: {
-            emptyTable: "No events found",
-            zeroRecords: "No matching events found",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "Showing 0 to 0 of 0 entries",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            search: "Search:",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        }
-    });
 
     // Add Event Form Submit
     $('#addEventForm').on('submit', function(e) {
@@ -168,27 +142,39 @@ $(document).ready(function() {
         });
     });
 
-    // Edit Event Button Click
-    $('#eventTable').on('click', '.edit-event', function() {
-        const eventId = $(this).data('id');
-        const row = eventTable.row($(this).closest('tr')).data();
-        
-        $('#editEventId').val(eventId);
-        $('#editEventType').val(row.event_type);
-        $('#editEventName').val(row.event_name_created);
-        $('#editEventTime').val(row.event_time);
-        $('#editEventPlace').val(row.event_place);
-        $('#editEventDate').val(row.event_date);
-        
-        editEventModal.show();
-    });
-
     // Edit Event Form Submit
     $('#editEventForm').on('submit', function(e) {
         e.preventDefault();
         
+        // Create FormData object
         const formData = new FormData(this);
         formData.append('action', 'update');
+
+        // Debug: Log all form data
+        console.log('Form Data being sent:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        // Validate required fields
+        const requiredFields = ['event_prikey', 'event_type', 'event_name', 'event_time', 'event_place', 'event_date'];
+        let missingFields = [];
+        
+        requiredFields.forEach(field => {
+            if (!formData.get(field)) {
+                missingFields.push(field);
+            }
+        });
+
+        if (missingFields.length > 0) {
+            console.error('Missing required fields:', missingFields);
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please fill in all required fields: ' + missingFields.join(', ')
+            });
+            return;
+        }
 
         $.ajax({
             url: '../backend/event_handler.php',
@@ -197,10 +183,10 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                editEventModal.hide();
-                $('#editEventForm')[0].reset();
-
+                console.log('Success Response:', response);
                 if (response.success) {
+                    editEventModal.hide();
+                    $('#editEventForm')[0].reset();
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
@@ -209,6 +195,7 @@ $(document).ready(function() {
                         eventTable.ajax.reload(null, false);
                     });
                 } else {
+                    console.error('Error in response:', response);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -217,12 +204,27 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr, status, error) {
-                editEventModal.hide();
+                console.error('AJAX Error:', {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    responseJSON: xhr.responseJSON,
+                    statusText: xhr.statusText
+                });
                 
+                let errorMessage = 'An error occurred while processing your request';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+                
+                editEventModal.hide();
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'An error occurred while processing your request'
+                    text: errorMessage
                 });
             }
         });

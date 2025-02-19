@@ -169,23 +169,23 @@ try {
     <script src="../script/patient_profile.js"></script>
 
     <script>
-    // Debug script loading
-    $(document).ready(function() {
-        console.log('Document ready');
-        console.log('jQuery version:', $.fn.jquery);
-        console.log('DataTables version:', $.fn.dataTable.version);
-        console.log('Bootstrap version:', typeof bootstrap !== 'undefined' ? bootstrap.Alert.VERSION : 'not loaded');
+    // // Debug script loading
+    // $(document).ready(function() {
+    //     console.log('Document ready');
+    //     console.log('jQuery version:', $.fn.jquery);
+    //     console.log('DataTables version:', $.fn.dataTable.version);
+    //     console.log('Bootstrap version:', typeof bootstrap !== 'undefined' ? bootstrap.Alert.VERSION : 'not loaded');
         
-        // Check if table exists and has data
-        console.log('Table exists:', $('#patientTable').length > 0);
-        console.log('Table rows:', $('#patientTable tbody tr').length);
+    //     // Check if table exists and has data
+    //     console.log('Table exists:', $('#patientTable').length > 0);
+    //     console.log('Table rows:', $('#patientTable tbody tr').length);
         
-        // Check if search input exists
-        console.log('Search input exists:', $('#patientSearch').length > 0);
+    //     // Check if search input exists
+    //     console.log('Search input exists:', $('#patientSearch').length > 0);
         
-        // Check if per page select exists
-        console.log('Per page select exists:', $('#patientPerPage').length > 0);
-    });
-    </script>
+    //     // Check if per page select exists
+    //     console.log('Per page select exists:', $('#patientPerPage').length > 0);
+    // });
+    // </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-console.log('Patient Profile JS loaded');
+// console.log('Patient Profile JS loaded');
 
 $(document).ready(function() {
     console.log('Initializing DataTable...');

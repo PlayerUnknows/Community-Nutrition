@@ -182,17 +182,17 @@ class MonitoringModel {
             if (!$handle) {
                 throw new Exception('Could not open file');
             }
-
+    
             // Read headers
             $headers = fgetcsv($handle);
             if (!$headers) {
                 throw new Exception('Invalid CSV format');
             }
-
+    
             $this->conn->beginTransaction();
             $successCount = 0;
             $rowCount = 0;
-
+    
             $query = "INSERT INTO checkup_info (
                 patient_id, patient_fam_id, age, sex, weight, height, bp, temperature,
                 weight_category, findings, date_of_appointment, time_of_appointment,
@@ -204,19 +204,29 @@ class MonitoringModel {
                 :place, :finding_growth, :finding_bmi, :arm_circumference,
                 :arm_circumference_status, :checkup_unique_id, NOW()
             )";
-
+    
             $stmt = $this->conn->prepare($query);
-
+    
             // Skip header row and process data
             while (($row = fgetcsv($handle)) !== false) {
                 $rowCount++;
                 if (count($row) !== count($headers)) {
                     continue; // Skip invalid rows
                 }
-
+    
                 $data = array_combine($headers, $row);
-                $data['checkup_unique_id'] = 'CHK' . time() . rand(1000, 9999);
-
+    
+                // Ensure patient_id exists
+                if (empty($data['patient_id'])) {
+                    error_log("Skipping row $rowCount: Missing patient_id");
+                    continue;
+                }
+    
+                // Generate checkup_unique_id with correct format
+                $current_datetime = date('YmdHis'); // YYYYMMDDHHMMSS format
+                $random_string = bin2hex(random_bytes(13)); // 8-character random string
+                $data['checkup_unique_id'] = $data['patient_id'] . '_' . $current_datetime . '_' . $random_string;
+    
                 try {
                     $stmt->execute($data);
                     $successCount++;
@@ -225,15 +235,15 @@ class MonitoringModel {
                     continue;
                 }
             }
-
+    
             fclose($handle);
             $this->conn->commit();
-
+    
             return [
                 'status' => 'success',
                 'message' => "Successfully imported $successCount out of $rowCount records"
             ];
-
+    
         } catch (Exception $e) {
             if ($this->conn->inTransaction()) {
                 $this->conn->rollBack();
@@ -244,4 +254,5 @@ class MonitoringModel {
             ];
         }
     }
+    
 }

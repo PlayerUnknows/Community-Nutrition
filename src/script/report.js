@@ -1,11 +1,113 @@
 class ReportManager {
     constructor() {
         this.charts = {};
-        // Initialize only if we have the required data
+        this.initializeEventListeners();
         if (window.reportData) {
             this.initializeCharts();
         } else {
             console.error('Report data is not available');
+        }
+    }
+
+    initializeEventListeners() {
+        // Add date range picker listeners
+        $('#startDate, #endDate').on('change', () => this.handleDateFilter());
+        $('#dateRangeFilter').on('change', (e) => this.handlePresetDateRange(e.target.value));
+    }
+
+    handlePresetDateRange(range) {
+        const today = moment();
+        let startDate, endDate;
+
+        switch(range) {
+            case 'week':
+                startDate = today.clone().subtract(1, 'week');
+                break;
+            case 'month':
+                startDate = today.clone().subtract(1, 'month');
+                break;
+            case 'year':
+                startDate = today.clone().subtract(1, 'year');
+                break;
+            default:
+                startDate = null;
+                endDate = null;
+                break;
+        }
+
+        if (startDate) {
+            $('#startDate').val(startDate.format('YYYY-MM-DD'));
+            $('#endDate').val(today.format('YYYY-MM-DD'));
+        } else {
+            $('#startDate').val('');
+            $('#endDate').val('');
+        }
+
+        this.handleDateFilter();
+    }
+
+    handleDateFilter() {
+        const startDate = $('#startDate').val();
+        const endDate = $('#endDate').val();
+
+        // Make AJAX call to get filtered data
+        $.ajax({
+            url: '/src/api/report-data.php',
+            method: 'GET',
+            data: { startDate, endDate },
+            success: (response) => {
+                if (response.success) {
+                    window.reportData = response.data;
+                    this.updateCharts();
+                } else {
+                    console.error('Error in API response:', response.error);
+                }
+            },
+            error: (err) => {
+                console.error('Error fetching filtered data:', err);
+            }
+        });
+    }
+
+    updateCharts() {
+        // Update growth trends chart
+        if (this.charts.growthTrends) {
+            this.charts.growthTrends.data.labels = window.reportData.dates;
+            this.charts.growthTrends.data.datasets[0].data = window.reportData.weights;
+            this.charts.growthTrends.data.datasets[1].data = window.reportData.heights;
+            this.charts.growthTrends.update();
+        }
+
+        // Update BMI distribution chart
+        if (this.charts.bmiDistribution) {
+            this.charts.bmiDistribution.data.labels = window.reportData.dates;
+            this.charts.bmiDistribution.data.datasets[0].data = window.reportData.bmis;
+            this.charts.bmiDistribution.update();
+        }
+
+        // Update arm circumference chart
+        if (this.charts.armCircumference) {
+            this.charts.armCircumference.data.labels = window.reportData.dates;
+            this.charts.armCircumference.data.datasets[0].data = window.reportData.armCircumferences;
+            this.charts.armCircumference.update();
+        }
+
+        // Update the measurements table if DataTable is initialized
+        const table = $('#measurementsTable').DataTable();
+        if (table) {
+            table.clear();
+            window.reportData.dates.forEach((date, index) => {
+                table.row.add([
+                    moment(date).format('MMM D, YYYY'),
+                    window.reportData.weights[index],
+                    window.reportData.heights[index],
+                    window.reportData.bmis[index],
+                    window.reportData.armCircumferences[index],
+                    // You might need to adjust this based on your status calculation
+                    this.getStatusBadge(window.reportData.bmis[index])
+                ]);
+            });
+            table.draw();
         }
     }
 
@@ -216,6 +318,22 @@ class ReportManager {
                 }
             }
         });
+    }
+
+    // Helper method to generate status badge HTML
+    getStatusBadge(bmi) {
+        let status, className;
+        if (bmi < 18.5) {
+            status = 'Underweight';
+            className = 'status-warning';
+        } else if (bmi >= 25) {
+            status = 'Overweight';
+            className = 'status-alert';
+        } else {
+            status = 'Normal';
+            className = 'status-normal';
+        }
+        return `<span class="status-badge ${className}">${status}</span>`;
     }
 }
 

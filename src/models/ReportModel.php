@@ -8,22 +8,34 @@ class ReportModel {
         $this->conn = connect();
     }
 
-    public function getGrowthTrendsData($patientId = null) {
+    public function getGrowthTrendsData($startDate = null, $endDate = null, $patientId = null) {
         $query = "SELECT c.date_of_appointment, c.weight, c.height, c.arm_circumference, 
                  c.finding_bmi, c.finding_growth, c.arm_circumference_status,
                  p.age, p.sex
                  FROM checkup_info c
-                 LEFT JOIN patient_info p ON c.patient_id = p.patient_id";
+                 LEFT JOIN patient_info p ON c.patient_id = p.patient_id
+                 WHERE 1=1";
         
+        $params = [];
         if ($patientId) {
-            $query .= " WHERE c.patient_id = :patientId";
+            $query .= " AND c.patient_id = :patientId";
+            $params[':patientId'] = $patientId;
         }
+        if ($startDate) {
+            $query .= " AND c.date_of_appointment >= :startDate";
+            $params[':startDate'] = $startDate;
+        }
+        if ($endDate) {
+            $query .= " AND c.date_of_appointment <= :endDate";
+            $params[':endDate'] = $endDate;
+        }
+        
         $query .= " ORDER BY c.date_of_appointment ASC";
 
         try {
             $stmt = $this->conn->prepare($query);
-            if ($patientId) {
-                $stmt->bindParam(':patientId', $patientId, PDO::PARAM_STR);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
             }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -33,20 +45,37 @@ class ReportModel {
         }
     }
 
-    public function getNutritionalStatusSummary() {
+    public function getNutritionalStatusSummary($startDate = null, $endDate = null) {
         $query = "SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN finding_bmi = 'Normal' THEN 1 ELSE 0 END) as normal_bmi,
-                    SUM(CASE WHEN finding_bmi = 'Underweight' THEN 1 ELSE 0 END) as underweight,
-                    SUM(CASE WHEN finding_bmi = 'Overweight' THEN 1 ELSE 0 END) as overweight,
-                    SUM(CASE WHEN finding_growth = 'Normal' THEN 1 ELSE 0 END) as normal_growth,
-                    SUM(CASE WHEN finding_growth = 'Stunted' THEN 1 ELSE 0 END) as stunted,
-                    SUM(CASE WHEN arm_circumference_status = 'Normal' THEN 1 ELSE 0 END) as normal_arm,
-                    SUM(CASE WHEN arm_circumference_status = 'Wasted' THEN 1 ELSE 0 END) as wasted
-                 FROM checkup_info";
+                    SUM(CASE WHEN finding_bmi LIKE '%Normal%' THEN 1 ELSE 0 END) as normal_weight,
+                    SUM(CASE WHEN finding_bmi LIKE '%Underweight%' THEN 1 ELSE 0 END) as underweight,
+                    SUM(CASE WHEN finding_bmi LIKE '%Overweight%' THEN 1 ELSE 0 END) as overweight,
+                    SUM(CASE WHEN finding_bmi LIKE '%Obese%' THEN 1 ELSE 0 END) as obese,
+                    SUM(CASE WHEN finding_growth LIKE '%Normal%' THEN 1 ELSE 0 END) as normal_height,
+                    SUM(CASE WHEN finding_growth LIKE '%Stunted%' THEN 1 ELSE 0 END) as stunted,
+                    SUM(CASE WHEN finding_growth LIKE '%Tall%' THEN 1 ELSE 0 END) as tall,
+                    SUM(CASE WHEN arm_circumference_status LIKE '%Normal%' THEN 1 ELSE 0 END) as normal_arm,
+                    SUM(CASE WHEN arm_circumference_status LIKE '%Wasted%' THEN 1 ELSE 0 END) as wasted,
+                    SUM(CASE WHEN arm_circumference_status LIKE '%Malnourished%' THEN 1 ELSE 0 END) as malnourished
+                 FROM checkup_info
+                 WHERE 1=1";
+
+        $params = [];
+        if ($startDate) {
+            $query .= " AND date_of_appointment >= :startDate";
+            $params[':startDate'] = $startDate;
+        }
+        if ($endDate) {
+            $query .= " AND date_of_appointment <= :endDate";
+            $params[':endDate'] = $endDate;
+        }
 
         try {
             $stmt = $this->conn->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {

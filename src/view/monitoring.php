@@ -59,15 +59,15 @@ require_once '../includes/header.php';
                         <i class="fas fa-search"></i>
                     </span>
                     <input type="search"
-                        class="form-control"
+                        class="form-control form-control-sm"
                         id="monitoringSearch"
-                        placeholder="Search monitoring records..."
+                        placeholder="Search..."
                         autocomplete="off"
                         spellcheck="false">
                 </div>
 
                 <!-- Action buttons -->
-                <div>
+                <div class="d-flex align-items-center">
                     <button type="button" class="btn btn-success me-2" id="downloadTemplateBtn">
                         <i class="fas fa-file-download"></i> Download Template
                     </button>

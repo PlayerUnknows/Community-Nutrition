@@ -32,12 +32,12 @@ class ReportController {
         }
     }
 
-    public function generateReport() {
+    public function generateReport($startDate = null, $endDate = null, $patientId = null) {
         try {
             $data = [
-                'growthTrends' => $this->getGrowthTrendsData(),
-                'nutritionalStatus' => $this->getNutritionalStatusSummary(),
-                'ageGroupAnalysis' => $this->getAgeGroupAnalysis()
+                'growthTrends' => $this->reportModel->getGrowthTrendsData($startDate, $endDate, $patientId),
+                'nutritionalStatus' => $this->reportModel->getNutritionalStatusSummary($startDate, $endDate),
+                'ageGroupAnalysis' => $this->reportModel->getAgeGroupAnalysis()
             ];
             return $data;
         } catch (Exception $e) {

@@ -121,6 +121,13 @@ foreach ($records as $record) {
                 <button id="exportExcel" class="btn btn-success ms-2">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </button>
+                <div class="d-inline-block ms-3">
+                    <label for="startDate">From:</label>
+                    <input type="date" id="startDate" class="form-control d-inline-block" style="width: auto;">
+                    
+                    <label for="endDate" class="ms-2">To:</label>
+                    <input type="date" id="endDate" class="form-control d-inline-block" style="width: auto;">
+                </div>
                 <select id="dateRangeFilter" class="form-select d-inline-block ms-2" style="width: auto;">
                     <option value="all">All Time</option>
                     <option value="week">Last Week</option>

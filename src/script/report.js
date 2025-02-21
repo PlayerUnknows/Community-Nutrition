@@ -109,6 +109,25 @@ class ReportManager {
             });
             table.draw();
         }
+
+        // Update growth statistics table
+        if (window.reportData.growthStatsByGender) {
+            const tableBody = document.querySelector('.growth-stats-table tbody');
+            if (tableBody) {
+                tableBody.innerHTML = '';
+                window.reportData.growthStatsByGender.forEach(stat => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${stat.age_group}</td>
+                        <td>${stat.gender}</td>
+                        <td>${stat.avg_height}</td>
+                        <td>${stat.avg_weight}</td>
+                        <td>${stat.total_patients}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
     }
 
     initializeCharts() {

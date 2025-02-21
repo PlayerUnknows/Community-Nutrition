@@ -37,7 +37,8 @@ class ReportController {
             $data = [
                 'growthTrends' => $this->reportModel->getGrowthTrendsData($startDate, $endDate, $patientId),
                 'nutritionalStatus' => $this->reportModel->getNutritionalStatusSummary($startDate, $endDate),
-                'ageGroupAnalysis' => $this->reportModel->getAgeGroupAnalysis()
+                'ageGroupAnalysis' => $this->reportModel->getAgeGroupAnalysis(),
+                'growthStatsByGender' => $this->reportModel->getGrowthStatsByAgeAndGender()
             ];
             return $data;
         } catch (Exception $e) {

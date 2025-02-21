@@ -31,12 +31,13 @@ try {
         'bmis' => [],
         'armCircumferences' => [],
         'nutritionalStatus' => $reportData['nutritionalStatus'],
-        'ageGroupAnalysis' => $reportData['ageGroupAnalysis']
+        'ageGroupAnalysis' => $reportData['ageGroupAnalysis'],
+        'growthStatsByGender' => $reportData['growthStatsByGender']
     ];
 
     // Process growth trends data
     foreach ($reportData['growthTrends'] as $record) {
-        $processedData['dates'][] = $record['date_of_appointment'];
+        $processedData['dates'][] = $record['created_at'];
         $processedData['weights'][] = floatval($record['weight']);
         $processedData['heights'][] = floatval($record['height']);
         

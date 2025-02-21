@@ -9,41 +9,64 @@ function getStatusClass($status) {
     return 'status-alert';
 }
 
-function calculateIdealBMI($age, $sex) {
-    if ($age < 19) {
-        return ['min' => 18.5, 'max' => 24.9]; // WHO standards for children
+function calculateIdealBMI($age) {
+    // Based on WHO-CGS and Philippine Pediatric Society standards
+    if ($age < 5) {
+        return ['min' => 13.0, 'max' => 17.0]; // Under 5 years
+    } else if ($age < 10) {
+        return ['min' => 13.5, 'max' => 18.0]; // 5-9 years
+    } else {
+        return ['min' => 14.0, 'max' => 19.0]; // 10-14 years
     }
-    return ['min' => 18.5, 'max' => 24.9]; // WHO standards for adults
 }
 
 function calculateIdealHeight($age, $sex) {
+    // Based on Philippine pediatric reference values
     if ($sex == 'Male') {
-        if ($age < 5) return ['min' => 95, 'max' => 110];
-        if ($age < 12) return ['min' => 110, 'max' => 150];
-        if ($age < 19) return ['min' => 150, 'max' => 175];
-        return ['min' => 160, 'max' => 190];
+        if ($age < 2) return ['min' => 45, 'max' => 87];      // 0-24 months
+        if ($age < 5) return ['min' => 87, 'max' => 110];     // 2-5 years
+        if ($age < 10) return ['min' => 110, 'max' => 135];   // 5-9 years
+        return ['min' => 135, 'max' => 163];                  // 10-14 years
     } else {
-        if ($age < 5) return ['min' => 90, 'max' => 105];
-        if ($age < 12) return ['min' => 105, 'max' => 145];
-        if ($age < 19) return ['min' => 145, 'max' => 170];
-        return ['min' => 150, 'max' => 180];
+        if ($age < 2) return ['min' => 44, 'max' => 85];      // 0-24 months
+        if ($age < 5) return ['min' => 85, 'max' => 109];     // 2-5 years
+        if ($age < 10) return ['min' => 109, 'max' => 133];   // 5-9 years
+        return ['min' => 133, 'max' => 157];                  // 10-14 years
     }
 }
 
-function calculateIdealArmCircumference($age, $sex) {
-    if ($age < 5) {
-        return ['min' => 12.5, 'max' => 13.5];
-    } else if ($age < 12) {
-        return ['min' => 14.5, 'max' => 16.5];
-    } else if ($age < 19) {
-        return ['min' => 17.5, 'max' => 23.0];
+function calculateIdealArmCircumference($age) {
+    // Based on Philippine MUAC standards
+    if ($age < 2) {
+        return ['min' => 11.0, 'max' => 13.0];  // 0-24 months
+    } else if ($age < 5) {
+        return ['min' => 12.5, 'max' => 14.5];  // 2-5 years
+    } else if ($age < 10) {
+        return ['min' => 14.5, 'max' => 17.0];  // 5-9 years
     } else {
-        if ($sex == 'Male') {
-            return ['min' => 23.0, 'max' => 32.0];
-        } else {
-            return ['min' => 21.0, 'max' => 30.0];
-        }
+        return ['min' => 16.0, 'max' => 19.0];  // 10-14 years
     }
+}
+
+function getStatusBadge($bmi) {
+    // Based on Philippine standards for malnutrition classification
+    $status = '';
+    $className = '';
+    
+    if ($bmi < 14.5) {
+        $status = 'Severely Underweight';
+        $className = 'status-alert';
+    } else if ($bmi < 16.0) {
+        $status = 'Underweight';
+        $className = 'status-warning';
+    } else if ($bmi > 19.0) {
+        $status = 'Overweight';
+        $className = 'status-warning';
+    } else {
+        $status = 'Normal';
+        $className = 'status-normal';
+    }
+    return "<span class=\"status-badge {$className}\">{$status}</span>";
 }
 
 $reportController = new ReportController();
@@ -66,7 +89,7 @@ $bmis = [];
 $armCircumferences = [];
 
 foreach ($records as $record) {
-    $dates[] = $record['date_of_appointment'];
+    $dates[] = $record['created_at'];
     $weights[] = floatval($record['weight']);
     $heights[] = floatval($record['height']);
     $heightInMeters = $record['height'] / 100;
@@ -139,7 +162,7 @@ foreach ($records as $record) {
 
         <!-- Growth Trends -->
         <div class="row mb-4">
-            <div class="col-12">
+            <div class="col-lg-6">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0"><i class="fas fa-chart-line"></i> Growth Trends Over Time</h5>
@@ -147,6 +170,39 @@ foreach ($records as $record) {
                     <div class="card-body">
                         <div class="chart-container">
                             <canvas id="growthTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-table"></i> Growth Statistics by Age & Gender</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered growth-stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>Age Group</th>
+                                        <th>Gender</th>
+                                        <th>Avg Height (cm)</th>
+                                        <th>Avg Weight (kg)</th>
+                                        <th>Total Patients</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($reportData['growthStatsByGender'] as $stat): ?>
+                                    <tr>
+                                        <td><?php echo $stat['age_group']; ?></td>
+                                        <td><?php echo $stat['gender']; ?></td>
+                                        <td><?php echo $stat['avg_height']; ?></td>
+                                        <td><?php echo $stat['avg_weight']; ?></td>
+                                        <td><?php echo $stat['total_patients']; ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -207,7 +263,7 @@ foreach ($records as $record) {
                                         $bmi = round($record['weight'] / ($heightInMeters * $heightInMeters), 2);
                                     ?>
                                     <tr>
-                                        <td><?php echo date('M d, Y', strtotime($record['date_of_appointment'])); ?></td>
+                                        <td><?php echo date('M d, Y', strtotime($record['created_at'])); ?></td>
                                         <td><?php echo $record['weight']; ?></td>
                                         <td><?php echo $record['height']; ?></td>
                                         <td><?php echo $bmi; ?></td>

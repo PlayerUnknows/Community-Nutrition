@@ -211,18 +211,7 @@ foreach ($records as $record) {
 
         <!-- BMI and Arm Circumference -->
         <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-weight"></i> BMI Distribution</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="bmiDistributionChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
             <div class="col-md-6">
                 <div class="card shadow">
                     <div class="card-header bg-info text-white">

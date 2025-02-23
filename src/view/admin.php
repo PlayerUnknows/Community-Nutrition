@@ -226,12 +226,13 @@ require_once __DIR__ . '/../includes/header.php';
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.8); /* transparent white background */
+            background-color: rgba(255, 255, 255, 0.8);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            transition: opacity 0.5s ease;
         }
 
         .loading-logo {
@@ -273,7 +274,7 @@ require_once __DIR__ . '/../includes/header.php';
 </head>
 
 <body>
-    <!-- Update loading screen div -->
+    <!-- Update the loading screen div -->
     <div id="loading-screen">
         <img src="../../assets/img/SanAndres.svg" alt="Logo" class="loading-logo">
         <div class="loading-dots">
@@ -350,7 +351,9 @@ require_once __DIR__ . '/../includes/header.php';
             <li class="nav-item" role="presentation" id="monitoring-container">
                 <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false" tabindex="-1">Nutrition Monitoring</button>
                 <div class="sub-nav">
+                    <button class="sub-nav-button" data-target="monitoring-records">Monitoring Records</button>
                     <button class="sub-nav-button" data-target="nutrition-report">Nutrition Report</button>
+                    <button class="sub-nav-button" data-target="bmi-statistics">BMI Statistics</button>
                 </div>
             </li>
             <li class="nav-item" role="presentation">
@@ -371,7 +374,7 @@ require_once __DIR__ . '/../includes/header.php';
             </li>
         </ul>
 
-        <div class="tab-content" id="myTabContent" role="tabpanel">
+        <div class="tab-content" id="adminTabContent">
             <!-- Patient Profile Section -->
             <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
                 <div id="patientProfileContainer" class="container mt-4">
@@ -390,6 +393,10 @@ require_once __DIR__ . '/../includes/header.php';
                     <!-- Nutrition Report Content -->
                     <div id="nutrition-report" class="sub-content" style="display: none;">
                         <?php include 'report.php'; ?>
+                    </div>
+                    <!-- BMI Statistics Content -->
+                    <div id="bmi-statistics" class="sub-content" style="display: none;">
+                        <?php include 'bmi_statistics.php'; ?>
                     </div>
                 </div>
             </div>
@@ -771,6 +778,74 @@ require_once __DIR__ . '/../includes/header.php';
                     }
                 });
             }
+
+            // Handle tab changes for BMI Statistics and other content
+            $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                const target = $(e.target).attr('data-bs-target');
+                
+                // Reinitialize DataTables when showing content
+                if ($.fn.DataTable.isDataTable('#monitoringTable')) {
+                    $('#monitoringTable').DataTable().columns.adjust();
+                }
+                if ($.fn.DataTable.isDataTable('#measurementsTable')) {
+                    $('#measurementsTable').DataTable().columns.adjust();
+                }
+                
+                // Handle specific tab content
+                if (target === '#schedule') {
+                    // Show monitoring records by default
+                    $('#schedule .sub-content').hide();
+                    $('#monitoring-records').show();
+                }
+            });
+
+            // Handle sub-navigation button clicks
+            $('.sub-nav-button').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this).data('target');
+                
+                // Hide all sub-content first
+                $('.sub-content').hide();
+                
+                // Show the target content
+                $(`#${target}`).show();
+                
+                // Reinitialize or adjust DataTables if present
+                setTimeout(() => {
+                    if ($.fn.DataTable.isDataTable('#monitoringTable')) {
+                        $('#monitoringTable').DataTable().columns.adjust();
+                    }
+                    if ($.fn.DataTable.isDataTable('#measurementsTable')) {
+                        $('#measurementsTable').DataTable().columns.adjust();
+                    }
+                    
+                    // Trigger window resize to adjust any charts
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
+            });
+
+            // Modify the loading screen code
+            document.addEventListener('DOMContentLoaded', function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (!loadingScreen) return;
+
+                // Function to hide loading screen
+                const hideLoadingScreen = () => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        // Trigger resize event to adjust tables and charts
+                        window.dispatchEvent(new Event('resize'));
+                    }, 500);
+                };
+
+                // Hide loading screen when everything is loaded
+                if (document.readyState === 'complete') {
+                    hideLoadingScreen();
+                } else {
+                    window.addEventListener('load', hideLoadingScreen);
+                }
+            });
         });
     </script>
 
@@ -857,12 +932,39 @@ require_once __DIR__ . '/../includes/header.php';
     <script src="../../src/script/session.js"></script>
 
     <script>
-        // Add this loading screen script right before the closing body tag
         window.addEventListener('load', function() {
-            setTimeout(function() {
-                document.getElementById('loading-screen').style.display = 'none';
-            }, 3000);
+            // Add a class to start fade out
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.opacity = '0';
+                loadingScreen.style.transition = 'opacity 0.5s ease';
+                
+                // Remove the element after fade out
+                setTimeout(function() {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
         });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle tab switching
+        const tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const target = this.getAttribute('data-bs-target');
+                if (target === '#bmi-statistics') {
+                    // Clear any existing chart before showing the tab
+                    const canvas = document.getElementById('bmiDistributionChart');
+                    if (canvas) {
+                        const context = canvas.getContext('2d');
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                }
+            });
+        });
+    });
     </script>
 </body>
 

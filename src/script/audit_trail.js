@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    let auditTable;
+    let auditTable = null;
 
     // Function to safely dispose modals
     function disposeModal(modalId) {
@@ -16,12 +16,6 @@ $(document).ready(function() {
 
     // Function to get readable role name
     function getRoleName(role) {
-        // If role is already a string name, return it
-        if (typeof role === 'string' && isNaN(role)) {
-            return role;
-        }
-
-        // If role is a number, convert it
         const roleMap = {
             '1': 'Parent',
             '2': 'Brgy Health Worker',
@@ -35,49 +29,100 @@ $(document).ready(function() {
         // Destroy existing instance if it exists
         if ($.fn.DataTable.isDataTable('#auditTable')) {
             $('#auditTable').DataTable().destroy();
+            $('#auditTable').empty();
         }
-
-        // Clear any existing event handlers
-        $('#auditTable').off();
 
         // Initialize new instance
         auditTable = $('#auditTable').DataTable({
-            order: [[3, 'desc']], // Order by timestamp column
-            pageLength: 5,
-            lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+            ajax: {
+                url: '../backend/fetch_audit_trail.php',
+                type: 'GET',
+                dataSrc: function(json) {
+                    return json || [];
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error loading audit trail:', error);
+                }
+            },
+            columns: [
+                { data: 'username', defaultContent: 'System' },
+                { data: 'action' },
+                { 
+                    data: 'details',
+                    render: function(data, type, row) {
+                        if (!data) return '';
+                        try {
+                            const details = JSON.parse(data);
+                            let detailsHtml = '<div class="audit-details">';
+                            for (const [key, value] of Object.entries(details)) {
+                                const displayKey = key.replace(/_/g, ' ')
+                                    .replace(/\b\w/g, l => l.toUpperCase());
+                                detailsHtml += `<div><strong>${displayKey}:</strong> ${value}</div>`;
+                            }
+                            detailsHtml += '</div>';
+                            return detailsHtml;
+                        } catch (e) {
+                            return data;
+                        }
+                    }
+                },
+                { 
+                    data: 'action_timestamp',
+                    render: function(data) {
+                        return moment(data).format('YYYY-MM-DD HH:mm:ss');
+                    }
+                },
+                { data: 'count', defaultContent: '1' }
+            ],
+            order: [[3, 'desc']],
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             responsive: true,
-            scrollY: '400px',
-            scrollCollapse: true,
             dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
             language: {
                 lengthMenu: "Show _MENU_ entries",
-                search: "Search:",
                 info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                paginate: {
-                    first: "First",
-                    last: "Last",
-                    next: "Next",
-                    previous: "Previous"
-                }
+                processing: "Loading audit trail data..."
             }
         });
 
         return auditTable;
     }
 
-    // Initialize table when audit tab is shown
+    // Handle tab switching
     $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
         if ($(e.target).attr('id') === 'audit-tab') {
-            setTimeout(initializeAuditTable, 100);
+            setTimeout(() => {
+                if (!auditTable) {
+                    auditTable = initializeAuditTable();
+                } else {
+                    auditTable.ajax.reload();
+                }
+            }, 100);
         }
     });
 
     // Initialize if audit tab is active on page load
     if ($('#audit-tab').hasClass('active')) {
-        setTimeout(initializeAuditTable, 100);
+        setTimeout(() => {
+            auditTable = initializeAuditTable();
+        }, 100);
     }
+
+    // Connect search and length controls
+    $('#auditSearch').on('keyup', function() {
+        if (auditTable) {
+            auditTable.search(this.value).draw();
+        }
+    });
+
+    $('#auditsPerPage').on('change', function() {
+        if (auditTable) {
+            auditTable.page.len($(this).val()).draw();
+        }
+    });
 
     // Handle filter form submission
     $(document).on('submit', 'form', function(e) {
@@ -200,3 +245,4 @@ $(document).ready(function() {
         disposeModal(this.id ? `#${this.id}` : '.modal');
     });
 });
+

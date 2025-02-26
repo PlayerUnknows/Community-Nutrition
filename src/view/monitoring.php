@@ -88,23 +88,28 @@ require_once '../includes/header.php';
             </div>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table id="monitoringTable" class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th class="dt-left">Patient ID</th>
-                            <th class="dt-left">Family ID</th>
-                            <th class="dt-center">Age</th>
-                            <th class="dt-center">Sex</th>
-                            <th class="dt-right">Weight (kg)</th>
-                            <th class="dt-right">Height (cm)</th>
-                            <th class="dt-center">BP</th>
-                            <th class="dt-right">Temperature</th>
-                            <th class="dt-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div class="container-fluid">
+                <!-- Table container -->
+                <div class="table-responsive">
+                    <table id="monitoringTable" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Family ID</th>
+                                <th>Age</th>
+                                <th>Sex</th>
+                                <th>Weight</th>
+                                <th>Height</th>
+                                <th>BP</th>
+                                <th>Temperature</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

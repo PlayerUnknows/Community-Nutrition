@@ -4,7 +4,7 @@ require_once __DIR__ . '/../controllers/ReportController.php';
 
 <div class="container-fluid mt-4">
     <!-- Date Filter Section -->
-    <div class="row mb-4">
+    <!-- <div class="row mb-4">
         <div class="col-12 col-md-6">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
@@ -27,7 +27,7 @@ require_once __DIR__ . '/../controllers/ReportController.php';
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Chart Section -->
     <div class="row">
@@ -37,8 +37,60 @@ require_once __DIR__ . '/../controllers/ReportController.php';
                     <h5 class="mb-0"><i class="fas fa-weight"></i> BMI Distribution</h5>
                 </div>
                 <div class="card-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input type="text" id="overallDateRange" class="form-control" placeholder="Select date range">
+                            <button class="btn btn-success" id="applyOverallDateRange">
+                                <i class="fas fa-check"></i> Apply
+                            </button>
+                        </div>
+                    </div>
                     <div class="chart-container">
                         <canvas id="bmiDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gender-specific BMI Distribution Charts -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-pink text-white">
+                    <h5 class="mb-0"><i class="fas fa-venus"></i> Female BMI Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input type="text" id="femaleDateRange" class="form-control" placeholder="Select date range">
+                            <button class="btn btn-pink" id="applyFemaleDateRange">
+                                <i class="fas fa-check"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="femaleBmiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-blue text-white">
+                    <h5 class="mb-0"><i class="fas fa-mars"></i> Male BMI Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input type="text" id="maleDateRange" class="form-control" placeholder="Select date range">
+                            <button class="btn btn-blue" id="applyMaleDateRange">
+                                <i class="fas fa-check"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="maleBmiChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -118,7 +170,7 @@ require_once __DIR__ . '/../controllers/ReportController.php';
     </div>
 </div>
 
-<!-- Add these CSS styles -->
+<!-- Only keep the specific styles for this component -->
 <style>
 .card-body {
     padding: 1.25rem;
@@ -141,41 +193,117 @@ require_once __DIR__ . '/../controllers/ReportController.php';
 .daterangepicker {
     z-index: 1100;
 }
+
+/* Add custom background colors for gender charts */
+.bg-pink {
+    background-color: #FF69B4 !important;
+}
+
+.bg-blue {
+    background-color: #4169E1 !important;
+}
+
+/* Set fixed height for chart containers */
+.chart-container {
+    position: relative;
+    height: 300px !important;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Ensure proper padding and margins for cards */
+.card {
+    margin-bottom: 1rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+    background-color: #fff;
+}
+
+/* Style date range inputs and buttons */
+.input-group {
+    max-width: 400px;
+}
+
+.btn-pink {
+    background-color: #FF69B4;
+    border-color: #FF69B4;
+    color: white;
+}
+
+.btn-pink:hover {
+    background-color: #FF1493;
+    border-color: #FF1493;
+    color: white;
+}
+
+.btn-blue {
+    background-color: #4169E1;
+    border-color: #4169E1;
+    color: white;
+}
+
+.btn-blue:hover {
+    background-color: #0000CD;
+    border-color: #0000CD;
+    color: white;
+}
+
+/* Style daterangepicker dropdown */
+.daterangepicker {
+    z-index: 3000;
+}
+
+.daterangepicker td.active {
+    background-color: #4169E1;
+}
+
+.daterangepicker td.active:hover {
+    background-color: #0000CD;
+}
 </style>
 
 <!-- Load dependencies in correct order -->
-<!-- jQuery first -->
 <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
-
-<!-- Bootstrap dependencies -->
 <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
 <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-
-<!-- Moment.js before daterangepicker -->
 <script src="../../node_modules/moment/moment.js"></script>
 
-<!-- DateRangePicker after moment -->
-<link rel="stylesheet" type="text/css" href="../../node_modules/daterangepicker/daterangepicker.css" />
-<script src="../../node_modules/daterangepicker/daterangepicker.js"></script>
-
-<!-- Chart.js -->
-<script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
-
 <!-- DataTables -->
-<link rel="stylesheet" type="text/css" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
 <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+<link rel="stylesheet" type="text/css" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
 
-<!-- Custom Script -->
-<script src="../../src/script/bmi_statistics.js"></script>
+<!-- Other dependencies -->
+<script src="../../node_modules/daterangepicker/daterangepicker.js"></script>
+<link rel="stylesheet" type="text/css" href="../../node_modules/daterangepicker/daterangepicker.css" />
+<script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
+<script src="../../node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
 
+<!-- Initialize your custom script after all dependencies are loaded -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Clear canvas when the component is loaded
-        const canvas = document.getElementById('bmiDistributionChart');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure all required libraries are loaded
+    const checkDependencies = () => {
+        return typeof $ !== 'undefined' && 
+               typeof $.fn.DataTable !== 'undefined' && 
+               typeof $.fn.daterangepicker !== 'undefined' &&
+               typeof Chart !== 'undefined';
+    };
+
+    const initializeScripts = () => {
+        if (!checkDependencies()) {
+            setTimeout(initializeScripts, 100);
+            return;
         }
-    });
+        
+        // Load your custom script
+        const script = document.createElement('script');
+        script.src = '../script/bmi_statistics.js';
+        document.body.appendChild(script);
+    };
+
+    initializeScripts();
+});
 </script>

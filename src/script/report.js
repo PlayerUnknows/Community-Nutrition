@@ -135,12 +135,12 @@ class ReportManager {
         if (document.getElementById('growthTrendsChart')) {
             this.initializeGrowthTrendsChart();
         }
-        if (document.getElementById('bmiDistributionChart')) {
-            this.initializeBMIDistributionChart();
-        }
-        if (document.getElementById('armCircumferenceChart')) {
-            this.initializeArmCircumferenceChart();
-        }
+        // if (document.getElementById('bmiDistributionChart')) {
+        //     this.initializeBMIDistributionChart();
+        // }
+        // if (document.getElementById('armCircumferenceChart')) {
+        //     this.initializeArmCircumferenceChart();
+        // }
         if (document.getElementById('nutritionBarChart')) {
             this.initializeNutritionBarChart();
         }

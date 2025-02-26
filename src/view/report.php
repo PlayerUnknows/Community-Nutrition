@@ -9,44 +9,44 @@ function getStatusClass($status) {
     return 'status-alert';
 }
 
-function calculateIdealBMI($age) {
-    // Based on WHO-CGS and Philippine Pediatric Society standards
-    if ($age < 5) {
-        return ['min' => 13.0, 'max' => 17.0]; // Under 5 years
-    } else if ($age < 10) {
-        return ['min' => 13.5, 'max' => 18.0]; // 5-9 years
-    } else {
-        return ['min' => 14.0, 'max' => 19.0]; // 10-14 years
-    }
-}
+// function calculateIdealBMI($age) {
+//     // Based on WHO-CGS and Philippine Pediatric Society standards
+//     if ($age < 5) {
+//         return ['min' => 13.0, 'max' => 17.0]; // Under 5 years
+//     } else if ($age < 10) {
+//         return ['min' => 13.5, 'max' => 18.0]; // 5-9 years
+//     } else {
+//         return ['min' => 14.0, 'max' => 19.0]; // 10-14 years
+//     }
+// }
 
-function calculateIdealHeight($age, $sex) {
-    // Based on Philippine pediatric reference values
-    if ($sex == 'Male') {
-        if ($age < 2) return ['min' => 45, 'max' => 87];      // 0-24 months
-        if ($age < 5) return ['min' => 87, 'max' => 110];     // 2-5 years
-        if ($age < 10) return ['min' => 110, 'max' => 135];   // 5-9 years
-        return ['min' => 135, 'max' => 163];                  // 10-14 years
-    } else {
-        if ($age < 2) return ['min' => 44, 'max' => 85];      // 0-24 months
-        if ($age < 5) return ['min' => 85, 'max' => 109];     // 2-5 years
-        if ($age < 10) return ['min' => 109, 'max' => 133];   // 5-9 years
-        return ['min' => 133, 'max' => 157];                  // 10-14 years
-    }
-}
+// function calculateIdealHeight($age, $sex) {
+//     // Based on Philippine pediatric reference values
+//     if ($sex == 'Male') {
+//         if ($age < 2) return ['min' => 45, 'max' => 87];      // 0-24 months
+//         if ($age < 5) return ['min' => 87, 'max' => 110];     // 2-5 years
+//         if ($age < 10) return ['min' => 110, 'max' => 135];   // 5-9 years
+//         return ['min' => 135, 'max' => 163];                  // 10-14 years
+//     } else {
+//         if ($age < 2) return ['min' => 44, 'max' => 85];      // 0-24 months
+//         if ($age < 5) return ['min' => 85, 'max' => 109];     // 2-5 years
+//         if ($age < 10) return ['min' => 109, 'max' => 133];   // 5-9 years
+//         return ['min' => 133, 'max' => 157];                  // 10-14 years
+//     }
+// }
 
-function calculateIdealArmCircumference($age) {
-    // Based on Philippine MUAC standards
-    if ($age < 2) {
-        return ['min' => 11.0, 'max' => 13.0];  // 0-24 months
-    } else if ($age < 5) {
-        return ['min' => 12.5, 'max' => 14.5];  // 2-5 years
-    } else if ($age < 10) {
-        return ['min' => 14.5, 'max' => 17.0];  // 5-9 years
-    } else {
-        return ['min' => 16.0, 'max' => 19.0];  // 10-14 years
-    }
-}
+// function calculateIdealArmCircumference($age) {
+//     // Based on Philippine MUAC standards
+//     if ($age < 2) {
+//         return ['min' => 11.0, 'max' => 13.0];  // 0-24 months
+//     } else if ($age < 5) {
+//         return ['min' => 12.5, 'max' => 14.5];  // 2-5 years
+//     } else if ($age < 10) {
+//         return ['min' => 14.5, 'max' => 17.0];  // 5-9 years
+//     } else {
+//         return ['min' => 16.0, 'max' => 19.0];  // 10-14 years
+//     }
+// }
 
 function getStatusBadge($bmi) {
     // Based on Philippine standards for malnutrition classification

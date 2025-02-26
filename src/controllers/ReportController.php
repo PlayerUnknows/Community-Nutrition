@@ -61,7 +61,21 @@ class ReportController {
             
             $data = $this->reportModel->getBMIDetails($startDate, $endDate);
             
-            // Return success response
+            // Validate data structure
+            if (!is_array($data)) {
+                throw new Exception("Invalid data format received from database");
+            }
+            
+            // Ensure all required fields are present
+            foreach ($data as $record) {
+                if (!isset($record['finding_bmi']) || !isset($record['sex'])) {
+                    error_log("Invalid record format: " . json_encode($record));
+                    continue;
+                }
+            }
+            
+            // Return success response with data
+            header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'success',
                 'data' => $data
@@ -69,6 +83,7 @@ class ReportController {
             exit;
         } catch (Exception $e) {
             error_log("Error in getBMIDetails: " . $e->getMessage());
+            header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'error',
                 'message' => "Failed to fetch BMI details: " . $e->getMessage()

@@ -1,20 +1,346 @@
 document.addEventListener('DOMContentLoaded', function() {
     let bmiTable;
     let bmiChart = null;
+    let femaleBmiChart = null;
+    let maleBmiChart = null;
+
+    // Register the plugin globally
+    Chart.register(ChartDataLabels);
+
+    // Initialize date ranges
+    const dateRanges = {
+        overall: { start: null, end: null },
+        female: { start: null, end: null },
+        male: { start: null, end: null }
+    };
+
+    // Function to filter data by date range
+    const filterDataByDateRange = (data, startDate, endDate) => {
+        if (!startDate || !endDate) return data;
+        return data.filter(record => {
+            const recordDate = moment(record.checkup_date);
+            return recordDate.isBetween(startDate, endDate, 'day', '[]');
+        });
+    };
+
+ 
+
+    // Initialize date range pickers
+    const initDateRangePickers = () => {
+        const dateRangeConfig = {
+            autoUpdateInput: false,
+            locale: {
+                cancelLabel: 'Clear'
+            }
+        };
+
+        ['#overallDateRange', '#femaleDateRange', '#maleDateRange'].forEach(selector => {
+            $(selector).daterangepicker(dateRangeConfig);
+
+            $(selector).on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+                const type = selector.replace('#', '').replace('DateRange', '');
+                dateRanges[type] = {
+                    start: picker.startDate,
+                    end: picker.endDate
+                };
+            });
+
+            $(selector).on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                const type = selector.replace('#', '').replace('DateRange', '');
+                dateRanges[type] = { start: null, end: null };
+            });
+        });
+    };
+
+    // Function to check if Chart.js and plugins are loaded
+    const isChartJsLoaded = () => {
+        return typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined';
+    };
+
+    // Function to initialize charts with retry mechanism
+    const initializeChartsWithRetry = (data, maxRetries = 5) => {
+        let retryCount = 0;
+        
+        const tryInitialize = () => {
+            if (!isChartJsLoaded()) {
+                console.log('Chart.js not loaded yet, retrying...', retryCount);
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    setTimeout(tryInitialize, 1000);
+                    return;
+                } else {
+                    console.error('Failed to load Chart.js after', maxRetries, 'attempts');
+                    return;
+                }
+            }
+            
+            console.log('Chart.js loaded, initializing charts...');
+            initGenderCharts(data);
+            initBMIChart(data);
+        };
+        
+        tryInitialize();
+    };
+
+    // Add event listeners for date range buttons
+    const initDateRangeButtons = () => {
+        $('#applyOverallDateRange').on('click', function() {
+            if (bmiChart) {
+                const filteredData = filterDataByDateRange(
+                    dummyData,
+                    dateRanges.overall.start,
+                    dateRanges.overall.end
+                );
+                initBMIChart(filteredData);
+            }
+        });
+
+        $('#applyFemaleDateRange').on('click', function() {
+            if (femaleBmiChart) {
+                const filteredData = filterDataByDateRange(
+                    dummyData,
+                    dateRanges.female.start,
+                    dateRanges.female.end
+                );
+                initGenderCharts(filteredData, 'female');
+            }
+        });
+
+        $('#applyMaleDateRange').on('click', function() {
+            if (maleBmiChart) {
+                const filteredData = filterDataByDateRange(
+                    dummyData,
+                    dateRanges.male.start,
+                    dateRanges.male.end
+                );
+                initGenderCharts(filteredData, 'male');
+            }
+        });
+    };
+
+    // Function to safely destroy a chart
+    const destroyChart = (chartInstance, canvasId) => {
+        try {
+            // First try to get the chart instance from Chart.js
+            const existingChart = Chart.getChart(canvasId);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            // Also destroy the stored instance if it exists
+            if (chartInstance && typeof chartInstance.destroy === 'function') {
+                chartInstance.destroy();
+            }
+        } catch (error) {
+            console.warn(`Error destroying chart ${canvasId}:`, error);
+        }
+    };
+
+    const initGenderCharts = (data, gender = null) => {
+        console.log('Initializing gender charts with data:', data);
+        
+        // Get canvas elements
+        const femaleCtx = document.getElementById('femaleBmiChart');
+        const maleCtx = document.getElementById('maleBmiChart');
+        
+        if (!femaleCtx || !maleCtx) {
+            console.error('Chart canvas elements not found');
+            return;
+        }
+
+        try {
+            // Use dummy data if no data is provided
+            const chartData = Array.isArray(data) && data.length > 0 ? data : dummyData;
+
+            // Destroy existing charts based on gender parameter
+            if (!gender || gender === 'female') {
+                destroyChart(femaleBmiChart, 'femaleBmiChart');
+                femaleBmiChart = null;
+            }
+            if (!gender || gender === 'male') {
+                destroyChart(maleBmiChart, 'maleBmiChart');
+                maleBmiChart = null;
+            }
+
+            // Initialize counters for each gender
+            const femaleCounts = {
+                'Severely Wasted': 0,
+                'Wasted': 0,
+                'Normal': 0,
+                'Obese': 0
+            };
+            const maleCounts = {
+                'Severely Wasted': 0,
+                'Wasted': 0,
+                'Normal': 0,
+                'Obese': 0
+            };
+
+            // Count data
+            chartData.forEach(record => {
+                console.log('Processing record:', record);
+                const bmiType = record.finding_bmi;
+                const sex = record.sex?.toUpperCase();
+
+                if (sex === 'F' && femaleCounts.hasOwnProperty(bmiType)) {
+                    femaleCounts[bmiType]++;
+                } else if (sex === 'M' && maleCounts.hasOwnProperty(bmiType)) {
+                    maleCounts[bmiType]++;
+                }
+            });
+
+            console.log('Final counts:', {
+                female: femaleCounts,
+                male: maleCounts
+            });
+
+            // Colors for BMI categories with opacity for better visibility
+            const colors = {
+                'Severely Wasted': 'rgba(255, 0, 0, 0.8)',
+                'Wasted': 'rgba(255, 165, 0, 0.8)',
+                'Normal': 'rgba(0, 128, 0, 0.8)',
+                'Obese': 'rgba(255, 69, 0, 0.8)'
+            };
+
+            // Set minimum height for chart containers
+            femaleCtx.parentElement.style.minHeight = '300px';
+            maleCtx.parentElement.style.minHeight = '300px';
+
+            // Create new charts only if they should be created
+            if (!gender || gender === 'female') {
+                femaleBmiChart = new Chart(femaleCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(femaleCounts),
+                        datasets: [{
+                            data: Object.values(femaleCounts),
+                            backgroundColor: Object.keys(femaleCounts).map(key => colors[key]),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#333',
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                color: '#fff',
+                                textStrokeColor: '#000',
+                                textStrokeWidth: 2,
+                                font: {
+                                    weight: 'bold',
+                                    size: 12
+                                },
+                                formatter: function(value, context) {
+                                    if (value === 0) return '';
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value}\n(${percentage}%)`;
+                                },
+                                anchor: 'center',
+                                align: 'center',
+                                offset: 0
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (!gender || gender === 'male') {
+                maleBmiChart = new Chart(maleCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(maleCounts),
+                        datasets: [{
+                            data: Object.values(maleCounts),
+                            backgroundColor: Object.keys(maleCounts).map(key => colors[key]),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#333',
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                color: '#fff',
+                                textStrokeColor: '#000',
+                                textStrokeWidth: 2,
+                                font: {
+                                    weight: 'bold',
+                                    size: 12
+                                },
+                                formatter: function(value, context) {
+                                    if (value === 0) return '';
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value}\n(${percentage}%)`;
+                                },
+                                anchor: 'center',
+                                align: 'center',
+                                offset: 0
+                            }
+                        }
+                    }
+                });
+            }
+
+            console.log('Charts created successfully');
+
+        } catch (error) {
+            console.error('Error initializing gender charts:', error);
+        }
+    };
 
     const initBMIChart = (data) => {
         const ctx = document.getElementById('bmiDistributionChart');
         if (!ctx) return;
 
         try {
-            if (bmiChart instanceof Chart) {
-                bmiChart.destroy();
-            }
-            
-            const existingChart = Chart.getChart(ctx);
-            if (existingChart) {
-                existingChart.destroy();
-            }
+            // Destroy existing chart
+            destroyChart(bmiChart, 'bmiDistributionChart');
+            bmiChart = null;
 
             // Initialize counters for each BMI type
             const bmiCounts = {
@@ -95,6 +421,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             display: true,
                             text: 'BMI Distribution by Category and Sex',
                             font: { size: 16, weight: 'bold' }
+                        },
+                        datalabels: {
+                            display: function(context) {
+                                return context.dataset.data[context.dataIndex] > 0;
+                            },
+                            color: '#fff',
+                            textStrokeColor: '#000',
+                            textStrokeWidth: 2,
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value, context) {
+                                if (value === 0) return '';
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${value}\n(${percentage}%)`;
+                            },
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0
                         }
                     }
                 }
@@ -125,96 +472,116 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Initialize DataTable
+    // Modified DataTable initialization
     const initDataTable = () => {
         try {
-            if ($.fn.DataTable.isDataTable('#bmiTable')) {
-                $('#bmiTable').DataTable().destroy();
+            console.log('Initializing DataTable...');
+            // Wait for jQuery and DataTables to be available
+            if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
+                console.warn('Waiting for DataTables to load...');
+                setTimeout(initDataTable, 100);
+                return;
             }
 
-            const table = $('#bmiTable').DataTable({
-                processing: true,
-                serverSide: false,
-                dom: '<"d-flex justify-content-between align-items-center mb-3"f>rt<"d-flex justify-content-between align-items-center mt-3"lip>',
-                ajax: {
-                    url: '../controllers/ReportController.php',
-                    type: 'POST',
-                    data: function(d) {
-                        return {
-                            action: 'getBMIDetails',
-                            startDate: $('#dateRangePicker').data('startDate') || '',
-                            endDate: $('#dateRangePicker').data('endDate') || ''
-                        };
-                    },
-                    dataSrc: function(response) {
-                        if (response.status === 'success') {
-                            setTimeout(() => {
-                                initBMIChart(response.data);
-                            }, 0);
-                            return response.data || [];
-                        } else {
-                            console.error('Server error:', response.message);
-                            alert('Error loading data: ' + response.message);
-                            return [];
+            if (!$.fn.DataTable.isDataTable('#bmiTable')) {
+                bmiTable = $('#bmiTable').DataTable({
+                    processing: true,
+                    serverSide: false,
+                    data: [], // Initialize with empty array instead of dummyData
+                    dom: '<"d-flex justify-content-between align-items-center mb-3"f>rt<"d-flex justify-content-between align-items-center mt-3"lip>',
+                    ajax: {
+                        url: '../controllers/ReportController.php',
+                        type: 'POST',
+                        data: function(d) {
+                            console.log('Sending request with data:', {
+                                action: 'getBMIDetails',
+                                startDate: $('#dateRangePicker').data('startDate'),
+                                endDate: $('#dateRangePicker').data('endDate')
+                            });
+                            return {
+                                action: 'getBMIDetails',
+                                startDate: $('#dateRangePicker').data('startDate') || '',
+                                endDate: $('#dateRangePicker').data('endDate') || ''
+                            };
+                        },
+                        dataSrc: function(response) {
+                            console.log('Received data from server:', response);
+                            if (response.status === 'success' && Array.isArray(response.data)) {
+                                // Initialize charts with retry mechanism
+                                initializeChartsWithRetry(response.data);
+                                return response.data;
+                            } else {
+                                console.warn('Using dummy data due to invalid server response');
+                                initializeChartsWithRetry(dummyData);
+                                return dummyData;
+                            }
+                        },
+                        error: function(xhr, error, thrown) {
+                            console.error('AJAX error:', {xhr, error, thrown});
+                            console.warn('Using dummy data due to server error');
+                            initializeChartsWithRetry(dummyData);
+                            return dummyData;
                         }
                     },
-                    error: function(xhr, error, thrown) {
-                        console.error('AJAX error:', error, thrown);
-                        alert('Error connecting to server. Please try again.');
-                    }
-                },
-                columns: [
-                    { 
-                        data: 'checkup_date',
-                        render: function(data) {
-                            return moment(data).format('MMM DD, YYYY');
-                        }
-                    },
-                    { data: 'patient_id' },
-                    { 
-                        data: 'age',
-                        render: function(data) {
-                            return data + ' years';
-                        }
-                    },
-                    { data: 'finding_bmi' }
-                ],
-                order: [[0, 'desc']],
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                responsive: true,
-                scrollY: '400px',
-                scrollCollapse: true
-            });
+                    columns: [
+                        { 
+                            data: 'checkup_date',
+                            render: function(data) {
+                                return moment(data).format('MMM DD, YYYY');
+                            }
+                        },
+                        { data: 'patient_id' },
+                        { 
+                            data: 'age',
+                            render: function(data) {
+                                return data + ' years';
+                            }
+                        },
+                        { data: 'finding_bmi' }
+                    ],
+                    order: [[0, 'desc']],
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    responsive: true,
+                    scrollY: '400px',
+                    scrollCollapse: true
+                });
+            }
 
             // Initialize daterangepicker
-            $('#dateRangePicker').daterangepicker({
-                autoUpdateInput: false,
-                locale: {
-                    cancelLabel: 'Clear'
-                }
-            });
+            if (typeof $.fn.daterangepicker !== 'undefined') {
+                $('#dateRangePicker').daterangepicker({
+                    autoUpdateInput: false,
+                    locale: {
+                        cancelLabel: 'Clear'
+                    }
+                });
 
-            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
-                $(this).data('startDate', picker.startDate.format('YYYY-MM-DD'));
-                $(this).data('endDate', picker.endDate.format('YYYY-MM-DD'));
-            });
+                $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+                    $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+                    $(this).data('startDate', picker.startDate.format('YYYY-MM-DD'));
+                    $(this).data('endDate', picker.endDate.format('YYYY-MM-DD'));
+                });
 
-            $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
-                $(this).val('');
-                $(this).data('startDate', '');
-                $(this).data('endDate', '');
-            });
+                $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+                    $(this).val('');
+                    $(this).data('startDate', '');
+                    $(this).data('endDate', '');
+                });
+            }
 
             // Handle entries select
             $('#entriesSelect').on('change', function() {
-                table.page.len($(this).val()).draw();
+                if (bmiTable) {
+                    bmiTable.page.len($(this).val()).draw();
+                }
             });
 
             // Handle apply date range
             $('#applyDateRange').on('click', function() {
-                table.ajax.reload();
+                if (bmiTable) {
+                    bmiTable.ajax.reload();
+                }
             });
 
         } catch (error) {
@@ -222,6 +589,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Initialize DataTable when the page loads
+    // Initialize everything when the page loads
+    initDateRangePickers();
+    initDateRangeButtons();
     initDataTable();
+
+    // Make sure to handle tab switching properly
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+        if ($(e.target).attr('data-bs-target') === '#bmi-statistics') {
+            // Delay chart rendering slightly to ensure the canvas is visible
+            setTimeout(() => {
+                // Refresh your charts here
+                updateCharts();
+            }, 100);
+        }
+    });
 }); 

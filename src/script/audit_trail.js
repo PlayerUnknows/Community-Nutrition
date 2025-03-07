@@ -34,24 +34,30 @@ $(document).ready(function() {
 
         // Initialize new instance
         auditTable = $('#auditTable').DataTable({
+            processing: true,
+            serverSide: false,
             ajax: {
                 url: '../backend/fetch_audit_trail.php',
                 type: 'GET',
-                dataSrc: function(json) {
-                    return json || [];
-                },
-                error: function(xhr, error, thrown) {
-                    console.error('Error loading audit trail:', error);
-                }
+                dataSrc: 'data'  // Specify that data is in the 'data' property
             },
             columns: [
                 { data: 'username', defaultContent: 'System' },
                 { data: 'action' },
                 { 
+                    data: 'user_id',
+                    render: function(data) {
+                        return data || 'N/A';
+                    }
+                },
+                { 
                     data: 'details',
                     render: function(data, type, row) {
-                        if (!data) return '';
+                        if (!data) return 'N/A';
                         try {
+                            if (row.action === 'LOGIN' || row.action === 'LOGOUT') {
+                                return data || 'User ' + row.action.toLowerCase();
+                            }
                             const details = JSON.parse(data);
                             let detailsHtml = '<div class="audit-details">';
                             for (const [key, value] of Object.entries(details)) {
@@ -62,19 +68,22 @@ $(document).ready(function() {
                             detailsHtml += '</div>';
                             return detailsHtml;
                         } catch (e) {
-                            return data;
+                            return data || 'N/A';
                         }
                     }
                 },
                 { 
                     data: 'action_timestamp',
                     render: function(data) {
+                        // Check if data is valid before formatting
+                        if (!data || data === '-') {
+                            return 'N/A';
+                        }
                         return moment(data).format('YYYY-MM-DD HH:mm:ss');
                     }
-                },
-                { data: 'count', defaultContent: '1' }
+                }
             ],
-            order: [[3, 'desc']],
+            order: [[4, 'desc']],  // Sort by timestamp descending
             pageLength: 10,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             responsive: true,
@@ -84,7 +93,9 @@ $(document).ready(function() {
             language: {
                 lengthMenu: "Show _MENU_ entries",
                 info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                processing: "Loading audit trail data..."
+                processing: "Loading audit trail data...",
+                emptyTable: "No audit trail data available",
+                zeroRecords: "No matching records found"
             }
         });
 
@@ -160,6 +171,12 @@ $(document).ready(function() {
                         { data: 'username', defaultContent: 'System' },
                         { data: 'action' },
                         { 
+                            data: 'user_id',
+                            render: function(data) {
+                                return data || 'N/A';
+                            }
+                        },
+                        { 
                             data: 'details',
                             render: function(data, type, row) {
                                 if (!data) return '';
@@ -210,6 +227,7 @@ $(document).ready(function() {
                             }
                         },
                         { data: 'action_timestamp' },
+                        { data: 'user_agent' },
                         { data: 'count', defaultContent: '1' }
                     ],
                     dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +

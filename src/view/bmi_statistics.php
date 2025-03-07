@@ -4,30 +4,7 @@ require_once __DIR__ . '/../controllers/ReportController.php';
 
 <div class="container-fluid mt-4">
     <!-- Date Filter Section -->
-    <!-- <div class="row mb-4">
-        <div class="col-12 col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-filter"></i> Date Filter</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <label for="startDate" class="form-label">Start Date:</label>
-                            <input type="date" class="form-control" id="startDate">
-                        </div>
-                        <div class="col-md-5">
-                            <label for="endDate" class="form-label">End Date:</label>
-                            <input type="date" class="form-control" id="endDate">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-primary w-100" id="filterDates">Filter</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
+    
 
     <!-- Chart Section -->
     <div class="row">

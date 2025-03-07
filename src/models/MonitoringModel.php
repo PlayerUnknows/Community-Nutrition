@@ -75,12 +75,40 @@ class MonitoringModel {
     }
 
     public function exportMonitoringData() {
-        $query = "SELECT * FROM checkup_info ORDER BY created_at DESC";
+        $query = "SELECT 
+            patient_id,
+            patient_fam_id,
+            age,
+            sex,
+            weight,
+            height,
+            bp,
+            temperature,
+            weight_category,
+            findings,
+            date_of_appointment,
+            time_of_appointment,
+            place,
+            finding_growth,
+            finding_bmi,
+            arm_circumference,
+            arm_circumference_status,
+            created_at
+        FROM checkup_info 
+        ORDER BY created_at DESC";
         
         try {
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (!$results) {
+                error_log("No data found for export");
+                return false;
+            }
+            
+            error_log("Exporting " . count($results) . " records");
+            return $results;
         } catch (PDOException $e) {
             error_log("Error exporting monitoring data: " . $e->getMessage());
             return false;

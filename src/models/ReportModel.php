@@ -221,13 +221,16 @@ class ReportModel {
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // If no results, return dummy data for testing
+            // If no results, return message indicating no data
             if (empty($results)) {
                 return [
-                    ['checkup_date' => date('Y-m-d'), 'patient_id' => '001', 'age' => 25, 'finding_bmi' => 'Normal', 'sex' => 'F'],
-                    ['checkup_date' => date('Y-m-d'), 'patient_id' => '002', 'age' => 30, 'finding_bmi' => 'Obese', 'sex' => 'F'],
-                    ['checkup_date' => date('Y-m-d'), 'patient_id' => '003', 'age' => 35, 'finding_bmi' => 'Normal', 'sex' => 'M'],
-                    ['checkup_date' => date('Y-m-d'), 'patient_id' => '004', 'age' => 28, 'finding_bmi' => 'Wasted', 'sex' => 'M']
+                    [
+                        'checkup_date' => 'N/A', 
+                        'patient_id' => 'N/A', 
+                        'age' => 'N/A', 
+                        'finding_bmi' => 'No BMI data available', 
+                        'sex' => 'N/A'
+                    ]
                 ];
             }
             

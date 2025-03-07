@@ -58,13 +58,26 @@ class MonitoringController {
     }
 
     public function exportData() {
+        error_log("Starting data export in controller...");
+        
         $records = $this->model->exportMonitoringData();
-        if ($records) {
-            $filename = 'monitoring_data_' . date('Y-m-d_H-i-s') . '.csv';
-            header('Content-Type: text/csv');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
+        if (!$records) {
+            error_log("No records found for export");
+            return false;
+        }
+        
+        try {
+            error_log("Processing " . count($records) . " records for export");
             
+            // Set headers for CSV download
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="monitoring_data_' . date('Y-m-d_H-i-s') . '.csv"');
+            
+            // Create output stream
             $output = fopen('php://output', 'w');
+            
+            // Add UTF-8 BOM for Excel compatibility
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
             
             // Write headers
             fputcsv($output, array_keys($records[0]));
@@ -75,9 +88,12 @@ class MonitoringController {
             }
             
             fclose($output);
-        } else {
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => 'Failed to export data']);
+            error_log("CSV file generated successfully");
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Error generating CSV: " . $e->getMessage());
+            return false;
         }
     }
 

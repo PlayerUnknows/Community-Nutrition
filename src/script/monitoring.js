@@ -193,6 +193,7 @@ window.MonitoringModule = (function() {
         $("#monitoringTable").off('click', '.btn-view');
         $("#confirmImportBtn").off('click');
         $("#downloadTemplateBtn").off('click');
+        $("#exportMonitoringBtn").off('click');
 
         // Add new handlers
         $(window).on('resize.monitoring', function() {
@@ -208,6 +209,54 @@ window.MonitoringModule = (function() {
         $("#confirmImportBtn").on("click", handleFileImport);
         $("#downloadTemplateBtn").on("click", function() {
             window.location.href = "../backend/download_template.php";
+        });
+
+        // Add export handler
+        $("#exportMonitoringBtn").on("click", function() {
+            console.log("Export button clicked - Sending request...");
+            $.ajax({
+                url: "../backend/export_monitoring.php",
+                method: "GET",
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                beforeSend: function() {
+                    console.log("Starting export request...");
+                },
+                success: function(response, status, xhr) {
+                    console.log("Export response received", xhr.getResponseHeader('Content-Type'));
+                    
+                    // Check if we received an error message
+                    if (xhr.getResponseHeader('Content-Type').indexOf('application/json') !== -1) {
+                        // Handle JSON error response
+                        const reader = new FileReader();
+                        reader.onload = function() {
+                            const errorResponse = JSON.parse(this.result);
+                            console.error("Export error:", errorResponse);
+                            alert(errorResponse.message || "Failed to export data");
+                        };
+                        reader.readAsText(response);
+                        return;
+                    }
+                    
+                    // Handle successful CSV response
+                    const blob = new Blob([response], { type: 'text/csv' });
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'monitoring_data_' + new Date().toISOString().slice(0,10) + '.csv';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log("File download initiated");
+                },
+                error: function(xhr, status, error) {
+                    console.error("Export failed - Status:", status);
+                    console.error("Error:", error);
+                    console.error("Response:", xhr.responseText);
+                    alert("Failed to export data. Please check the console for details.");
+                }
+            });
         });
     }
 

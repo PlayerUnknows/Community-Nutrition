@@ -480,6 +480,8 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="tab-pane fade" id="audit" role="tabpanel" aria-labelledby="audit-tab">
                 <div class="card">
                     <div class="card-body">
+                        <h5 class="card-title mb-4">Audit Trail</h5>
+                        
                         <!-- Search and length controls -->
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -505,15 +507,15 @@ require_once __DIR__ . '/../includes/header.php';
                             <table id="auditTable" class="table table-striped table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>User</th>
+                                        <th>Username</th>
                                         <th>Action</th>
+                                        <th>User ID</th>
                                         <th>Details</th>
                                         <th>Timestamp</th>
-                                        <th>Count</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- Data will be populated by DataTables -->
+                                    <!-- Data will be loaded dynamically -->
                                 </tbody>
                             </table>
                         </div>

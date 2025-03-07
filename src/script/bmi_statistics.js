@@ -23,33 +23,66 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
- 
+    // Function to fetch BMI data with date range
+    const fetchBMIData = (startDate, endDate, callback) => {
+        $.ajax({
+            url: '../controllers/ReportController.php',
+            type: 'POST',
+            data: {
+                action: 'getBMIDetails',
+                startDate: startDate || '',
+                endDate: endDate || ''
+            },
+            success: function(response) {
+                if (response.status === 'success' && Array.isArray(response.data)) {
+                    callback(response.data);
+                } else {
+                    callback([]);
+                }
+            },
+            error: function(xhr, error, thrown) {
+                console.error('AJAX error:', {xhr, error, thrown});
+                callback([]);
+            }
+        });
+    };
 
     // Initialize date range pickers
     const initDateRangePickers = () => {
+        // Set default dates to yesterday
+        const yesterday = moment().subtract(1, 'days');
+        const defaultStartDate = yesterday.clone().startOf('day');
+        const defaultEndDate = yesterday.clone().endOf('day');
+
         const dateRangeConfig = {
-            autoUpdateInput: false,
+            autoUpdateInput: true, // Changed to true for default value
+            startDate: defaultStartDate,
+            endDate: defaultEndDate,
             locale: {
-                cancelLabel: 'Clear'
+                cancelLabel: 'Clear',
+                format: 'MM/DD/YYYY'
             }
         };
 
-        ['#overallDateRange', '#femaleDateRange', '#maleDateRange'].forEach(selector => {
+        // Initialize all date range pickers
+        ['#overallDateRange', '#femaleDateRange', '#maleDateRange', '#dateRangePicker'].forEach(selector => {
             $(selector).daterangepicker(dateRangeConfig);
+            
+            // Set default values
+            $(selector).val(defaultStartDate.format('MM/DD/YYYY') + ' - ' + defaultEndDate.format('MM/DD/YYYY'));
+            $(selector).data('startDate', defaultStartDate.format('YYYY-MM-DD'));
+            $(selector).data('endDate', defaultEndDate.format('YYYY-MM-DD'));
 
             $(selector).on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
-                const type = selector.replace('#', '').replace('DateRange', '');
-                dateRanges[type] = {
-                    start: picker.startDate,
-                    end: picker.endDate
-                };
+                $(this).data('startDate', picker.startDate.format('YYYY-MM-DD'));
+                $(this).data('endDate', picker.endDate.format('YYYY-MM-DD'));
             });
 
             $(selector).on('cancel.daterangepicker', function(ev, picker) {
                 $(this).val('');
-                const type = selector.replace('#', '').replace('DateRange', '');
-                dateRanges[type] = { start: null, end: null };
+                $(this).data('startDate', '');
+                $(this).data('endDate', '');
             });
         });
     };
@@ -87,35 +120,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners for date range buttons
     const initDateRangeButtons = () => {
         $('#applyOverallDateRange').on('click', function() {
-            if (bmiChart) {
-                const filteredData = filterDataByDateRange(
-                    dummyData,
-                    dateRanges.overall.start,
-                    dateRanges.overall.end
-                );
-                initBMIChart(filteredData);
-            }
+            const startDate = $('#overallDateRange').data('startDate');
+            const endDate = $('#overallDateRange').data('endDate');
+            
+            fetchBMIData(startDate, endDate, function(data) {
+                initBMIChart(data);
+            });
         });
 
         $('#applyFemaleDateRange').on('click', function() {
-            if (femaleBmiChart) {
-                const filteredData = filterDataByDateRange(
-                    dummyData,
-                    dateRanges.female.start,
-                    dateRanges.female.end
-                );
-                initGenderCharts(filteredData, 'female');
-            }
+            const startDate = $('#femaleDateRange').data('startDate');
+            const endDate = $('#femaleDateRange').data('endDate');
+            
+            fetchBMIData(startDate, endDate, function(data) {
+                initGenderCharts(data, 'female');
+            });
         });
 
         $('#applyMaleDateRange').on('click', function() {
-            if (maleBmiChart) {
-                const filteredData = filterDataByDateRange(
-                    dummyData,
-                    dateRanges.male.start,
-                    dateRanges.male.end
-                );
-                initGenderCharts(filteredData, 'male');
+            const startDate = $('#maleDateRange').data('startDate');
+            const endDate = $('#maleDateRange').data('endDate');
+            
+            fetchBMIData(startDate, endDate, function(data) {
+                initGenderCharts(data, 'male');
+            });
+        });
+
+        // Separate handler for DataTable date range
+        $('#applyDateRange').on('click', function() {
+            if (bmiTable) {
+                bmiTable.ajax.reload();
             }
         });
     };
@@ -150,8 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            // Use dummy data if no data is provided
-            const chartData = Array.isArray(data) && data.length > 0 ? data : dummyData;
+            // Use empty array if no data is provided
+            const chartData = Array.isArray(data) ? data : [];
 
             // Destroy existing charts based on gender parameter
             if (!gender || gender === 'female') {
@@ -476,7 +510,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const initDataTable = () => {
         try {
             console.log('Initializing DataTable...');
-            // Wait for jQuery and DataTables to be available
             if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
                 console.warn('Waiting for DataTables to load...');
                 setTimeout(initDataTable, 100);
@@ -487,17 +520,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 bmiTable = $('#bmiTable').DataTable({
                     processing: true,
                     serverSide: false,
-                    data: [], // Initialize with empty array instead of dummyData
+                    data: [],
                     dom: '<"d-flex justify-content-between align-items-center mb-3"f>rt<"d-flex justify-content-between align-items-center mt-3"lip>',
                     ajax: {
                         url: '../controllers/ReportController.php',
                         type: 'POST',
                         data: function(d) {
-                            console.log('Sending request with data:', {
-                                action: 'getBMIDetails',
-                                startDate: $('#dateRangePicker').data('startDate'),
-                                endDate: $('#dateRangePicker').data('endDate')
-                            });
                             return {
                                 action: 'getBMIDetails',
                                 startDate: $('#dateRangePicker').data('startDate') || '',
@@ -505,29 +533,53 @@ document.addEventListener('DOMContentLoaded', function() {
                             };
                         },
                         dataSrc: function(response) {
-                            console.log('Received data from server:', response);
                             if (response.status === 'success' && Array.isArray(response.data)) {
-                                // Initialize charts with retry mechanism
-                                initializeChartsWithRetry(response.data);
-                                return response.data;
-                            } else {
-                                console.warn('Using dummy data due to invalid server response');
-                                initializeChartsWithRetry(dummyData);
-                                return dummyData;
+                                // Clean the data before it reaches the render function
+                                return response.data.map(item => ({
+                                    ...item,
+                                    checkup_date: item.checkup_date || 'N/A'
+                                }));
                             }
-                        },
-                        error: function(xhr, error, thrown) {
-                            console.error('AJAX error:', {xhr, error, thrown});
-                            console.warn('Using dummy data due to server error');
-                            initializeChartsWithRetry(dummyData);
-                            return dummyData;
+                            return [];
                         }
                     },
                     columns: [
                         { 
                             data: 'checkup_date',
                             render: function(data) {
-                                return moment(data).format('MMM DD, YYYY');
+                                // More detailed debug logging
+                                console.log('Date value received:', {
+                                    value: data,
+                                    type: typeof data,
+                                    stringified: JSON.stringify(data)
+                                });
+                                
+                                // Early return for N/A
+                                if (data === 'N/A') {
+                                    return 'N/A';
+                                }
+                                
+                                // Early return for null/undefined
+                                if (!data) {
+                                    return 'N/A';
+                                }
+                                
+                                // Convert to string if needed
+                                const dateStr = String(data).trim();
+                                
+                                // Early return for empty string
+                                if (!dateStr) {
+                                    return 'N/A';
+                                }
+                                
+                                // Check for valid date format
+                                if (!/^\d{1,4}[-/]\d{1,2}[-/]\d{1,4}$/.test(dateStr)) {
+                                    return 'Invalid date';
+                                }
+                                
+                                // Try parsing with strict mode
+                                const parsed = moment(dateStr, ['MM/DD/YYYY', 'YYYY-MM-DD'], true);
+                                return parsed.isValid() ? parsed.format('MMM DD, YYYY') : 'Invalid date';
                             }
                         },
                         { data: 'patient_id' },
@@ -548,39 +600,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            // Initialize daterangepicker
-            if (typeof $.fn.daterangepicker !== 'undefined') {
-                $('#dateRangePicker').daterangepicker({
-                    autoUpdateInput: false,
-                    locale: {
-                        cancelLabel: 'Clear'
-                    }
-                });
-
-                $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
-                    $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
-                    $(this).data('startDate', picker.startDate.format('YYYY-MM-DD'));
-                    $(this).data('endDate', picker.endDate.format('YYYY-MM-DD'));
-                });
-
-                $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
-                    $(this).val('');
-                    $(this).data('startDate', '');
-                    $(this).data('endDate', '');
-                });
-            }
-
             // Handle entries select
             $('#entriesSelect').on('change', function() {
                 if (bmiTable) {
                     bmiTable.page.len($(this).val()).draw();
-                }
-            });
-
-            // Handle apply date range
-            $('#applyDateRange').on('click', function() {
-                if (bmiTable) {
-                    bmiTable.ajax.reload();
                 }
             });
 
@@ -589,10 +612,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    // Function to load initial data
+    const loadInitialData = () => {
+        const yesterday = moment().subtract(1, 'days');
+        const startDate = yesterday.clone().startOf('day').format('YYYY-MM-DD');
+        const endDate = yesterday.clone().endOf('day').format('YYYY-MM-DD');
+
+        // Load data for overall chart
+        fetchBMIData(startDate, endDate, function(data) {
+            initBMIChart(data);
+        });
+
+        // Load data for gender charts
+        fetchBMIData(startDate, endDate, function(data) {
+            initGenderCharts(data);
+        });
+
+        // DataTable will automatically load with default dates
+        if (bmiTable) {
+            bmiTable.ajax.reload();
+        }
+    };
+
     // Initialize everything when the page loads
     initDateRangePickers();
     initDateRangeButtons();
     initDataTable();
+    loadInitialData();
 
     // Make sure to handle tab switching properly
     $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {

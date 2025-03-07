@@ -17,18 +17,25 @@ class User
     }
 
     // Create new user with role
-    public function createUser($email, $password, $role)
+    public function createUser($email, $firstName, $middleName, $lastName, $suffix, $role)
     {
         try {
             // Generate a unique role-specific ID
             $userId = $this->generateRoleSpecificId($role);
+            
+            // Generate a temporary password
+            $tempPassword = $this->generateTemporaryPassword();
 
-            $sql = "INSERT INTO account_info (user_id, email, password, role) VALUES (?, ?, ?, ?)";
+            $sql = "INSERT INTO account_info (user_id, email, first_name, middle_name, last_name, suffix, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $this->conn->prepare($sql);
             $result = $stmt->execute([
                 $userId,
                 $email,
-                password_hash($password, PASSWORD_BCRYPT),
+                $firstName,
+                $middleName,
+                $lastName,
+                $suffix,
+                password_hash($tempPassword, PASSWORD_BCRYPT),
                 $role
             ]);
 
@@ -36,9 +43,19 @@ class User
                 // Log the account creation in audit trail
                 require_once __DIR__ . '/../backend/audit_trail.php';
                 logUserAuth($userId, $email, AUDIT_REGISTER);
+                
+                // Return both the user ID and temporary password
+                return [
+                    'success' => true,
+                    'userId' => $userId,
+                    'tempPassword' => $tempPassword
+                ];
             }
-
-            return $result;
+            
+            return [
+                'success' => false,
+                'message' => 'Failed to create account'
+            ];
         } catch (PDOException $e) {
             // Handle duplicate email error specifically
             if ($e->getCode() == '23000') { // SQLSTATE for unique constraint violation
@@ -63,6 +80,20 @@ class User
 
         // Combine prefix, date, and primary key
         return "{$prefix}{$currentDate}{$primaryKey}";
+    }
+
+    // Generate a random temporary password
+    private function generateTemporaryPassword()
+    {
+        $length = 12;
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
+        $password = '';
+        
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        
+        return $password;
     }
 
     // Get the next primary key value from the database
@@ -141,5 +172,39 @@ class User
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function updateProfile($userId, $updates) {
+        try {
+            $setClauses = [];
+            $params = [];
+            
+            foreach ($updates as $field => $value) {
+                $setClauses[] = "$field = ?";
+                $params[] = $value;
+            }
+            
+            // Add userId to params
+            $params[] = $userId;
+            
+            $sql = "UPDATE account_info SET " . implode(', ', $setClauses) . " WHERE user_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            error_log("Error updating profile: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function emailExists($email) {
+        try {
+            $sql = "SELECT COUNT(*) FROM account_info WHERE email = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$email]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log("Error checking email existence: " . $e->getMessage());
+            return false;
+        }
+    }
 }
-?>

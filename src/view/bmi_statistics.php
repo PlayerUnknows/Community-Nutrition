@@ -83,7 +83,7 @@ require_once __DIR__ . '/../controllers/ReportController.php';
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="bmiCategoryTable" class="table table-striped table-bordered">
+                        <table id="bmiCategoryTable" class="table table-striped table-bordered w-100">
                             <thead>
                                 <tr>
                                     <th>BMI Category</th>
@@ -128,17 +128,20 @@ require_once __DIR__ . '/../controllers/ReportController.php';
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive" style="min-height: 500px;">
-                    <table id="bmiTable" class="table table-striped table-bordered w-100">
+                <div class="table-responsive">
+                    <table id="bmiTable" class="table table-striped table-bordered display nowrap w-100">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Patient ID</th>
-                                <th>Age</th>
-                                <th>BMI Status</th>
+                                <th class="all">Date</th>
+                                <th class="min-tablet">Patient ID</th>
+                                <th class="min-tablet">Patient Name</th>
+                                <th class="min-tablet">Age</th>
+                                <th class="min-tablet">Sex</th>
+                                <th class="all">BMI Status</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Data will be populated by DataTables -->
                         </tbody>
                     </table>
                 </div>
@@ -153,22 +156,106 @@ require_once __DIR__ . '/../controllers/ReportController.php';
     padding: 1.25rem;
 }
 
-.table-responsive {
-    margin: 0;
-    padding: 0;
-}
+   .table-responsive {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: auto;
+        }
 
 #bmiTable {
     margin: 0 !important;
+    width: 100% !important;
+    white-space: nowrap;
 }
 
-.dataTables_wrapper .dataTables_length, 
-.dataTables_wrapper .dataTables_filter {
-    margin-bottom: 1rem;
+#bmiTable th {
+    padding: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.daterangepicker {
-    z-index: 1100;
+/* DataTables Responsive styles */
+table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
+table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control {
+    padding-left: 30px !important;
+}
+
+table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
+table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
+    top: 50%;
+    transform: translateY(-50%);
+    left: 5px;
+    height: 14px;
+    width: 14px;
+    border-radius: 14px;
+    line-height: 14px;
+    text-align: center;
+    color: white;
+    background-color: #0d6efd;
+}
+
+/* Table wrapper adjustments */
+.dataTables_wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.dataTables_wrapper .row {
+    margin: 0;
+    padding: 10px 0;
+}
+
+/* Mobile optimizations */
+@media screen and (max-width: 767px) {
+    #bmiTable_wrapper .row:first-child {
+        flex-direction: column;
+    }
+
+    #bmiTable_wrapper .col-sm-12 {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .dataTables_filter {
+        text-align: left !important;
+    }
+}
+
+/* Entries and date range controls */
+.d-flex.gap-2 {
+    display: flex;
+    align-items: center;
+    gap: 1rem !important;
+}
+
+.input-group {
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.input-group-text {
+    background: #f8f9fa;
+    border: none;
+    color: #6c757d;
+}
+
+.form-select, 
+.form-control {
+    border: none;
+    box-shadow: none !important;
+}
+
+.btn-primary {
+    background: #0d6efd;
+    border: none;
+    padding: 0.5rem 1rem;
+}
+
+.btn-primary:hover {
+    background: #0b5ed7;
 }
 
 /* Add custom background colors for gender charts */
@@ -250,7 +337,11 @@ require_once __DIR__ . '/../controllers/ReportController.php';
 <!-- DataTables -->
 <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+<script src="../../node_modules/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+<script src="../../node_modules/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
+
 <link rel="stylesheet" type="text/css" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="../../node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css">
 
 <!-- Other dependencies -->
 <script src="../../node_modules/daterangepicker/daterangepicker.js"></script>

@@ -114,4 +114,59 @@ define('AUDIT_CREATE', 'CREATE');
 define('AUDIT_UPDATE', 'UPDATE');
 define('AUDIT_DELETE', 'DELETE');
 define('AUDIT_VIEW', 'VIEW');
+
+// File operation constants
+define('AUDIT_FILE_DOWNLOAD', 'FILE_DOWNLOAD');
+define('AUDIT_FILE_EXPORT', 'FILE_EXPORT');
+define('AUDIT_FILE_IMPORT', 'FILE_IMPORT');
+
+// Event operation constants
+define('AUDIT_EVENT_CREATE', 'EVENT_CREATE');
+define('AUDIT_EVENT_UPDATE', 'EVENT_UPDATE');
+define('AUDIT_EVENT_DELETE', 'EVENT_DELETE');
+
+// Function to log file downloads
+function logFileDownload($userId, $username, $filename, $fileType = '') {
+    $details = json_encode([
+        'filename' => $filename,
+        'file_type' => $fileType,
+        'operation' => 'download'
+    ]);
+    return logAuditTrail($userId, $username, AUDIT_FILE_DOWNLOAD, $details);
+}
+
+// Function to log file exports
+function logFileExport($userId, $username, $filename, $exportFormat, $exportType = '') {
+    $details = json_encode([
+        'filename' => $filename,
+        'format' => $exportFormat,
+        'export_type' => $exportType,
+        'operation' => 'export'
+    ]);
+    return logAuditTrail($userId, $username, AUDIT_FILE_EXPORT, $details);
+}
+
+// Function to log file imports
+function logFileImport($userId, $username, $filename, $importType, $status = 'success', $details = '') {
+    $logDetails = json_encode([
+        'filename' => $filename,
+        'import_type' => $importType,
+        'status' => $status,
+        'additional_details' => $details,
+        'operation' => 'import'
+    ]);
+    return logAuditTrail($userId, $username, AUDIT_FILE_IMPORT, $logDetails);
+}
+
+// Function to log event operations
+function logEventOperation($userId, $username, $action, $eventId, $eventDetails = []) {
+    $details = json_encode([
+        'event_id' => $eventId,
+        'event_type' => $eventDetails['event_type'] ?? '',
+        'event_name' => $eventDetails['event_name'] ?? '',
+        'event_date' => $eventDetails['event_date'] ?? '',
+        'operation' => strtolower(str_replace('EVENT_', '', $action))
+    ]);
+    return logAuditTrail($userId, $username, $action, $details);
+}
 ?>

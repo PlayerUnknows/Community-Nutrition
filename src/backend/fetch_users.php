@@ -9,7 +9,7 @@ header('Content-Type: application/json');
 
 try {
     $conn = connect();
-    
+
     // Get all users
     $query = "SELECT 
         user_id,
@@ -23,17 +23,16 @@ try {
         DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
         FROM account_info
         ORDER BY created_at DESC";
-    
+
     $stmt = $conn->prepare($query);
     $stmt->execute();
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode([
         'success' => true,
         'data' => $users
     ]);
-    
-} catch(Exception $e) {
+} catch (Exception $e) {
     error_log('Fetch users error: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([

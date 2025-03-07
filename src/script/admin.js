@@ -169,9 +169,23 @@
             }
         });
 
+        // Initialize toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
         // Profile Settings Handler
         $('#profileSettingsBtn').on('click', function(e) {
             e.preventDefault();
+
             Swal.fire({
                 title: 'Profile Settings',
                 html: `
@@ -186,38 +200,168 @@
                         </div>
                         <div class="mb-3">
                             <label for="currentPassword" class="form-label">Current Password</label>
-                            <input type="password" class="form-control" id="currentPassword">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="currentPassword">
+                                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="currentPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="newPassword" class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="newPassword">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="newPassword">
+                                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="newPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Leave blank if you don't want to change password</small>
                         </div>
                     </form>
                 `,
                 showCancelButton: true,
-                confirmButtonText: 'Save Changes',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: '<i class="fas fa-save me-1"></i>Save Changes',
+                cancelButtonText: '<i class="fas fa-times me-1"></i>Cancel',
                 width: '500px',
                 customClass: {
                     container: 'profile-settings-modal',
-                    popup: 'profile-settings-modal'
+                    popup: 'profile-settings-modal',
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary'
+                },
+                didOpen: () => {
+                    // Add password toggle functionality
+                    $('.toggle-password').on('click', function() {
+                        const targetId = $(this).data('target');
+                        const input = $(`#${targetId}`);
+                        const icon = $(this).find('i');
+                        
+                        if (input.attr('type') === 'password') {
+                            input.attr('type', 'text');
+                            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                        } else {
+                            input.attr('type', 'password');
+                            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                        }
+                    });
                 },
                 preConfirm: () => {
-                    // Add validation and submission logic here
-                    const newEmail = $('#newEmail').val();
+                    const newEmail = $('#newEmail').val().trim();
                     const currentPassword = $('#currentPassword').val();
                     const newPassword = $('#newPassword').val();
                     
-                    // Add your update profile logic here
+                    // Validate inputs
+                    if (newEmail && !isValidEmail(newEmail)) {
+                        Swal.showValidationMessage('Please enter a valid email address');
+                        return false;
+                    }
+                    
+                    if (!currentPassword) {
+                        Swal.showValidationMessage('Current password is required');
+                        return false;
+                    }
+                    
+                    if (newPassword && newPassword.length < 8) {
+                        Swal.showValidationMessage('New password must be at least 8 characters long');
+                        return false;
+                    }
+                    
                     return { newEmail, currentPassword, newPassword };
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Handle the form submission
-                    // Add your AJAX call to update profile
+                    // Update confirm button to loading state
+                    const confirmButton = Swal.getConfirmButton();
+                    const originalText = confirmButton.innerHTML;
+                    confirmButton.innerHTML = `
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        Updating...
+                    `;
+                    confirmButton.disabled = true;
+
+                    // Show processing toast
+                    Toast.fire({
+                        icon: 'info',
+                        title: 'Processing your request...'
+                    });
+
+                    // Add delay for minimum loading time
+                    setTimeout(() => {
+                        // Make AJAX call to update profile
+                        $.ajax({
+                            url: '../../src/controllers/UserController.php?action=updateProfile',
+                            type: 'POST',
+                            data: {
+                                newEmail: result.value.newEmail,
+                                currentPassword: result.value.currentPassword,
+                                newPassword: result.value.newPassword
+                            },
+                            success: function(response) {
+                                try {
+                                    const data = JSON.parse(response);
+                                    if (data.success) {
+                                        // Close the modal first
+                                        Swal.close();
+                                        
+                                        // Then show success toast
+                                        Toast.fire({
+                                            icon: 'success',
+                                            title: 'Profile updated successfully!'
+                                        }).then(() => {
+                                            // If email or password was changed, reload after toast
+                                            if (result.value.newEmail || result.value.newPassword) {
+                                                Toast.fire({
+                                                    icon: 'info',
+                                                    title: 'Refreshing page...'
+                                                }).then(() => {
+                                                    window.location.reload();
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        // Show error toast
+                                        Toast.fire({
+                                            icon: 'error',
+                                            title: data.message || 'Failed to update profile'
+                                        });
+                                        // Restore button state
+                                        confirmButton.innerHTML = originalText;
+                                        confirmButton.disabled = false;
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing response:', e);
+                                    // Show error toast
+                                    Toast.fire({
+                                        icon: 'error',
+                                        title: 'An unexpected error occurred'
+                                    });
+                                    // Restore button state
+                                    confirmButton.innerHTML = originalText;
+                                    confirmButton.disabled = false;
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('AJAX Error:', {xhr, status, error});
+                                // Show error toast
+                                Toast.fire({
+                                    icon: 'error',
+                                    title: 'Failed to connect to the server'
+                                });
+                                // Restore button state
+                                confirmButton.innerHTML = originalText;
+                                confirmButton.disabled = false;
+                            }
+                        });
+                    }, 3000); // Minimum 3 second loading state
                 }
             });
         });
+
+        // Email validation helper function
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
 
         // Display Settings Handler
         $('#displaySettingsBtn').on('click', function(e) {
@@ -246,12 +390,14 @@
                     </form>
                 `,
                 showCancelButton: true,
-                confirmButtonText: 'Save Changes',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: '<i class="fas fa-save me-1"></i>Save Changes',
+                cancelButtonText: '<i class="fas fa-times me-1"></i>Cancel',
                 width: '500px',
                 customClass: {
                     container: 'display-settings-modal',
-                    popup: 'display-settings-modal'
+                    popup: 'display-settings-modal',
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary'
                 },
                 preConfirm: () => {
                     const theme = $('#darkTheme').prop('checked') ? 'dark' : 'light';
@@ -260,6 +406,11 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show processing toast
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Display settings updated!'
+                    });
                     // Handle the display settings changes
                     // Add your logic to apply theme and font size
                 }

@@ -13,7 +13,7 @@ class MonitoringModel {
                 `weight`, `height`, `bp`, `temperature`, `weight_category`, `findings`, 
                 `date_of_appointment`, `time_of_appointment`, `place`, `created_at`, 
                 `finding_growth`, `finding_bmi`, `arm_circumference`, `arm_circumference_status`, 
-                `checkup_unique_id`
+                `checkup_unique_id`,`patient_name`
                 FROM `checkup_info` 
                 ORDER BY created_at DESC";
         
@@ -76,6 +76,7 @@ class MonitoringModel {
 
     public function exportMonitoringData() {
         $query = "SELECT 
+        patient_name
             patient_id,
             patient_fam_id,
             age,
@@ -182,13 +183,18 @@ class MonitoringModel {
             weight_category,
             finding_bmi,
             finding_growth,
+            height,
+            bp,
+            temperature,
             arm_circumference,
             arm_circumference_status,
             findings,
             date_of_appointment,
             time_of_appointment,
             place,
-            created_at
+            created_at,
+            height,
+            weight  
         FROM checkup_info 
         WHERE checkup_unique_id LIKE :id";
         
@@ -225,12 +231,12 @@ class MonitoringModel {
                 patient_id, patient_fam_id, age, sex, weight, height, bp, temperature,
                 weight_category, findings, date_of_appointment, time_of_appointment,
                 place, finding_growth, finding_bmi, arm_circumference,
-                arm_circumference_status, checkup_unique_id, created_at
+                arm_circumference_status,patient_name, checkup_unique_id, created_at
             ) VALUES (
                 :patient_id, :patient_fam_id, :age, :sex, :weight, :height, :bp, :temperature,
                 :weight_category, :findings, :date_of_appointment, :time_of_appointment,
                 :place, :finding_growth, :finding_bmi, :arm_circumference,
-                :arm_circumference_status, :checkup_unique_id, NOW()
+                :arm_circumference_status, :patient_name, :checkup_unique_id, NOW()
             )";
     
             $stmt = $this->conn->prepare($query);

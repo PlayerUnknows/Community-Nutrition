@@ -7,7 +7,8 @@ require_once __DIR__ . '/../includes/header.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboad</title>
+    <link rel="icon" href="../../assets/img/healthy-food.png">
 
     <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
@@ -227,49 +228,43 @@ require_once __DIR__ . '/../includes/header.php';
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.5s ease;
+            transition: opacity 1.9s ease;
+           
         }
 
         .loading-logo {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             margin-bottom: 20px;
+            animation: pulse 3s ease-in-out infinite;
+            
         }
 
-        .loading-dots {
-            display: flex;
-            gap: 8px;
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
-        .dot {
-            width: 12px;
-            height: 12px;
-            background-color: #007bff;
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
             border-radius: 50%;
-            animation: bounce 0.5s ease-in-out infinite;
+            animation: spin 1.05s linear infinite;
         }
 
-        .dot:nth-child(2) {
-            animation-delay: 0.1s;
-        }
-
-        .dot:nth-child(3) {
-            animation-delay: 0.2s;
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+            
         }
 
         .header-clock {
@@ -336,11 +331,7 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Update the loading screen div -->
     <div id="loading-screen">
         <img src="../../assets/img/SanAndres.svg" alt="Logo" class="loading-logo">
-        <div class="loading-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
+        <div class="loading-spinner"></div>
     </div>
 
     <!-- Header Section -->
@@ -501,6 +492,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </select>
                             </div>
                         </div>
+                        
 
                         <!-- Audit table -->
                         <div class="table-responsive">
@@ -509,9 +501,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     <tr>
                                         <th>Username</th>
                                         <th>Action</th>
-                                        <th>User ID</th>
                                         <th>Details</th>
                                         <th>Timestamp</th>
+                                        <th>Count</th>
                                     </tr>
                                 </thead>
                                 <tbody>

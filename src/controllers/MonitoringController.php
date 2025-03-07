@@ -9,7 +9,7 @@ class MonitoringController {
     }
 
     public function fetchAllMonitoring() {
-        error_log("Fetching all monitoring records...");
+        // error_log("Fetching all monitoring records...");
         $records = $this->model->getAllMonitoringRecords();
         
         if ($records !== false) {
@@ -69,9 +69,27 @@ class MonitoringController {
         try {
             error_log("Processing " . count($records) . " records for export");
             
+            // Generate filename
+            $filename = "monitoring_data_" . date('Y-m-d_H-i-s') . ".csv";
+            
+            // Log the export
+            require_once __DIR__ . '/../backend/audit_trail.php';
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+            if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
+                logFileExport(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $filename,
+                    'CSV',
+                    'Monitoring Data'
+                );
+            }
+            
             // Set headers for CSV download
             header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename="monitoring_data_' . date('Y-m-d_H-i-s') . '.csv"');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
             
             // Create output stream
             $output = fopen('php://output', 'w');
@@ -139,8 +157,23 @@ class MonitoringController {
             'finding_growth',
             'finding_bmi',
             'arm_circumference',
-            'arm_circumference_status'
+            'arm_circumference_status',
+            'patient_name'  
         ];
+
+        // Log the template download
+        require_once __DIR__ . '/../backend/audit_trail.php';
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
+            logFileDownload(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $filename,
+                'CSV Template'
+            );
+        }
 
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -166,11 +199,13 @@ class MonitoringController {
             'Normal',
             'Normal',
             '15.5',
-            'Normal'
+            'Normal',
+            'John Doe'
         ];
         fputcsv($output, $sampleRow);
         fclose($output);
     }
+ 
 
     public function importData() {
         header('Content-Type: application/json');
@@ -181,15 +216,45 @@ class MonitoringController {
         }
 
         $file = $_FILES['importFile']['tmp_name'];
+        $originalFilename = $_FILES['importFile']['name'];
         
         try {
+            require_once __DIR__ . '/../backend/audit_trail.php';
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
             $result = $this->model->importMonitoringData($file);
+            
+            // Log the import attempt
+            if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
+                logFileImport(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $originalFilename,
+                    'Monitoring Data',
+                    $result['status'],
+                    $result['message']
+                );
+            }
+
             if ($result['status'] === 'success') {
                 echo json_encode(['status' => 'success', 'message' => $result['message']]);
             } else {
                 echo json_encode(['status' => 'error', 'message' => $result['message']]);
             }
         } catch (Exception $e) {
+            // Log the failed import
+            if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
+                logFileImport(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $originalFilename,
+                    'Monitoring Data',
+                    'error',
+                    'Import failed: ' . $e->getMessage()
+                );
+            }
             echo json_encode(['status' => 'error', 'message' => 'Import failed: ' . $e->getMessage()]);
         }
     }

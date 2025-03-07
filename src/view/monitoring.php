@@ -94,14 +94,15 @@ require_once '../includes/header.php';
                     <table id="monitoringTable" class="table table-striped table-bordered">
                         <thead>
                             <tr>
+                                <th>Patient Name</th>
                                 <th>Patient ID</th>
                                 <th>Family ID</th>
                                 <th>Age</th>
                                 <th>Sex</th>
-                                <th>Weight</th>
-                                <th>Height</th>
-                                <th>BP</th>
-                                <th>Temperature</th>
+                                <th>BMI Status</th>
+                                <th>Growth Status</th>
+                                <th>Arm Circumference<br>Status</th>
+                                <!-- <th>Temperature</th> -->
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -130,19 +131,16 @@ require_once '../includes/header.php';
                     <div class="col-md-6">
                         <h6 class="fw-bold mb-3">Assessment Results</h6>
                         <div class="mb-2">
-                            <strong>Weight Category:</strong> <span id="weightCategory"></span>
+                            <strong>Height:</strong> <span id="growthStatus"></span>
                         </div>
                         <div class="mb-2">
-                            <strong>BMI Status:</strong> <span id="bmiStatus"></span>
+                            <strong>Weight:</strong> <span id="weight"></span>
                         </div>
                         <div class="mb-2">
-                            <strong>Growth Status:</strong> <span id="growthStatus"></span>
+                            <strong>Blood Pressure:</strong> <span id="bp"></span>
                         </div>
                         <div class="mb-2">
-                            <strong>Arm Circumference:</strong> <span id="armCircumference"></span>
-                        </div>
-                        <div class="mb-2">
-                            <strong>Arm Status:</strong> <span id="armStatus"></span>
+                            <strong>Temperature:</strong> <span id="temperature"></span>
                         </div>
                     </div>
                     <!-- Appointment Information -->

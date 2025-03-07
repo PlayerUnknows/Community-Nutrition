@@ -2,6 +2,7 @@
 ob_start();
 session_start();
 require_once("../config/dbcon.php");
+require_once __DIR__ . '/../backend/audit_trail.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, must-revalidate');
@@ -119,6 +120,21 @@ try {
                 throw new Exception('Failed to add event');
             }
 
+            // Log event creation in audit trail
+            if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
+                logEventOperation(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    AUDIT_EVENT_CREATE,
+                    $conn->lastInsertId(),
+                    [
+                        'event_type' => $_POST['event_type'],
+                        'event_name' => $_POST['event_name'],
+                        'event_date' => $_POST['event_date']
+                    ]
+                );
+            }
+
             sendJSON([
                 'success' => true,
                 'message' => 'Event added successfully'
@@ -185,6 +201,21 @@ try {
                     throw new Exception('No rows were updated. Event may not exist.');
                 }
 
+                // Log event update in audit trail
+                if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
+                    logEventOperation(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        AUDIT_EVENT_UPDATE,
+                        $_POST['event_prikey'],
+                        [
+                            'event_type' => $_POST['event_type'],
+                            'event_name' => $_POST['event_name'],
+                            'event_date' => $_POST['event_date']
+                        ]
+                    );
+                }
+
                 sendJSON([
                     'success' => true,
                     'message' => 'Event updated successfully'
@@ -199,11 +230,32 @@ try {
                 throw new Exception('Event ID not provided');
             }
 
+            // Get event details before deletion for audit trail
+            $stmt = $conn->prepare("SELECT event_type, event_name_created, event_date FROM event_info WHERE event_prikey = ?");
+            $stmt->execute([$_POST['event_prikey']]);
+            $eventDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Delete the event
             $stmt = $conn->prepare("DELETE FROM event_info WHERE event_prikey = ?");
             $result = $stmt->execute([$_POST['event_prikey']]);
 
             if (!$result) {
                 throw new Exception('Failed to delete event');
+            }
+
+            // Log event deletion in audit trail
+            if (isset($_SESSION['user_id']) && isset($_SESSION['email']) && $eventDetails) {
+                logEventOperation(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    AUDIT_EVENT_DELETE,
+                    $_POST['event_prikey'],
+                    [
+                        'event_type' => $eventDetails['event_type'],
+                        'event_name' => $eventDetails['event_name_created'],
+                        'event_date' => $eventDetails['event_date']
+                    ]
+                );
             }
 
             sendJSON([

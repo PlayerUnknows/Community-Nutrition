@@ -185,9 +185,11 @@ class ReportModel {
     public function getBMIDetails($startDate = null, $endDate = null) {
         try {
             $query = "SELECT 
-                c.created_at as checkup_date,
+                DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') as checkup_date,
                 c.patient_id,
+                c.patient_name,
                 c.age,
+                c.sex,
                 CASE 
                     WHEN c.finding_bmi LIKE '%Severely Wasted%' THEN 'Severely Wasted'
                     WHEN c.finding_bmi LIKE '%Wasted%' THEN 'Wasted'
@@ -195,7 +197,7 @@ class ReportModel {
                     WHEN c.finding_bmi LIKE '%Obese%' THEN 'Obese'
                     ELSE c.finding_bmi
                 END as finding_bmi,
-                UPPER(c.sex) as sex  -- Standardize sex to uppercase
+                UPPER(c.sex) as sex
             FROM checkup_info c
             WHERE c.finding_bmi IS NOT NULL";
             
@@ -213,6 +215,10 @@ class ReportModel {
             
             $query .= " ORDER BY c.created_at DESC";
             
+            // Log the query and parameters for debugging
+            error_log("Query: " . $query);
+            error_log("Parameters: " . json_encode($params));
+            
             $stmt = $this->conn->prepare($query);
             foreach ($params as $key => $value) {
                 $stmt->bindValue($key, $value);
@@ -221,20 +227,13 @@ class ReportModel {
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // If no results, return message indicating no data
+            // Return empty array if no results
             if (empty($results)) {
-                return [
-                    [
-                        'checkup_date' => 'N/A', 
-                        'patient_id' => 'N/A', 
-                        'age' => 'N/A', 
-                        'finding_bmi' => 'No BMI data available', 
-                        'sex' => 'N/A'
-                    ]
-                ];
+                return [];
             }
             
             return $results;
+            
         } catch (PDOException $e) {
             error_log("Database error in getBMIDetails: " . $e->getMessage());
             throw new Exception("Database error occurred");

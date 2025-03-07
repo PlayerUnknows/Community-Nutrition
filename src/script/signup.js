@@ -1,160 +1,173 @@
-// Load signup form when the Account tab is clicked
-document.getElementById('acc-reg').addEventListener('click', function () {
-    // Get the container where we'll put the form
-    const container = document.getElementById('signupFormContainer');
+// Form validation
+(function () {
+  "use strict";
 
-    // Use AJAX to load the signup form
-    $.ajax({
-        url: '../view/signup.php',
-        method: 'GET',
-        success: function (response) {
-            // Extract the form content from the response
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(response, 'text/html');
-            const signupContainer = doc.querySelector('.signup-container');
+  const form = document.getElementById("signupForm");
+  const alert = document.getElementById("formAlert");
 
-            if (signupContainer) {
-                container.innerHTML = signupContainer.outerHTML;
+  // Initialize toast
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer)
+      toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+  });
 
-                // Add the submitBtn class to the submit button
-                const submitButton = container.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.classList.add('submitBtn');
-                }
+  // Copy button functionality
+  document.querySelectorAll('.copy-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const inputId = this.getAttribute('data-copy');
+      const input = document.getElementById(inputId);
+      input.select();
+      document.execCommand('copy');
+      
+      // Show feedback
+      const originalText = this.innerHTML;
+      this.innerHTML = '<i class="fas fa-check"></i>';
+      setTimeout(() => {
+        this.innerHTML = originalText;
+      }, 2000);
 
-                // Reinitialize the form submission handler
-                $('#signupForm').submit(function (e) {
-                    e.preventDefault();
-
-                    const email = $('#email').val().trim();
-                    const password = $('#password').val().trim();
-                    const role = $('#role').val();
-
-                    // Clear previous error messages
-                    clearErrorMessages();
-
-                    // Clear input values
-                    $('#email').val('');
-                    $('#password').val('');
-                    $('#role').val('0');
-
-                    // Basic client-side validation
-                    if (!validateForm(email, password, role)) {
-                        return;
-                    }
-
-                    // Disable the submit button during request
-                    const submitButton = $('.submitBtn');
-                    submitButton.prop('disabled', true).text('Submitting...');
-
-                    // Perform AJAX request
-                    $.ajax({
-                        url: '../../src/controllers/UserController.php?action=signup',
-                        type: 'POST',
-                        data: { email, password, role },
-                        success: function (response) {
-                            console.log('Server response:', response);
-                            try {
-                                response = JSON.parse(response);
-
-                                if (response.success) {
-                                    console.log(Swal);
-                                    Swal.fire({
-                                        title: 'Success!',
-                                        text: response.message,
-                                        icon: 'success',
-                                        confirmButtonText: 'OK'
-                                    }).then(() => {
-                                        resetForm();
-                                        // Refresh tables
-                                        if (typeof refreshTable === 'function') {
-                                            refreshTable('usersTable');
-                                            refreshTable('auditTable');
-                                        }
-                                    });
-                                } else {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: response.message,
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    });
-
-                                    if (response.error && response.error === "email_exists") {
-                                        $('#email').addClass('error')
-                                            .after('<span class="error-msg">This email is already in use.</span>');
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Invalid JSON response:', e);
-                                Swal.fire({
-                                    title: 'Error',
-                                    text: 'An unexpected error occurred.',
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'Failed to connect to the server.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        },
-                        complete: function () {
-                            submitButton.prop('disabled', false).text('Sign Up');
-                        }
-                    });
-                });
-            }
-        },
-        error: function (xhr, status, error) {
-            container.innerHTML = '<div class="alert alert-danger">Error loading signup form. Please try again.</div>';
-            console.error('Error loading signup form:', error);
-        }
+      // Show toast for copy success
+      Toast.fire({
+        icon: 'success',
+        title: 'Copied to clipboard'
+      });
     });
-});
+  });
 
-// Helper functions
-function validateForm(email, password, role) {
-    let isValid = true;
+  form.addEventListener(
+    "submit",
+    function (event) {
+      event.preventDefault();
 
-    if (!password || !role || role === "0") {
-        isValid = false;
-        if (!password) {
-            $('#password').addClass('error')
-                .after('<span class="error-msg">Password is required.</span>');
-        }
-        if (!role || role === "0") {
-            $('#role').addClass('error')
-                .after('<span class="error-msg">Please select a role.</span>');
-        }
+      // Check privacy agreement
+      const privacyCheckbox = document.getElementById('privacyAgreement');
+      if (!privacyCheckbox.checked) {
+        privacyCheckbox.classList.add('is-invalid');
+        event.stopPropagation();
+        alert.style.display = "block";
+        return;
+      }
+
+      if (!form.checkValidity()) {
+        event.stopPropagation();
+        alert.style.display = "block";
+      } else {
+        alert.style.display = "none";
+
+        const submitButton = $(this).find('button[type="submit"]');
+        const originalButtonText = submitButton.html();
+        
+        // Show loading state in button
+        submitButton.prop("disabled", true).html(
+          '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating account...'
+        );
+
+        setTimeout(() => {
+          $.ajax({
+            url: "../../src/controllers/UserController.php?action=signup",
+            type: "POST",
+            data: {
+              firstName: $("#firstName").val().trim(),
+              middleName: $("#middleName").val().trim(),
+              lastName: $("#lastName").val().trim(),
+              suffix: $("#suffix").val().trim(),
+              email: $("#email").val().trim(),
+              role: $("#role").val(),
+            },
+            success: function (response) {
+              try {
+                response = JSON.parse(response);
+                if (response.success) {
+                  // Show success toast
+                  Toast.fire({
+                    icon: 'success',
+                    title: 'Account created successfully!'
+                  });
+
+                  // Display credentials in modal
+                  $('#userIdDisplay').val(response.userId);
+                  $('#tempPasswordDisplay').val(response.tempPassword);
+                  
+                  // Show modal using the global variable
+                  if (typeof credentialsModal !== 'undefined') {
+                    try {
+                      // Hide any existing modals first
+                      $('.modal').modal('hide');
+                      // Show credentials modal
+                      setTimeout(() => {
+                        credentialsModal.show();
+                      }, 1000); // Slight delay after toast
+                    } catch (e) {
+                      console.error('Modal error:', e);
+                      // Fallback alert
+                      Toast.fire({
+                        icon: 'info',
+                        title: 'Please save your credentials',
+                        html: `User ID: ${response.userId}<br>Password: ${response.tempPassword}`
+                      });
+                    }
+                  }
+
+                  // Reset form
+                  form.reset();
+                  form.classList.remove("was-validated");
+                  if (typeof refreshTable === "function") {
+                    refreshTable("usersTable");
+                    refreshTable("auditTable");
+                  }
+                } else {
+                  // Show error toast
+                  Toast.fire({
+                    icon: 'error',
+                    title: response.message || 'Failed to create account'
+                  });
+                }
+              } catch (e) {
+                console.error('Response parsing error:', e);
+                Toast.fire({
+                  icon: 'error',
+                  title: 'An unexpected error occurred'
+                });
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error('Ajax error:', status, error);
+              Toast.fire({
+                icon: 'error',
+                title: 'Failed to connect to the server'
+              });
+            },
+            complete: function () {
+              // Restore button state after minimum 3 seconds
+              setTimeout(() => {
+                submitButton.prop("disabled", false).html(originalButtonText);
+              }, 3000);
+            },
+          });
+        }, 1000); // Add initial delay before AJAX call
+      }
+
+      form.classList.add("was-validated");
+    },
+    false
+  );
+
+  // Hide alert when user starts fixing errors
+  form.addEventListener("input", function (event) {
+    if (event.target.id === 'privacyAgreement' && event.target.checked) {
+        event.target.classList.remove('is-invalid');
     }
-    return isValid;
-}
-
-function clearErrorMessages() {
-    $('.error-msg').remove();
-    $('.error').removeClass('error');
-}
-
-function resetForm() {
-    $('#signupForm')[0].reset();
-    clearErrorMessages();
-}
-
-/* Clear inputs on page load/refresh
-$(document).ready(function () {
-    // Clear signup form inputs
-    $('#email').val('');
-    $('#password').val('');
-    $('#role').val('0');  // Reset to default/first option
-
-    // Optional: Prevent form resubmission on page refresh
-    if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.href);
+    if (form.checkValidity()) {
+      alert.style.display = "none";
     }
-});
-*/
+    // Remove is-invalid class when user starts typing
+    $(this).find(".is-invalid").removeClass("is-invalid");
+  });
+})();

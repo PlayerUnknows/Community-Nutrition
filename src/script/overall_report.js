@@ -31,7 +31,7 @@ const OverallReportModule = (function() {
     if ($dateRangeFilter && $dateRangeFilter.length > 0) {
       // Add a small delay to ensure daterangepicker is fully initialized
       setTimeout(() => {
-        generateReport();
+    generateReport();
       }, 200);
     } else {
       console.warn('Date range filter not found, cannot generate initial report');
@@ -134,7 +134,7 @@ const OverallReportModule = (function() {
     
     // Add a small delay to show the loading state
     setTimeout(() => {
-      fetchBMIStatsAndRender($reportContainer);
+    fetchBMIStatsAndRender($reportContainer);
     }, 100);
   }
   window.generateReport = generateReport;
@@ -549,12 +549,87 @@ const OverallReportModule = (function() {
         url += `&startDate=${startDate}&endDate=${endDate}`;
       }
       
-      // Use window.open to trigger download
-      window.open(url, '_blank');
+      // Use fetch to handle the response
+      fetch(url)
+        .then(response => {
+          // Check if response is JSON (error/no data) or file download
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            // Handle JSON response (no data or error)
+            return response.json();
+          } else {
+            // Handle file download
+            return response.blob().then(blob => {
+              // Create download link
+              const downloadUrl = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'export.xlsx';
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(downloadUrl);
+              document.body.removeChild(a);
+              return { status: 'success', message: 'Export completed successfully' };
+            });
+          }
+        })
+        .then(data => {
+          if (data.status === 'no_data') {
+            // Show SweetAlert for no data
+            Swal.fire({
+              title: data.title,
+              text: data.message,
+              icon: data.icon,
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#3085d6',
+              showCancelButton: true,
+              cancelButtonText: 'Clear Filters',
+              cancelButtonColor: '#6c757d'
+            }).then((result) => {
+              if (result.dismiss === Swal.DismissReason.cancel) {
+                clearFilters();
+              }
+            });
+          } else if (data.status === 'error') {
+            // Show SweetAlert for error
+            Swal.fire({
+              title: 'Export Error',
+              text: data.message,
+              icon: 'error',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#d33'
+            });
+          } else if (data.status === 'success') {
+            // Show success message
+            Swal.fire({
+              title: 'Export Successful',
+              text: data.message,
+              icon: 'success',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#28a745'
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error exporting report:', error);
+          Swal.fire({
+            title: 'Export Error',
+            text: 'An error occurred while exporting the report. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
+        });
       
     } catch (error) {
       console.error('Error exporting report:', error);
-      alert('Error exporting report: ' + error.message);
+      Swal.fire({
+        title: 'Export Error',
+        text: 'An error occurred while exporting the report. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
     }
   }
   

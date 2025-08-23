@@ -37,7 +37,15 @@ try {
             $data = $model->getUnifiedOPTOverallReport($startDate, $endDate);
             
             if (empty($data)) {
-                throw new Exception("No data available for export");
+                // Return JSON response for SweetAlert handling
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'status' => 'no_data',
+                    'message' => 'No nutrition data found for the selected date range: ' . ($startDate && $endDate ? "$startDate to $endDate" : "All Time"),
+                    'title' => 'No Data Available for Export',
+                    'icon' => 'warning'
+                ]);
+                exit;
             }
             
             // Clear any existing output

@@ -71,7 +71,7 @@
 
         setTimeout(() => {
           $.ajax({
-            url: "../../src/controllers/UserController.php?action=signup",
+            url: "../../src/controllers/UserController.php?action=signupUser",
             type: "POST",
             data: {
               firstName: $("#firstName").val().trim(),
@@ -83,7 +83,7 @@
             },
             success: function (response) {
               try {
-                response = JSON.parse(response);
+                // Response is already a JavaScript object, no need to parse
                 if (response.success) {
                   // Show success toast
                   Toast.fire({

@@ -2,7 +2,7 @@
 // Prevent any error output from being displayed
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
-
+ 
 // Function to handle all JSON responses
 function sendJsonResponse($data, $status = 200)
 {

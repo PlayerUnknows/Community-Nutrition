@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../backend/audit_trail.php';
+require_once __DIR__ . '/../services/audit_trail.php';
 
 class AuditTrail {
     private $conn;

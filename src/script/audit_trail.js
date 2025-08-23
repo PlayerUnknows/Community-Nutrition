@@ -37,7 +37,7 @@ $(document).ready(function () {
         processing: true,
         serverSide: false,
         ajax: {
-          url: "../backend/fetch_audit_trail.php",
+          url: "../services/fetch_audit_trail.php",
           type: "GET",
           dataSrc: "data",
         },
@@ -55,14 +55,14 @@ $(document).ready(function () {
             data: "details",
             width: "40%",
             render: function (data, type, row) {
+              // LOGIN / LOGOUT simple message - handle empty data first
+              if (row.action === "LOGIN" || row.action === "LOGOUT") {
+                return data || `User ${row.action.toLowerCase()} successfully`;
+              }
+
               if (!data) return "N/A";
-  
+
               try {
-                // LOGIN / LOGOUT simple message
-                if (row.action === "LOGIN" || row.action === "LOGOUT") {
-                  return data || `User ${row.action.toLowerCase()}`;
-                }
-  
                 // FILE operations
                 if (
                   row.action === "FILE_DOWNLOAD" ||
@@ -71,18 +71,18 @@ $(document).ready(function () {
                 ) {
                   const details = JSON.parse(data);
                   let html = '<div class="audit-details">';
-  
+
                   if (details.filename) {
                     html += `<div><strong>Filename:</strong> ${details.filename}</div>`;
                   }
-  
+
                   switch (row.action) {
                     case "FILE_DOWNLOAD":
                       if (details.file_type) {
                         html += `<div><strong>File Type:</strong> ${details.file_type}</div>`;
                       }
                       break;
-  
+
                     case "FILE_EXPORT":
                       if (details.format) {
                         html += `<div><strong>Format:</strong> ${details.format}</div>`;
@@ -91,7 +91,7 @@ $(document).ready(function () {
                         html += `<div><strong>Export Type:</strong> ${details.export_type}</div>`;
                       }
                       break;
-  
+
                     case "FILE_IMPORT":
                       if (details.import_type) {
                         html += `<div><strong>Import Type:</strong> ${details.import_type}</div>`;
@@ -104,20 +104,20 @@ $(document).ready(function () {
                       }
                       break;
                   }
-  
+
                   html += "</div>";
                   return html;
                 }
-  
+
                 // For CRUD operations (create/update/delete)
                 const details = JSON.parse(data);
                 let html = '<div class="audit-details">';
-  
+
                 for (const [key, value] of Object.entries(details)) {
                   const label = key
                     .replace(/_/g, " ")
                     .replace(/\b\w/g, (char) => char.toUpperCase());
-  
+
                   if (typeof value === "object" && value !== null) {
                     if ("old" in value && "new" in value) {
                       html += `<div><strong>${label}:</strong> "${value.old}" → "${value.new}"</div>`;
@@ -128,7 +128,7 @@ $(document).ready(function () {
                     html += `<div><strong>${label}:</strong> ${value}</div>`;
                   }
                 }
-  
+
                 html += "</div>";
                 return html;
               } catch (e) {
@@ -213,7 +213,7 @@ $(document).ready(function () {
     const params = new URLSearchParams(formData);
 
     $.ajax({
-      url: "../backend/fetch_audit_trail.php",
+      url: "../services/fetch_audit_trail.php",
       method: "GET",
       data: params.toString(),
       success: function (response) {
@@ -450,7 +450,7 @@ $(document).ready(function () {
       try {
         // Update this URL to match your project structure
         const response = await $.ajax({
-          url: "../backend/audit_trail/import_audit_data.php", // Updated path
+          url: "../services/audit_trail/import_audit_data.php", // Updated path
           type: "POST",
           data: formData,
           processData: false,

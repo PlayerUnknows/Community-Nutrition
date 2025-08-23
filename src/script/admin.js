@@ -349,7 +349,8 @@
                 },
                 success: function (response) {
                   try {
-                    const data = JSON.parse(response);
+                    // Response is already a JavaScript object, no need to parse
+                    const data = response;
                     if (data.success) {
                       // Close the modal first
                       Swal.close();

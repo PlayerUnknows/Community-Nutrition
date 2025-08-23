@@ -36,7 +36,7 @@ $(document).ready(function () {
     });
 
     $.ajax({
-      url: "../backend/fetch_users.php",
+      url: "../controllers/UserController.php?action=fetchUsers",
       type: "POST",
       data: {
         page: currentPage,
@@ -228,10 +228,10 @@ $(document).ready(function () {
   $("#usersTable").on("click", ".view-user", function () {
     const userId = $(this).data("id");
     $.ajax({
-      url: "../backend/fetch_single_user.php",
+      url: "../controllers/UserController.php?action=fetchSingleUser",
       type: "POST",
       data: { user_id: userId },
-      success: function (response) {
+      success: function (response) { 
         if (response.success) {
           const user = response.data;
           Swal.fire({
@@ -279,7 +279,7 @@ $(document).ready(function () {
 
             setTimeout(() => {
                 $.ajax({
-                    url: "../backend/delete_user.php",
+                    url: "../controllers/UserController.php?action=deleteUser",
                     type: "POST",
                     data: { user_id: userId },
                     success: function(response) {
@@ -328,7 +328,7 @@ $(document).ready(function () {
 
     setTimeout(() => {
         $.ajax({
-            url: "../backend/fetch_single_user.php",
+            url: "../controllers/UserController.php?action=fetchSingleUser",
             type: "POST",
             data: { user_id: userId },
             success: function (response) {
@@ -368,7 +368,7 @@ $(document).ready(function () {
                                     const userId = $("#editUserId").val();
 
                                     $.ajax({
-                                        url: "../backend/edit_user.php",
+                                        url: "../controllers/UserController.php?action=editUser",
                                         type: "POST",
                                         data: { user_id: userId, email, role },
                                         dataType: "json"

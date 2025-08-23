@@ -73,7 +73,7 @@ class MonitoringController {
             $filename = "monitoring_data_" . date('Y-m-d_H-i-s') . ".csv";
             
             // Log the export
-            require_once __DIR__ . '/../backend/audit_trail.php';
+            require_once __DIR__ . '/../services/audit_trail.php';
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
@@ -162,7 +162,7 @@ class MonitoringController {
         ];
 
         // Log the template download
-        require_once __DIR__ . '/../backend/audit_trail.php';
+        require_once __DIR__ . '/../services/audit_trail.php';
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -219,7 +219,7 @@ class MonitoringController {
         $originalFilename = $_FILES['importFile']['name'];
         
         try {
-            require_once __DIR__ . '/../backend/audit_trail.php';
+            require_once __DIR__ . '/../services/audit_trail.php';
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }

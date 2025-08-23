@@ -41,7 +41,7 @@ class User
 
             if ($result) {
                 // Log the account creation in audit trail
-                require_once __DIR__ . '/../backend/audit_trail.php';
+                require_once __DIR__ . '/../services/audit_trail.php';
                 logUserAuth($userId, $email, AUDIT_REGISTER);
 
                 // Return both the user ID and temporary password
@@ -133,7 +133,7 @@ class User
             $_SESSION['role'] = $user['role'];
             $_SESSION['login_time'] = time();
 
-            require_once __DIR__ . '/../backend/audit_trail.php';
+            require_once __DIR__ . '/../services/audit_trail.php';
             logUserAuth($user['user_id'], $user['email'], AUDIT_LOGIN);
 
             $redirectPage = $this->getRedirectPage($user['role']);
@@ -151,7 +151,7 @@ class User
     public function logout()
     {
         if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
-            require_once __DIR__ . '/../backend/audit_trail.php';
+            require_once __DIR__ . '/../services/audit_trail.php';
             logUserAuth($_SESSION['user_id'], $_SESSION['email'], AUDIT_LOGOUT);
 
             // Clear all session data

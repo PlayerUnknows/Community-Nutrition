@@ -68,7 +68,7 @@ window.MonitoringModule = (function () {
     currentPatientId = $button.data("patient-id");
 
     $.ajax({
-      url: "../backend/get_monitoring_details.php",
+      url: "../services/get_monitoring_details.php",
       method: "GET",
       data: { id: currentPatientId },
       success: function (response) {
@@ -178,7 +178,7 @@ window.MonitoringModule = (function () {
     formData.append("importFile", fileInput.files[0]);
 
     $.ajax({
-      url: "../backend/import_monitoring.php",
+      url: "../services/import_monitoring.php",
       method: "POST",
       data: formData,
       processData: false,
@@ -312,7 +312,7 @@ window.MonitoringModule = (function () {
           },
         ],
         ajax: {
-          url: "../backend/fetch_monitoring.php",
+          url: "../services/fetch_monitoring.php",
           dataSrc: function (json) {
             return json.status === "success" ? json.data : [];
           },
@@ -365,7 +365,7 @@ window.MonitoringModule = (function () {
 
     $("#confirmImportBtn").on("click", handleFileImport);
     $("#downloadTemplateBtn").on("click", function () {
-      window.location.href = "../backend/download_template.php";
+      window.location.href = "../services/download_template.php";
     });
 
     // Add search handler
@@ -385,7 +385,7 @@ window.MonitoringModule = (function () {
     // Add export handler
     $("#exportMonitoringBtn").on("click", function () {
       $.ajax({
-        url: "../backend/export_monitoring.php",
+        url: "../services/export_monitoring.php",
         method: "GET",
         xhrFields: {
           responseType: "blob",

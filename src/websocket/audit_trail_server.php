@@ -6,7 +6,7 @@ use Ratchet\ConnectionInterface;
 
 require __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../config/dbcon.php';
-require_once __DIR__ . '/../backend/audit_trail.php';
+require_once __DIR__ . '/../services/audit_trail.php';
 
 // Add error logging
 error_reporting(E_ALL);

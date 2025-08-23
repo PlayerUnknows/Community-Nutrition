@@ -96,7 +96,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
     <script>
         $(document).ready(function() {
-            const debugEndpoint = '../../src/backend/session_debug.php';
+            const debugEndpoint = '../../src/services/session_debug.php';
             const logResponse = (action, response) => {
                 const timestamp = new Date().toLocaleTimeString();
                 const logEntry = `[${timestamp}] ${action}:\n${JSON.stringify(response, null, 2)}\n\n`;

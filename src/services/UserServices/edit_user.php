@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/dbcon.php';
+require_once __DIR__ . '/../../config/dbcon.php';
 
 header('Content-Type: application/json');
 session_start();
@@ -75,18 +75,6 @@ try {
         $stmt = $conn->prepare("UPDATE account_info SET email = ?, role = ? WHERE user_id = ?");
         $stmt->execute([$email, $roleNumber, $userId]);
     }
-    
-    // Log the action in audit trail with role names instead of numbers
-    $stmt = $conn->prepare("INSERT INTO audit_trail (username, action, details) VALUES (?, ?, ?)");
-    $changes = [
-        'updated_user_id' => $userId,
-        'old_email' => $user['email'],
-        'updated_user_email' => $email,
-        'old_role' => $numberToRole[$user['role']] ?? $user['role'],
-        'new_role' => $role,
-        'password_changed' => !empty($newPassword)
-    ];
-    $stmt->execute([$_SESSION['email'], 'UPDATED_USER', json_encode($changes)]);
     
     // Commit transaction
     $conn->commit();

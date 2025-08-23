@@ -1,5 +1,5 @@
 <?php
-require_once '../backend/audit_trail.php';
+require_once '../services/audit_trail.php';
 session_start();
 
 // Set default limit for records

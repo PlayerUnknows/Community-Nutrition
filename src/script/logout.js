@@ -53,9 +53,9 @@ $(document).ready(function () {
           // Get the correct path to logout_handler.php based on current location
           let basePath;
           if (window.location.pathname.includes("/view/")) {
-            basePath = "../../src/backend/logout_handler.php";
+            basePath = "../../src/services/logout_handler.php";
           } else {
-            basePath = "/src/backend/logout_handler.php";
+            basePath = "/src/services/logout_handler.php";
           }
           console.log("Using logout endpoint:", basePath);
 

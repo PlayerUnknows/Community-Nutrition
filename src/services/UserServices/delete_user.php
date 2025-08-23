@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/dbcon.php';
+require_once __DIR__ . '/../../config/dbcon.php';
 
 header('Content-Type: application/json');
 session_start();
@@ -66,15 +66,6 @@ try {
     $stmt = $conn->prepare("DELETE FROM account_info WHERE user_id = :userId");
     $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
     $stmt->execute();
-    
-    // Log the action in audit trail
-    $stmt = $conn->prepare("INSERT INTO audit_trail (username, action, details) VALUES (?, ?, ?)");
-    $details = json_encode([
-        'deleted_user_id' => $userId,
-        'deleted_user_email' => $user['email'],
-        'deleted_user_role' => $readableRole
-    ]);
-    $stmt->execute([$_SESSION['email'], 'DELETED_USER', $details]);
     
     // Commit transaction
     $conn->commit();

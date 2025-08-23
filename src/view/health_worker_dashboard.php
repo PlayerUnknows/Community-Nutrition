@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../backend/check_role_access.php';
+require_once __DIR__ . '/../services/check_role_access.php';
 
 // Only allow role 2 (Health Worker) to access this page
 checkUserRole([2]);

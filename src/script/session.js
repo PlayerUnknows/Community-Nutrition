@@ -143,20 +143,20 @@ class SessionManager {
 
   // Helper method to get the correct path to backend files
   getBackendPath(endpoint) {
-    let basePath = "../backend/";
+    let basePath = "../services/";
 
     // If we're in a nested view folder, adjust the path
     if (window.location.pathname.includes("/view/")) {
       if (window.location.pathname.split("/").length > 4) {
         // We're in a deeper folder structure
-        basePath = "../../src/backend/";
+        basePath = "../../src/services/";
       }
     } else if (
       window.location.pathname === "/" ||
       window.location.pathname.includes("/index.php")
     ) {
       // We're at the root or index page
-      basePath = "src/backend/";
+      basePath = "src/services/";
     }
 
     return basePath + endpoint;
@@ -288,13 +288,13 @@ class SessionManager {
 
       if (window.location.pathname.includes("/view/")) {
         // If we're in the /view/ directory structure
-        logoutUrl = "../../src/backend/logout_handler.php";
+        logoutUrl = "../../src/services/logout_handler.php";
       } else if (window.location.pathname.includes("/src/")) {
         // If we're in another src subdirectory
-        logoutUrl = "../backend/logout_handler.php";
+        logoutUrl = "../services/logout_handler.php";
       } else {
         // Default path (for root or unknown locations)
-        logoutUrl = "/src/backend/logout_handler.php";
+        logoutUrl = "/src/services/logout_handler.php";
       }
 
       console.log("Current path:", window.location.pathname);

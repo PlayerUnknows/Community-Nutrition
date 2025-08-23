@@ -88,7 +88,7 @@ assets/
    - Ensure PHP has socket extension enabled
 
 3. **Diagnostic Steps**
-   - Run `php src/backend/websocket_test.php` to check environment
+   - Run `php src/services/websocket_test.php` to check environment
    - Check server logs in `error_log` or console output
 
 #### Firewall Configuration

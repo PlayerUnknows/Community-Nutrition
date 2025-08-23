@@ -3,7 +3,7 @@
 $debug = false;
 
 // Include the session helper functions
-require_once __DIR__ . '/src/backend/session_helper.php';
+require_once __DIR__ . '/src/services/session_helper.php';
 
 // Ensure session is started
 ensureSessionStarted();
@@ -43,7 +43,7 @@ if (
 // Only perform session redirect check on direct page loads
 if ($isDirectPageLoad && shouldPerformSessionCheck(15, 'index_page')) {
     // Include the session redirect logic
-    require_once __DIR__ . '/src/backend/session_redirect.php';
+    require_once __DIR__ . '/src/services/session_redirect.php';
 }
 
 // Output debug information if debug mode is enabled

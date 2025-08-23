@@ -4,215 +4,215 @@ require_once '../models/User.php';
 require_once '../config/dbcon.php';
 require_once '../models/AuditTrail.php'; // Include the AuditTrail model
 
-$dbcon = connect();
-$user = new User($dbcon);
-$auditTrail = new AuditTrail($dbcon); // Create an instance of AuditTrail
-
-// In UserController.php
-if (isset($dbcon) && isset($user)) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (isset($_GET['action'])) {
-            switch ($_GET['action']) {
-                case 'signup':
-                    if (isset($_POST['email']) && isset($_POST['role'])) {
-                        signup($dbcon, $user, $auditTrail); // Pass the auditTrail object
-                    }
-                    break;
-                case 'login':
-                    if (isset($_POST['login']) || isset($_POST['email']) && isset($_POST['password'])) {
-                        login($dbcon, $user, $auditTrail); // Pass the auditTrail object
-                    }
-                    break;
-                case 'logout':
-                    logout($user, $auditTrail); // Pass the auditTrail object
-                    break;
-                case 'updateProfile':
-                    updateProfile($dbcon, $user, $auditTrail);
-                    break;
-            }
-        }
-    }
-}
-
-// Handle user signup
-function signup($dbcon, $user, $auditTrail)
+class UserController
 {
-    try {
-        $email = $_POST['email'];
-        $role = intval($_POST['role']); // Ensure role is an integer
-        $firstName = $_POST['firstName'];
-        $lastName = $_POST['lastName'];
-        $middleName = $_POST['middleName'] ?? null;
-        $suffix = $_POST['suffix'] ?? null;
+    private $dbcon;
+    private $user;
+    private $auditTrail;
 
-        // Validate required fields
-        if (empty($firstName) || empty($lastName)) {
-            throw new Exception('First name and last name are required.');
+    public function __construct()
+    {
+        $this->dbcon = connect();
+        $this->user = new User($this->dbcon);
+        $this->auditTrail = new AuditTrail($this->dbcon); // Create an instance of AuditTrail
+    }
+
+
+    // Helper method to call services
+    private function callService($servicePath, $postData = [])
+    {
+        // Capture the output from the service
+        ob_start();
+        
+        // Set the POST data for the service
+        foreach ($postData as $key => $value) {
+            $_POST[$key] = $value;
         }
-
-        $result = $user->createUser($email, $firstName, $middleName, $lastName, $suffix, $role);
-
-        if ($result['success']) {
-            $auditTrail->log('signup', 'User signed up with email ' . $email); // Log the signup event
-            echo json_encode([
-                'success' => true,
-                'message' => 'Signup successful! Please check your credentials.',
-                'userId' => $result['userId'],
-                'tempPassword' => $result['tempPassword']
-            ]);
+        
+        // Include the service file
+        include $servicePath;
+        
+        // Get the output
+        $serviceResponse = ob_get_clean();
+        
+        // Parse the JSON response
+        $responseData = json_decode($serviceResponse, true);
+        
+        if ($responseData) {
+            return $responseData;
         } else {
-            echo json_encode([
-                'success' => false,
-                'message' => $result['message']
-            ]);
+            throw new Exception('Invalid response from service');
         }
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
     }
-}
 
-// Handle user login
-function login($dbcon, $user, $auditTrail)
-{
-    try {
-        $login = $_POST['login'] ?? $_POST['email']; // Support both login and email keys
-        $password = $_POST['password'];
-
-        // Authenticate user
-        $authenticatedUser = $user->login($login, $password);
-
-        if ($authenticatedUser) {
-            $auditTrail->log('login', 'User logged in with login identifier ' . $login); // Log the login event
-
-            // For non-admin users, return success but with a special flag
-            if ($authenticatedUser['role'] != 3) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Login successful but access restricted.',
-                    'redirect' => '/index.php',
-                    'role' => $authenticatedUser['role'],
-                    'restricted' => true
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Login successful!',
-                    'redirect' => $authenticatedUser['redirect'],
-                    'role' => $authenticatedUser['role']
-                ]);
-            }
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid login credentials.'
-            ]);
-        }
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error during login. Please try again.'
-        ]);
-    }
-}
-
-// Handle user logout
-function logout($user, $auditTrail)
-{
-    if ($user->logout()) {
-        $auditTrail->log('logout', 'User logged out'); // Log the logout event
-        echo json_encode([
-            'success' => true,
-            'message' => 'Logged out successfully',
-            'redirect' => '/index.php'
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error during logout'
-        ]);
-    }
-}
-
-// Add this new function to handle profile updates
-function updateProfile($dbcon, $user, $auditTrail)
-{
-    try {
-        // Get the POST data
-        $newEmail = $_POST['newEmail'] ?? null;
-        $currentPassword = $_POST['currentPassword'] ?? '';
-        $newPassword = $_POST['newPassword'] ?? null;
-
-        // Get current user's ID from session
-        session_start();
-        $userId = $_SESSION['user_id'] ?? null;
-
-        if (!$userId) {
-            throw new Exception('User not authenticated');
-        }
-
-        // Verify current password first
-        $currentUser = $user->getUserById($userId);
-        if (!$currentUser || !password_verify($currentPassword, $currentUser['password'])) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Current password is incorrect'
-            ]);
-            return;
-        }
-
-        // Prepare update data
-        $updates = [];
-        if ($newEmail && $newEmail !== $currentUser['email']) {
-            // Check if email already exists
-            if ($user->emailExists($newEmail)) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Email address is already in use'
-                ]);
-                return;
-            }
-            $updates['email'] = $newEmail;
-        }
-
-        if ($newPassword) {
-            $updates['password'] = password_hash($newPassword, PASSWORD_BCRYPT);
-        }
-
-        // If there are updates to make
-        if (!empty($updates)) {
-            $result = $user->updateProfile($userId, $updates);
-            if ($result) {
-                // Update session email if email was changed
-                if (isset($updates['email'])) {
-                    $_SESSION['email'] = $updates['email'];
+    // Example of how to use services for other operations:
+    // public function someOtherOperation()
+    // {
+    //     try {
+    //         $serviceUrl = __DIR__ . '/../services/some_service.php';
+    //         $response = $this->callService($serviceUrl, [
+    //             'param1' => $_POST['param1'],
+    //             'param2' => $_POST['param2']
+    //         ]);
+    //         
+    //         echo json_encode($response);
+    //         $this->auditTrail->log('operation_name', 'Operation completed');
+    //     } catch (Exception $e) {
+    //         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    //     }
+    // }
+    // Handle incoming requests
+    public function handleRequest(){
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_GET['action'])) {
+                switch ($_GET['action']) {
+                    case 'signupUser':
+                        if (isset($_POST['email']) && isset($_POST['role'])) {
+                            $this->signupUser();
+                        }
+                        break;
+                    case 'loginUser':
+                        if (isset($_POST['login']) || (isset($_POST['email']) && isset($_POST['password']))) {
+                            $this->loginUser();
+                        }
+                        break;
+                    case 'logout':
+                        $this->logout();
+                        break;
+                    case 'updateProfile':
+                        $this->updateProfile();
+                        break;
+                    case 'fetchSingleUser':
+                        $this->fetchSingleUser();
+                        break;
+                    case 'fetchUsers':
+                        $this->fetchUsers();
+                        break;
+                    case 'deleteUser':
+                        $this->deleteUser();
+                        break;
+                    case 'editUser':
+                        $this->editUser();
+                        break;
                 }
-
-                // Log the update in audit trail
-                $auditTrail->log('profile_update', 'User updated their profile');
-
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Profile updated successfully'
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Failed to update profile'
-                ]);
             }
-        } else {
+        }
+    }
+    // Handle user login
+    public function loginUser() {
+        $serviceUrl = __DIR__ . '/../services/UserServices/login.php';
+        $response = $this->callService($serviceUrl);
+        echo json_encode($response);
+
+        // Add audit logging if successful
+        if ($response['success']) {
+            $this->auditTrail->log('login', 'User logged in successfully');
+        }
+    } 
+    
+
+    // Handle user signup
+    public function signupUser()  {
+        $serviceUrl = __DIR__ . '/../services/UserServices/signup.php';
+        $response = $this->callService($serviceUrl);
+        echo json_encode($response);
+
+        // Add audit logging if successful
+        if ($response['success']) {
+            $this->auditTrail->log('signup', 'User signed up successfully');
+        }
+    }
+    
+    // Handle user logout
+    public function logout()
+    {
+        if ($this->user->logout()) {
+            $this->auditTrail->log('logout', 'User logged out'); // Log the logout event
             echo json_encode([
                 'success' => true,
-                'message' => 'No changes were made'
+                'message' => 'Logged out successfully',
+                'redirect' => '/index.php'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error during logout'
             ]);
         }
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
     }
+    
+    // Add this new function to handle profile updates
+    public function updateProfile(){
+        $serviceUrl = __DIR__ . '/../services/UserServices/update_profile.php';
+        $response = $this->callService($serviceUrl);
+        echo json_encode($response);
+
+        // Add audit logging if successful
+        if ($response['success']) {
+            $this->auditTrail->log('update_profile', 'User profile updated successfully');
+        }
+     
+    }
+    
+
+
+    public function fetchSingleUser(){
+        $userId = $_POST['user_id'] ?? null;
+        
+        if (!$userId) {
+            throw new Exception('User ID is required');
+        }
+
+        // Use fetch_single_user.php as a service
+        $serviceUrl = __DIR__ . '/../services/UserServices/fetch_single_user.php';
+        $response = $this->callService($serviceUrl, ['user_id' => $userId]);
+        
+        // Return the service response (it already handles success/error)
+        echo json_encode($response);
+        
+        // Add audit logging if successful
+        if ($response['success']) {
+            $this->auditTrail->log('fetch_single_user', 'User fetched successfully');
+        }
+    }
+
+    public function fetchUsers(){
+        $serviceUrl = __DIR__ . '/../services/UserServices/fetch_users.php';
+        $response = $this->callService($serviceUrl);
+        
+        echo json_encode($response);
+    }
+
+    public function deleteUser(){
+        $serviceUrl = __DIR__ .'/../services/UserServices/delete_user.php';
+        $response = $this->callService($serviceUrl);
+        
+        echo json_encode($response);
+        
+        // Add audit logging if successful
+        if ($response['success']) {
+            $this->auditTrail->log('delete_user', 'User deleted successfully');
+        }
+    }
+
+    public function editUser(){
+        $serviceUrl = __DIR__ . '/../services/UserServices/edit_user.php';
+        $response = $this->callService($serviceUrl);
+        
+        echo json_encode($response);
+        
+        // Add audit logging if successful
+        if ($response['success']) {
+            $this->auditTrail->log('edit_user', 'User edited successfully');
+        }
+    }
+    
 }
+
+// Instantiate the controller and handle the request
+$controller = new UserController();
+$controller->handleRequest();
+
+
+
+

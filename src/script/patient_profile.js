@@ -8,7 +8,7 @@ $(document).ready(function () {
     search: {
       return: true, // Enable search on Enter key
       smart: true, // Enable smart search
-    },
+    }, 
     scrollX: true, // Enable horizontal scrolling
     scrollY: "50vh", // Enable vertical scrolling with 50% viewport height
     scrollCollapse: true, // Enable scroll collapse

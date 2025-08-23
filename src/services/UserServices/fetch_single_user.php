@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/dbcon.php';
+require_once __DIR__ . '/../../config/dbcon.php';
 
 header('Content-Type: application/json');
 

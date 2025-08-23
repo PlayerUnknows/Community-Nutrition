@@ -46,7 +46,7 @@ $(document).ready(function () {
 
     // Perform AJAX request
     $.ajax({
-      url: "../src/controllers/UserController.php?action=login",
+      url: "../src/controllers/UserController.php?action=loginUser",
       type: "POST",
       data: {
         login: login,
@@ -54,8 +54,8 @@ $(document).ready(function () {
       },
       success: function (response) {
         try {
-          // Try to parse the response as JSON
-          let jsonResponse = JSON.parse(response);
+          // Response is already a JavaScript object, no need to parse
+          let jsonResponse = response;
 
           // Calculate remaining loading time
           const elapsedTime = Date.now() - startTime;

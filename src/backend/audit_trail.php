@@ -6,7 +6,7 @@ function logAuditTrail($userId, $username, $action, $details = '') {
     
     $userAgent = $_SERVER['HTTP_USER_AGENT'];
     
-    try {
+    try { 
         $stmt = $conn->prepare("INSERT INTO audit_trail (user_id, username, action, user_agent, details) 
                                VALUES (:user_id, :username, :action, :user_agent, :details)");
         
@@ -160,13 +160,23 @@ function logFileImport($userId, $username, $filename, $importType, $status = 'su
 
 // Function to log event operations
 function logEventOperation($userId, $username, $action, $eventId, $eventDetails = []) {
-    $details = json_encode([
-        'event_id' => $eventId,
-        'event_type' => $eventDetails['event_type'] ?? '',
-        'event_name' => $eventDetails['event_name'] ?? '',
-        'event_date' => $eventDetails['event_date'] ?? '',
-        'operation' => strtolower(str_replace('EVENT_', '', $action))
-    ]);
+    if (isset($eventDetails['before']) && isset($eventDetails['after'])) {
+        $details = json_encode([
+            'event_id' => $eventId,
+            'changes' => $eventDetails,
+            'operation' => strtolower(str_replace('EVENT_', '', $action))
+        ]);
+    } else {
+        $details = json_encode([
+            'event_id' => $eventId,
+            'event_type' => $eventDetails['event_type'] ?? '',
+            'event_name' => $eventDetails['event_name'] ?? '',
+            'event_date' => $eventDetails['event_date'] ?? '',
+            'operation' => strtolower(str_replace('EVENT_', '', $action))
+        ]);
+    }
+
     return logAuditTrail($userId, $username, $action, $details);
 }
+
 ?>

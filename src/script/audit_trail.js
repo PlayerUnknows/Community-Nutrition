@@ -31,8 +31,8 @@ $(document).ready(function () {
       if ($.fn.DataTable.isDataTable("#auditTable")) {
         $("#auditTable").DataTable().destroy();
       }
-
-      // Initialize new instance
+  
+      // Initialize DataTable
       auditTable = $("#auditTable").DataTable({
         processing: true,
         serverSide: false,
@@ -56,68 +56,81 @@ $(document).ready(function () {
             width: "40%",
             render: function (data, type, row) {
               if (!data) return "N/A";
+  
               try {
+                // LOGIN / LOGOUT simple message
                 if (row.action === "LOGIN" || row.action === "LOGOUT") {
-                  return data || "User " + row.action.toLowerCase();
+                  return data || `User ${row.action.toLowerCase()}`;
                 }
-
-                // Handle file operations
+  
+                // FILE operations
                 if (
                   row.action === "FILE_DOWNLOAD" ||
                   row.action === "FILE_EXPORT" ||
                   row.action === "FILE_IMPORT"
                 ) {
                   const details = JSON.parse(data);
-                  let detailsHtml = '<div class="audit-details">';
-
-                  // Common file details
+                  let html = '<div class="audit-details">';
+  
                   if (details.filename) {
-                    detailsHtml += `<div><strong>Filename:</strong> ${details.filename}</div>`;
+                    html += `<div><strong>Filename:</strong> ${details.filename}</div>`;
                   }
-
-                  // Operation-specific details
+  
                   switch (row.action) {
                     case "FILE_DOWNLOAD":
                       if (details.file_type) {
-                        detailsHtml += `<div><strong>File Type:</strong> ${details.file_type}</div>`;
+                        html += `<div><strong>File Type:</strong> ${details.file_type}</div>`;
                       }
                       break;
+  
                     case "FILE_EXPORT":
                       if (details.format) {
-                        detailsHtml += `<div><strong>Format:</strong> ${details.format}</div>`;
+                        html += `<div><strong>Format:</strong> ${details.format}</div>`;
                       }
                       if (details.export_type) {
-                        detailsHtml += `<div><strong>Export Type:</strong> ${details.export_type}</div>`;
+                        html += `<div><strong>Export Type:</strong> ${details.export_type}</div>`;
                       }
                       break;
+  
                     case "FILE_IMPORT":
                       if (details.import_type) {
-                        detailsHtml += `<div><strong>Import Type:</strong> ${details.import_type}</div>`;
+                        html += `<div><strong>Import Type:</strong> ${details.import_type}</div>`;
                       }
                       if (details.status) {
-                        detailsHtml += `<div><strong>Status:</strong> ${details.status}</div>`;
+                        html += `<div><strong>Status:</strong> ${details.status}</div>`;
                       }
                       if (details.additional_details) {
-                        detailsHtml += `<div><strong>Additional Details:</strong> ${details.additional_details}</div>`;
+                        html += `<div><strong>Additional Details:</strong> ${details.additional_details}</div>`;
                       }
                       break;
                   }
-
-                  detailsHtml += "</div>";
-                  return detailsHtml;
+  
+                  html += "</div>";
+                  return html;
                 }
-
-                // For other actions, display all details
+  
+                // For CRUD operations (create/update/delete)
                 const details = JSON.parse(data);
-                let detailsHtml = '<div class="audit-details">';
+                let html = '<div class="audit-details">';
+  
                 for (const [key, value] of Object.entries(details)) {
-                  const displayKey = key
+                  const label = key
                     .replace(/_/g, " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase());
-                  detailsHtml += `<div><strong>${displayKey}:</strong> ${value}</div>`;
+                    .replace(/\b\w/g, (char) => char.toUpperCase());
+  
+                  if (typeof value === "object" && value !== null) {
+                    if ("old" in value && "new" in value) {
+                      html += `<div><strong>${label}:</strong> "${value.old}" → "${value.new}"</div>`;
+                    } else {
+                      html += `<div><strong>${label}:</strong> ${JSON.stringify(value)}</div>`;
+                    }
+                  } else {
+                    html += `<div><strong>${label}:</strong> ${value}</div>`;
+                  }
                 }
-                detailsHtml += "</div>";
-                return detailsHtml;
+  
+                html += "</div>";
+                return html;
               } catch (e) {
                 return data || "N/A";
               }
@@ -127,9 +140,7 @@ $(document).ready(function () {
             data: "action_timestamp",
             width: "20%",
             render: function (data) {
-              if (!data || data === "-") {
-                return "N/A";
-              }
+              if (!data || data === "-") return "N/A";
               return moment(data).format("YYYY-MM-DD HH:mm:ss");
             },
           },
@@ -149,9 +160,11 @@ $(document).ready(function () {
         scrollX: true,
         autoWidth: false,
         fixedHeader: true,
-        dom: `<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>
-              <'row'<'col-sm-12'tr>>
-              <'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>`,
+        dom: `
+          <'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>
+          <'row'<'col-sm-12'tr>>
+          <'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>
+        `,
         language: {
           lengthMenu: "Show _MENU_ entries",
           info: "Showing _START_ to _END_ of _TOTAL_ entries",
@@ -164,31 +177,34 @@ $(document).ready(function () {
           updateScrollIndicator();
         },
       });
-
-      // Handle window resize
+  
+      // Update scroll indicator on resize
       $(window).on("resize", function () {
         updateScrollIndicator();
       });
-
-      // Handle content toggle
+  
+      // Toggle full/short content (if any truncation exists)
       $("#auditTable").on("click", ".toggle-content", function () {
         const container = $(this).closest(".truncated-content");
         const shortContent = container.find(".short-content");
         const fullContent = container.find(".full-content");
-
+  
         shortContent.toggleClass("d-none");
         fullContent.toggleClass("d-none");
+  
         $(this).text(
           fullContent.hasClass("d-none") ? "Show More" : "Show Less"
         );
       });
-
+  
       return auditTable;
     } catch (error) {
       console.error("Error initializing DataTable:", error);
       return null;
     }
   }
+  
+
 
   // Handle filter form submission
   $("#auditFilterForm").on("submit", function (e) {

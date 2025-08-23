@@ -273,8 +273,8 @@ $(document).ready(function () {
         cancelButtonText: '<i class="fas fa-times me-1"></i>Cancel'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading state in button
-            deleteButton.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Deleting...');
+            // Show only spinner in button
+            deleteButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
             deleteButton.prop('disabled', true);
 
             setTimeout(() => {
@@ -284,23 +284,13 @@ $(document).ready(function () {
                     data: { user_id: userId },
                     success: function(response) {
                         if (response.success) {
-                            const Toast = Swal.mixin({
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 3000,
-                                timerProgressBar: true,
-                                didOpen: (toast) => {
-                                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                                }
-                            });
-
+                            // Refresh table immediately
+                            loadUsers();
+                            
+                            // Show toast notification independently
                             Toast.fire({
                                 icon: 'success',
                                 title: 'Successfully deleted!'
-                            }).then(() => {
-                                loadUsers(); // Refresh the users table
                             });
                         } else {
                             Toast.fire({
@@ -321,7 +311,7 @@ $(document).ready(function () {
                         deleteButton.prop('disabled', false);
                     }
                 });
-            }, 1000); // 1 second minimum loading time
+            }, 1000);
         }
     });
   });
@@ -332,8 +322,8 @@ $(document).ready(function () {
     const editButton = $(this);
     const originalHtml = editButton.html();
 
-    // Show loading in button
-    editButton.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Loading...');
+    // Show only spinner in button
+    editButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
     editButton.prop('disabled', true);
 
     setTimeout(() => {
@@ -368,8 +358,7 @@ $(document).ready(function () {
                         cancelButtonText: '<i class="fas fa-times me-1"></i>Cancel',
                         preConfirm: () => {
                             const saveBtn = Swal.getConfirmButton();
-                            const originalSaveBtnText = saveBtn.innerHTML;
-                            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...';
+                            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
                             saveBtn.disabled = true;
 
                             return new Promise((resolve) => {
@@ -391,7 +380,6 @@ $(document).ready(function () {
                                     }).then(resolve)
                                     .catch(error => {
                                         Swal.showValidationMessage(error.message);
-                                        saveBtn.innerHTML = originalSaveBtnText;
                                         saveBtn.disabled = false;
                                     });
                                 }, 1000);
@@ -399,19 +387,14 @@ $(document).ready(function () {
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            const Toast = Swal.mixin({
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 3000,
-                                timerProgressBar: true
-                            });
-
+                            // Close modal and refresh table immediately
+                            Swal.close();
+                            loadUsers();
+                            
+                            // Show toast notification independently
                             Toast.fire({
                                 icon: 'success',
                                 title: 'Successfully updated!'
-                            }).then(() => {
-                                loadUsers();
                             });
                         }
                     });
@@ -437,6 +420,6 @@ $(document).ready(function () {
                 editButton.prop('disabled', false);
             }
         });
-    }, 1000); // 1 second minimum loading time
+    }, 1000);
   });
 });

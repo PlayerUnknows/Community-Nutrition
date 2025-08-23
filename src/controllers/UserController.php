@@ -51,7 +51,7 @@ function signup($dbcon, $user, $auditTrail)
         }
 
         $result = $user->createUser($email, $firstName, $middleName, $lastName, $suffix, $role);
-        
+
         if ($result['success']) {
             $auditTrail->log('signup', 'User signed up with email ' . $email); // Log the signup event
             echo json_encode([
@@ -86,12 +86,24 @@ function login($dbcon, $user, $auditTrail)
 
         if ($authenticatedUser) {
             $auditTrail->log('login', 'User logged in with login identifier ' . $login); // Log the login event
-            echo json_encode([
-                'success' => true,
-                'message' => 'Login successful!',
-                'redirect' => $authenticatedUser['redirect'],
-                'role' => $authenticatedUser['role']
-            ]);
+
+            // For non-admin users, return success but with a special flag
+            if ($authenticatedUser['role'] != 3) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Login successful but access restricted.',
+                    'redirect' => '/index.php',
+                    'role' => $authenticatedUser['role'],
+                    'restricted' => true
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Login successful!',
+                    'redirect' => $authenticatedUser['redirect'],
+                    'role' => $authenticatedUser['role']
+                ]);
+            }
         } else {
             echo json_encode([
                 'success' => false,
@@ -125,17 +137,18 @@ function logout($user, $auditTrail)
 }
 
 // Add this new function to handle profile updates
-function updateProfile($dbcon, $user, $auditTrail) {
+function updateProfile($dbcon, $user, $auditTrail)
+{
     try {
         // Get the POST data
         $newEmail = $_POST['newEmail'] ?? null;
         $currentPassword = $_POST['currentPassword'] ?? '';
         $newPassword = $_POST['newPassword'] ?? null;
-        
+
         // Get current user's ID from session
         session_start();
         $userId = $_SESSION['user_id'] ?? null;
-        
+
         if (!$userId) {
             throw new Exception('User not authenticated');
         }
@@ -176,10 +189,10 @@ function updateProfile($dbcon, $user, $auditTrail) {
                 if (isset($updates['email'])) {
                     $_SESSION['email'] = $updates['email'];
                 }
-                
+
                 // Log the update in audit trail
                 $auditTrail->log('profile_update', 'User updated their profile');
-                
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'Profile updated successfully'

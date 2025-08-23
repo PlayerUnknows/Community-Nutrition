@@ -166,7 +166,7 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label for="middleName" class="form-label">Middle Name</label>
-                <input type="text" name="middleName" id="middleName" placeholder="Enter middle name" required class="form-control">
+                <input type="text" name="middleName" id="middleName" placeholder="Leave N/A if none" class="form-control">
                 <div class="invalid-feedback">
                     <i class="fas fa-exclamation-circle me-1"></i>
                     Please enter your middle name.

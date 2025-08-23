@@ -2,72 +2,8 @@
 require_once __DIR__ . '/../controllers/ReportController.php';
 
 // Helper functions for status and calculations
-function getStatusClass($status) {
-    $status = strtolower($status);
-    if (strpos($status, 'normal') !== false || strpos($status, 'healthy') !== false) return 'status-normal';
-    if (strpos($status, 'under') !== false || strpos($status, 'low') !== false) return 'status-warning';
-    return 'status-alert';
-}
 
-// function calculateIdealBMI($age) {
-//     // Based on WHO-CGS and Philippine Pediatric Society standards
-//     if ($age < 5) {
-//         return ['min' => 13.0, 'max' => 17.0]; // Under 5 years
-//     } else if ($age < 10) {
-//         return ['min' => 13.5, 'max' => 18.0]; // 5-9 years
-//     } else {
-//         return ['min' => 14.0, 'max' => 19.0]; // 10-14 years
-//     }
-// }
 
-// function calculateIdealHeight($age, $sex) {
-//     // Based on Philippine pediatric reference values
-//     if ($sex == 'Male') {
-//         if ($age < 2) return ['min' => 45, 'max' => 87];      // 0-24 months
-//         if ($age < 5) return ['min' => 87, 'max' => 110];     // 2-5 years
-//         if ($age < 10) return ['min' => 110, 'max' => 135];   // 5-9 years
-//         return ['min' => 135, 'max' => 163];                  // 10-14 years
-//     } else {
-//         if ($age < 2) return ['min' => 44, 'max' => 85];      // 0-24 months
-//         if ($age < 5) return ['min' => 85, 'max' => 109];     // 2-5 years
-//         if ($age < 10) return ['min' => 109, 'max' => 133];   // 5-9 years
-//         return ['min' => 133, 'max' => 157];                  // 10-14 years
-//     }
-// }
-
-// function calculateIdealArmCircumference($age) {
-//     // Based on Philippine MUAC standards
-//     if ($age < 2) {
-//         return ['min' => 11.0, 'max' => 13.0];  // 0-24 months
-//     } else if ($age < 5) {
-//         return ['min' => 12.5, 'max' => 14.5];  // 2-5 years
-//     } else if ($age < 10) {
-//         return ['min' => 14.5, 'max' => 17.0];  // 5-9 years
-//     } else {
-//         return ['min' => 16.0, 'max' => 19.0];  // 10-14 years
-//     }
-// }
-
-function getStatusBadge($bmi) {
-    // Based on Philippine standards for malnutrition classification
-    $status = '';
-    $className = '';
-    
-    if ($bmi < 14.5) {
-        $status = 'Severely Underweight';
-        $className = 'status-alert';
-    } else if ($bmi < 16.0) {
-        $status = 'Underweight';
-        $className = 'status-warning';
-    } else if ($bmi > 19.0) {
-        $status = 'Overweight';
-        $className = 'status-warning';
-    } else {
-        $status = 'Normal';
-        $className = 'status-normal';
-    }
-    return "<span class=\"status-badge {$className}\">{$status}</span>";
-}
 
 $reportController = new ReportController();
 $reportData = $reportController->generateReport();
@@ -100,6 +36,7 @@ foreach ($records as $record) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -110,6 +47,7 @@ foreach ($records as $record) {
     <link href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="../../node_modules/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../../node_modules/daterangepicker/daterangepicker.css" />
     <!-- Custom CSS -->
     <style>
         .chart-container {
@@ -117,16 +55,83 @@ foreach ($records as $record) {
             height: 400px;
             margin-bottom: 20px;
         }
+
         .status-badge {
             padding: 5px 10px;
             border-radius: 15px;
             font-size: 0.9em;
         }
-        .status-normal { background-color: #28a745; color: white; }
-        .status-warning { background-color: #ffc107; color: black; }
-        .status-alert { background-color: #dc3545; color: white; }
+
+        .status-normal {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-warning {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .status-alert {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .bg-pink {
+            background-color: #FF69B4 !important;
+            color: white;
+        }
+
+        .badge {
+            font-size: 0.875rem;
+            padding: 0.4em 0.8em;
+        }
+
+        .search-container {
+            max-width: 200px;
+            position: relative;
+        }
+
+        #heightTableSearch {
+            padding-right: 30px;
+        }
+
+        .search-container .fas.fa-search {
+            font-size: 0.875rem;
+        }
+
+        .input-group-text {
+            background-color: #fff;
+            border-left: none;
+        }
+
+        #heightTableSearch {
+            border-right: none;
+        }
+
+        #heightTableSearch:focus+.input-group-text {
+            border-color: #86b7fe;
+        }
+
+        .fa-search {
+            color: #6c757d;
+        }
+
+        #heightTableSearch {
+            border-radius: 4px;
+        }
+
+        #clearSearch {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        #clearSearch:hover {
+            background-color: #e9ecef;
+        }
     </style>
 </head>
+
 <body>
     <div class="container-fluid mt-4">
         <div class="row">
@@ -138,25 +143,44 @@ foreach ($records as $record) {
         <!-- Export buttons -->
         <div class="row mb-3">
             <div class="col-12">
-                <button id="exportPDF" class="btn btn-danger">
-                    <i class="fas fa-file-pdf"></i> Export PDF
-                </button>
-                <button id="exportExcel" class="btn btn-success ms-2">
-                    <i class="fas fa-file-excel"></i> Export Excel
-                </button>
-                <div class="d-inline-block ms-3">
-                    <label for="startDate">From:</label>
-                    <input type="date" id="startDate" class="form-control d-inline-block" style="width: auto;">
-                    
-                    <label for="endDate" class="ms-2">To:</label>
-                    <input type="date" id="endDate" class="form-control d-inline-block" style="width: auto;">
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-eye"></i> Preview Report
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">Growth Status</h6></li>
+                        <li><a class="dropdown-item growth-preview-link" href="#" data-type="growth-chart">Growth Status Distribution</a></li>
+                        <li><a class="dropdown-item growth-preview-link" href="#" data-type="growth-summary">Growth Status Summary</a></li>
+                        <li><a class="dropdown-item growth-preview-link" href="#" data-type="growth-statistics">Growth Statistics by Age & Gender</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Gender Analysis</h6></li>
+                        <li><a class="dropdown-item growth-preview-link" href="#" data-type="gender-distribution">Gender Distribution</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Raw Data</h6></li>
+                        <li><a class="dropdown-item growth-preview-link" href="#" data-type="height-measurements">Height Measurements History</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item growth-preview-link" href="#" data-type="all">Complete Report</a></li>
+                    </ul>
                 </div>
-                <select id="dateRangeFilter" class="form-select d-inline-block ms-2" style="width: auto;">
-                    <option value="all">All Time</option>
-                    <option value="week">Last Week</option>
-                    <option value="month">Last Month</option>
-                    <option value="year">Last Year</option>
-                </select>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">Growth Status</h6></li>
+                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="growth-summary">Growth Status Summary</a></li>
+                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="growth-statistics">Growth Statistics by Age & Gender</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Gender Analysis</h6></li>
+                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="gender-distribution">Gender Distribution</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Raw Data</h6></li>
+                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="height-measurements">Height Measurements History</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="all">Complete Report</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -165,9 +189,17 @@ foreach ($records as $record) {
             <div class="col-lg-6">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Growth Trends Over Time</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Growth Status Distribution</h5>
                     </div>
                     <div class="card-body">
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" id="growthStatusDateRange" class="form-control" placeholder="Select date range">
+                                <button class="btn btn-primary" id="applyGrowthStatusDateRange">
+                                    <i class="fas fa-check"></i> Apply
+                                </button>
+                            </div>
+                        </div>
                         <div class="chart-container">
                             <canvas id="growthTrendsChart"></canvas>
                         </div>
@@ -175,6 +207,42 @@ foreach ($records as $record) {
                 </div>
             </div>
             <div class="col-lg-6">
+                <div id="growthStatusSummaryContainer">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-table"></i> Growth Status Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Count</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="growthStatusSummary">
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="fw-bold">
+                                            <td>Total</td>
+                                            <td id="totalCount">0</td>
+                                            <td>100%</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Growth Statistics by Age & Gender moved below -->
+        <div class="row mb-4">
+            <div class="col-12">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0"><i class="fas fa-table"></i> Growth Statistics by Age & Gender</h5>
@@ -187,22 +255,67 @@ foreach ($records as $record) {
                                         <th>Age Group</th>
                                         <th>Gender</th>
                                         <th>Avg Height (cm)</th>
-                                        <th>Avg Weight (kg)</th>
                                         <th>Total Patients</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($reportData['growthStatsByGender'] as $stat): ?>
-                                    <tr>
-                                        <td><?php echo $stat['age_group']; ?></td>
-                                        <td><?php echo $stat['gender']; ?></td>
-                                        <td><?php echo $stat['avg_height']; ?></td>
-                                        <td><?php echo $stat['avg_weight']; ?></td>
-                                        <td><?php echo $stat['total_patients']; ?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
+                                    <!-- Data will be populated by JavaScript -->
                                 </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold">
+                                        <td colspan="3">Overall Total</td>
+                                        <td id="growthStatsTotal">0</td>
+                                    </tr>
+                                </tfoot>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gender Distribution Chart -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Gender Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="genderDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div id="genderDistributionSummaryContainer">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Gender Distribution Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Gender</th>
+                                            <th>Count</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="genderDistributionSummary">
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-active fw-bold">
+                                            <td>Total</td>
+                                            <td id="genderDistributionTotal">0</td>
+                                            <td>100%</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -211,59 +324,59 @@ foreach ($records as $record) {
 
         <!-- BMI and Arm Circumference -->
         <div class="row mb-4">
-           
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-ruler"></i> Arm Circumference Trends</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="armCircumferenceChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Remove the entire arm circumference div and rename this section appropriately -->
         </div>
 
-        <!-- Comparison Tables -->
-        <div class="row mb-4">
+        <!-- Measurements History Table -->
+        <div class="row mt-4">
             <div class="col-12">
                 <div class="card shadow">
-                    <div class="card-header bg-warning">
-                        <h5 class="mb-0"><i class="fas fa-table"></i> Measurements History</h5>
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-table"></i> Height Measurements History</h5>
                     </div>
                     <div class="card-body">
+                        <!-- Search and Entries Controls -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <!-- Show entries on the left -->
+                                    <div class="d-flex align-items-center">
+                                        <label class="me-2">Show</label>
+                                        <select id="heightTableEntriesSelect" class="form-select form-select-sm" style="width: auto;">
+                                            <option value="10">10</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="-1">All</option>
+                                        </select>
+                                        <label class="ms-2">entries</label>
+                                    </div>
+
+                                    <!-- Search bar on the right -->
+                                    <div class="d-flex align-items-center">
+                                        <input type="text" id="heightTableSearch" class="form-control form-control-sm" placeholder="Search records..." style="width: 200px;">
+                                        <button class="btn btn-sm btn-outline-secondary ms-1" id="clearSearch" type="button">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
-                            <table id="measurementsTable" class="table table-striped table-bordered" style="width:100%">
+                            <table id="measurementsTable" class="table table-striped table-bordered display nowrap w-100">
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Weight (kg)</th>
-                                        <th>Height (cm)</th>
-                                        <th>BMI</th>
-                                        <th>Arm Circumference (cm)</th>
+                                        <th>Patient Name</th>
+                                        <th>Age</th>
+                                        <th>Sex</th>
+                                        <th>Current Height (cm)</th>
+                                        <th>Ideal Height (cm)</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($records as $record): 
-                                        $heightInMeters = $record['height'] / 100;
-                                        $bmi = round($record['weight'] / ($heightInMeters * $heightInMeters), 2);
-                                    ?>
-                                    <tr>
-                                        <td><?php echo date('M d, Y', strtotime($record['created_at'])); ?></td>
-                                        <td><?php echo $record['weight']; ?></td>
-                                        <td><?php echo $record['height']; ?></td>
-                                        <td><?php echo $bmi; ?></td>
-                                        <td><?php echo $record['arm_circumference']; ?></td>
-                                        <td>
-                                            <span class="status-badge <?php echo getStatusClass($record['finding_bmi']); ?>">
-                                                <?php echo $record['finding_bmi']; ?>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
+                                    <!-- Data will be populated by DataTables -->
                                 </tbody>
                             </table>
                         </div>
@@ -277,31 +390,31 @@ foreach ($records as $record) {
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
     <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
     <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../node_modules/moment/moment.js"></script>
+    <script src="../../node_modules/daterangepicker/daterangepicker.js"></script>
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
     <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
-    <script src="../../node_modules/moment/moment.js"></script>
 
     <!-- Initialize report data -->
     <script>
-        // Make sure data is available before initializing charts
-        window.reportData = {
-            dates: <?php echo json_encode($dates); ?>,
-            weights: <?php echo json_encode($weights); ?>,
-            heights: <?php echo json_encode($heights); ?>,
-            bmis: <?php echo json_encode($bmis); ?>,
-            armCircumferences: <?php echo json_encode($armCircumferences); ?>
-        };
+        // Initialize report data with yesterday's date
+        window.reportData = <?php
+                            $yesterday = date('Y-m-d', strtotime('-1 day'));
+                            $reportController = new ReportController();
+                            $data = $reportController->generateReport($yesterday, $yesterday);
+                            echo json_encode([
+                                'status' => 'success',
+                                'data' => $data
+                            ]);
+                            ?>;
 
-        // Initialize DataTable
-        $(document).ready(function() {
-            if ($.fn.DataTable) {
-                $('#measurementsTable').DataTable({
-                    pageLength: 10,
-                    order: [[0, 'desc']]
-                });
+        // Wait for all scripts to load
+        window.addEventListener('load', function() {
+            if (window.reportData && window.reportData.data) {
+                window.reportManager = new ReportManager();
             } else {
-                console.error('DataTables is not properly loaded');
+                console.error('Failed to load initial report data');
             }
         });
     </script>
@@ -309,4 +422,5 @@ foreach ($records as $record) {
     <!-- Custom report script -->
     <script src="/src/script/report.js"></script>
 </body>
+
 </html>

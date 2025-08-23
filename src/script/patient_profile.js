@@ -1,12 +1,4 @@
-// console.log('Patient Profile JS loaded');
-
 $(document).ready(function () {
-  // console.log('Initializing DataTable...');
-
-  // Remove any existing DataTable instance
-  if ($.fn.DataTable.isDataTable("#patientTable")) {
-    $("#patientTable").DataTable().destroy();
-  }
 
   var table = $("#patientTable").DataTable({
     processing: true,
@@ -23,7 +15,7 @@ $(document).ready(function () {
     ajax: {
       url: "../controllers/patient_controller.php?action=getAllPatients",
       dataSrc: function (json) {
-        console.log("Server response:", json);
+  
         if (json.status === "success") {
           return json.data;
         } else {
@@ -93,20 +85,17 @@ $(document).ready(function () {
 
   // Handle search input
   $("#patientSearch").on("input", function () {
-    console.log("Search input:", this.value);
     table.search(this.value).draw();
   });
 
   // Handle entries per page change
   $("#patientPerPage").on("change", function () {
-    console.log("Entries per page:", $(this).val());
     table.page.len(parseInt($(this).val())).draw();
   });
 
   // Handle view patient details
   $("#patientTable").on("click", ".view-patient", function () {
     var patientId = $(this).data("id");
-    console.log("View patient:", patientId);
 
     $.ajax({
       url: "../controllers/patient_controller.php",
@@ -116,7 +105,6 @@ $(document).ready(function () {
         patient_id: patientId,
       },
       success: function (response) {
-        console.log("Patient details response:", response);
         if (response.status === "success" && response.data) {
           var patient = response.data;
           var detailsHtml = `

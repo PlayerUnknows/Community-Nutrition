@@ -1,6 +1,11 @@
 <?php
 require_once(__DIR__ . '/../config/dbcon.php');
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+header('Content-Type: application/json');
+
 function createEvent($eventType, $eventName, $eventTime, $eventPlace, $eventDate, $minAge, $maxAge) {
     try {
         $conn = connect();

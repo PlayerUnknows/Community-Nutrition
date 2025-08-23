@@ -1,0 +1,204 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+ob_start();
+session_start();
+
+require_once("../config/dbcon.php"); // Database connection
+require_once __DIR__ . '/../backend/audit_trail.php'; // Audit trail functions
+
+// ✅ Define JSON response function
+function sendJSON($data, $statusCode = 200) {
+    http_response_code($statusCode);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
+// ✅ Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    sendJSON(['error' => 'Not logged in'], 401);
+}
+
+// ✅ Validate action
+if (!isset($_POST['action'])) {
+    sendJSON(['error' => 'No action specified'], 400);
+}
+
+$action = $_POST['action'];
+
+try {
+    switch ($action) {
+        case 'getAll':
+            getAllEvents($conn);
+            break;
+
+        case 'add':
+            addEvent($conn);
+            break;
+
+        case 'update':
+            updateEvent($conn);
+            break;
+
+        case 'delete':
+            deleteEvent($conn);
+            break;
+
+        default:
+            sendJSON(['error' => 'Invalid action'], 400);
+    }
+} catch (Exception $e) {
+    sendJSON(['error' => $e->getMessage()], 500);
+}
+
+// ------------------------------
+// ✅ Function to get all events
+function getAllEvents($conn) {
+    $query = "SELECT 
+                e.event_prikey,
+                e.event_type,
+                e.event_name_created,
+                e.event_time,
+                e.event_place,
+                e.event_date,
+                e.min_age,
+                e.max_age,
+                e.created_at,
+                e.updated_at,
+                COALESCE(SUBSTRING_INDEX(u1.email, '@', 1), '') as created_by_name,
+                COALESCE(SUBSTRING_INDEX(u2.email, '@', 1), '') as edited_by,
+                COALESCE(DATE_FORMAT(e.created_at, '%Y-%m-%d %H:%i:%s'), '') as raw_created_at,
+                COALESCE(DATE_FORMAT(e.updated_at, '%Y-%m-%d %H:%i:%s'), '') as raw_updated_at
+             FROM event_info e
+             LEFT JOIN account_info u1 ON e.created_by = u1.user_id
+             LEFT JOIN account_info u2 ON e.edited_by = u2.user_id
+             ORDER BY e.created_at DESC";
+
+    $stmt = $conn->prepare($query);
+    $stmt->execute();
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $data = array_map(function ($event) {
+        return [
+            'DT_RowId' => 'row_' . $event['event_prikey'],
+            'event_prikey' => $event['event_prikey'],
+            'event_type' => $event['event_type'],
+            'event_name_created' => $event['event_name_created'],
+            'event_time' => $event['event_time'],
+            'event_place' => $event['event_place'],
+            'event_date' => $event['event_date'],
+            'min_age' => $event['min_age'],
+            'max_age' => $event['max_age'],
+            'created_by_name' => $event['created_by_name'],
+            'edited_by' => $event['edited_by'],
+            'raw_created_at' => $event['raw_created_at'],
+            'raw_updated_at' => $event['raw_updated_at']
+        ];
+    }, $events);
+
+    sendJSON([
+        'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
+        'recordsTotal' => count($data),
+        'recordsFiltered' => count($data),
+        'data' => $data
+    ]);
+}
+
+// ------------------------------
+// ✅ Function to add event
+function addEvent($conn) {
+    $required = ['event_type', 'event_name', 'event_time', 'event_place', 'event_date', 'min_age', 'max_age'];
+    foreach ($required as $field) {
+        if (!isset($_POST[$field])) {
+            throw new Exception("Missing field: $field");
+        }
+    }
+
+    $query = "INSERT INTO event_info (
+        event_type, event_name_created, event_time, event_place, 
+        event_date, min_age, max_age, created_by, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+
+    $stmt = $conn->prepare($query);
+    $stmt->execute([
+        $_POST['event_type'],
+        $_POST['event_name'],
+        $_POST['event_time'],
+        $_POST['event_place'],
+        $_POST['event_date'],
+        $_POST['min_age'],
+        $_POST['max_age'],
+        $_SESSION['user_id']
+    ]);
+
+    // Audit trail
+    if (isset($_SESSION['email'])) {
+        logEventOperation($_SESSION['user_id'], $_SESSION['email'], AUDIT_EVENT_CREATE, $conn->lastInsertId(), $_POST);
+    }
+
+    sendJSON(['success' => true, 'message' => 'Event added successfully']);
+}
+
+// ------------------------------
+// ✅ Function to update event
+function updateEvent($conn) {
+    $required = ['event_prikey', 'event_type', 'event_name', 'event_time', 'event_date', 'event_place', 'min_age', 'max_age'];
+    foreach ($required as $field) {
+        if (!isset($_POST[$field])) {
+            throw new Exception("Missing field: $field");
+        }
+    }
+
+    $query = "UPDATE event_info SET 
+        event_type = ?, event_name_created = ?, event_time = ?, 
+        event_place = ?, event_date = ?, min_age = ?, max_age = ?, 
+        edited_by = ?, updated_at = NOW()
+        WHERE event_prikey = ?";
+
+    $stmt = $conn->prepare($query);
+    $stmt->execute([
+        $_POST['event_type'],
+        $_POST['event_name'],
+        $_POST['event_time'],
+        $_POST['event_place'],
+        $_POST['event_date'],
+        $_POST['min_age'],
+        $_POST['max_age'],
+        $_SESSION['user_id'],
+        $_POST['event_prikey']
+    ]);
+
+    if ($stmt->rowCount() === 0) {
+        throw new Exception('No event updated. Check if the event exists.');
+    }
+
+    if (isset($_SESSION['email'])) {
+        logEventOperation($_SESSION['user_id'], $_SESSION['email'], AUDIT_EVENT_UPDATE, $_POST['event_prikey'], $_POST);
+    }
+
+    sendJSON(['success' => true, 'message' => 'Event updated successfully']);
+}
+
+// ------------------------------
+// ✅ Function to delete event
+function deleteEvent($conn) {
+    if (!isset($_POST['event_prikey'])) {
+        throw new Exception('Missing event ID');
+    }
+
+    $stmt = $conn->prepare("SELECT event_type, event_name_created, event_date FROM event_info WHERE event_prikey = ?");
+    $stmt->execute([$_POST['event_prikey']]);
+    $eventDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $stmt = $conn->prepare("DELETE FROM event_info WHERE event_prikey = ?");
+    $stmt->execute([$_POST['event_prikey']]);
+
+    if (isset($_SESSION['email']) && $eventDetails) {
+        logEventOperation($_SESSION['user_id'], $_SESSION['email'], AUDIT_EVENT_DELETE, $_POST['event_prikey'], $eventDetails);
+    }
+
+    sendJSON(['success' => true, 'message' => 'Event deleted successfully']);
+}
+?>

@@ -1,12 +1,15 @@
 <?php
 // /backend/db.php
 
-function connect()
-{
-    $host = 'localhost';
-    $dbname = 'nutrition_system';
-    $username = 'root'; 
-    $password = ''; 
+require_once __DIR__ . '/load_env.php';
+
+loadEnv(__DIR__ . '../../../.env');
+
+function connect(){
+    $host = getenv('DB_HOST');
+    $dbname = getenv('DB_NAME');
+    $username = getenv('DB_USER'); 
+    $password = getenv('DB_PASS'); 
 
     try {
         $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -18,10 +21,6 @@ function connect()
     }
 }
 
-// Test connection
-try {
-    $conn = connect();
-    error_log("Database connection successful");
-} catch (Exception $e) {
-    error_log("Database connection test failed: " . $e->getMessage());
-}
+// auto-connect
+$conn = connect();
+

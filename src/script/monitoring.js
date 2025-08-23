@@ -252,52 +252,56 @@ window.MonitoringModule = (function () {
         searching: true,
         responsive: true,
         autoWidth: false,
-        scrollX: false,
+        scrollX: true,
         scrollY: "50vh",
-        scrollCollapse: false,
+        scrollCollapse: true,
         scroller: false,
-        fixedHeader: false,
+        fixedHeader: true,
         columns: [
           {
-            data: "checkup_unique_id",
+            data: "patient_id",
             className: "dt-left",
-            visible: false,
+            width: "150px",
           },
           {
             data: "patient_name",
             className: "dt-left",
-          },
-          {
-            data: "patient_id",
-            className: "dt-left",
+            width: "150px",
           },
           {
             data: "patient_fam_id",
             className: "dt-left",
+            width: "150px",
           },
           {
             data: "age",
             className: "dt-center",
+            width: "50px",
           },
           {
             data: "sex",
             className: "dt-center",
+            width: "80px",
           },
           {
             data: "finding_bmi",
-            className: "dt-right",
+            className: "dt-center",
+            width: "150px",
           },
           {
             data: "finding_growth",
             className: "dt-center",
+            width: "150px",
           },
           {
             data: "arm_circumference_status",
             className: "dt-center",
+            width: "150px",
           },
           {
             data: null,
             className: "dt-center",
+            width: "100px",
             render: function (data, type, row) {
               return (
                 '<button class="btn btn-primary btn-sm btn-view" data-patient-id="' +
@@ -380,7 +384,6 @@ window.MonitoringModule = (function () {
 
     // Add export handler
     $("#exportMonitoringBtn").on("click", function () {
-      console.log("Export button clicked - Sending request...");
       $.ajax({
         url: "../backend/export_monitoring.php",
         method: "GET",
@@ -388,13 +391,9 @@ window.MonitoringModule = (function () {
           responseType: "blob",
         },
         beforeSend: function () {
-          console.log("Starting export request...");
+     
         },
         success: function (response, status, xhr) {
-          console.log(
-            "Export response received",
-            xhr.getResponseHeader("Content-Type")
-          );
 
           // Check if we received an error message
           if (
@@ -423,7 +422,6 @@ window.MonitoringModule = (function () {
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          console.log("File download initiated");
         },
         error: function (xhr, status, error) {
           console.error("Export failed - Status:", status);

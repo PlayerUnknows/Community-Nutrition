@@ -7,21 +7,110 @@ require_once '../includes/header.php';
 <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="../../node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css">
 <style>
+    .container-fluid {
+        overflow: hidden;
+    }
+
     .table-responsive {
         margin: 0;
         padding: 0;
         width: 100%;
     }
 
-    /* Remove any default widths and make columns responsive */
-    #monitoringTable th,
-    #monitoringTable td {
-        width: auto !important;
-        /* Override any default widths */
-        white-space: nowrap;
-        /* Prevent wrapping of text */
+    /* Table container styles */
+    .dataTables_wrapper {
+        position: relative;
     }
 
+    .dataTables_wrapper .dataTables_scroll {
+        margin-bottom: 0.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_scrollBody {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .dataTables_scrollHead {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    /* Remove any default widths and make columns responsive */
+    #monitoringTable {
+        width: 100% !important;
+        margin: 0 !important;
+        table-layout: fixed;
+    }
+
+    #monitoringTable th,
+    #monitoringTable td {
+        padding: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Column specific widths */
+    #monitoringTable th:nth-child(1),
+    #monitoringTable td:nth-child(1) {
+        width: 200px;
+        min-width: 200px;
+    }
+
+    #monitoringTable th:nth-child(2),
+    #monitoringTable td:nth-child(2) {
+        width: 250px;
+        min-width: 250px;
+    }
+
+    #monitoringTable th:nth-child(3),
+    #monitoringTable td:nth-child(3) {
+        width: 200px;
+        min-width: 200px;
+    }
+
+    #monitoringTable th:nth-child(4),
+    #monitoringTable td:nth-child(4) {
+        width: 80px;
+        min-width: 80px;
+        text-align: center;
+    }
+
+    #monitoringTable th:nth-child(5),
+    #monitoringTable td:nth-child(5) {
+        width: 80px;
+        min-width: 80px;
+        text-align: center;
+    }
+
+    /* Status columns */
+    #monitoringTable th:nth-child(6),
+    #monitoringTable td:nth-child(6),
+    #monitoringTable th:nth-child(7),
+    #monitoringTable td:nth-child(7),
+    #monitoringTable th:nth-child(8),
+    #monitoringTable td:nth-child(8) {
+        width: 150px;
+        min-width: 150px;
+        text-align: center;
+    }
+
+    /* Actions column */
+    #monitoringTable th:nth-child(9),
+    #monitoringTable td:nth-child(9) {
+        width: 100px;
+        min-width: 100px;
+        text-align: center;
+    }
+
+    /* Make header sticky */
+    #monitoringTable thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 2;
+        border-bottom: 2px solid #dee2e6;
+    }
 
     /* Button styles */
     .btn-view {
@@ -30,8 +119,51 @@ require_once '../includes/header.php';
     }
 
     /* Container styles */
+    .card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
     .card-body {
         padding: 0;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    /* Custom scrollbar styles */
+    .dataTables_scrollBody::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .dataTables_scrollBody::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .dataTables_scrollBody::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* Hide DataTables' default search box */
+    .dataTables_filter {
+        display: none;
+    }
+
+    /* Ensure pagination and info are not affected by scroll */
+    .dataTables_info,
+    .dataTables_paginate {
+        position: relative;
+        z-index: 1;
+        background: #fff;
+        padding: 8px;
     }
 </style>
 

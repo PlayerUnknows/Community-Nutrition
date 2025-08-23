@@ -98,11 +98,11 @@ class MonitoringController {
             fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
             
             // Write headers
-            fputcsv($output, array_keys($records[0]));
+            fputcsv($output, array_keys($records[0]), ',', '"', '\\');
             
             // Write data
             foreach ($records as $record) {
-                fputcsv($output, $record);
+                fputcsv($output, $record, ',', '"', '\\');
             }
             
             fclose($output);
@@ -179,7 +179,7 @@ class MonitoringController {
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         
         $output = fopen('php://output', 'w');
-        fputcsv($output, $headers);
+        fputcsv($output, $headers, ',', '"', '\\');
         
         // Add a sample row
         $sampleRow = [
@@ -202,7 +202,7 @@ class MonitoringController {
             'Normal',
             'John Doe'
         ];
-        fputcsv($output, $sampleRow);
+        fputcsv($output, $sampleRow, ',', '"', '\\');
         fclose($output);
     }
  

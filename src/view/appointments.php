@@ -39,6 +39,7 @@
                     <thead>
                         <tr>
                             <th>User ID</th>
+                            <th>Patient Name</th>
                             <th>Date</th>
                             <th>Time</th>
                             <th>Description</th>
@@ -68,6 +69,9 @@
         </div>
     </div>
 </div>
+
+<!-- Add script reference to guardians.js -->
+<script src="/src/script/guardians.js"></script>
 
 <style>
     .table-container {
@@ -133,39 +137,108 @@
         background: none;
         border: none;
     }
+    .modal-open {
+        overflow: hidden;
+        padding-right: 0 !important;
+    }
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        opacity: 0.5;
+    }
+    .btn-state-loading {
+        pointer-events: none;
+        position: relative;
+        padding-left: 2.5rem !important;
+    }
+    .btn-state-loading:before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin {
+        to { transform: translateY(-50%) rotate(360deg); }
+    }
+    .btn .spinner-border-sm {
+        margin-right: 5px;
+        width: 1rem;
+        height: 1rem;
+    }
+    .btn.btn-success,
+    .btn.btn-danger {
+        transition: all 0.3s ease;
+    }
+    .btn i {
+        margin-right: 5px;
+    }
 </style>
 
 <!-- Add Appointment Modal -->
-<div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal" 
+     id="addAppointmentModal" 
+     tabindex="-1" 
+     role="dialog"
+     data-bs-backdrop="static">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addAppointmentModalLabel">Schedule New Appointment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Schedule New Appointment</h5>
+                <button type="button" 
+                        class="btn-close" 
+                        data-bs-dismiss="modal">
+                </button>
             </div>
             <div class="modal-body">
                 <form id="appointmentForm">
                     <div class="mb-3">
                         <label for="user_id" class="form-label">User ID</label>
                         <input type="text" class="form-control" id="user_id" name="user_id" required>
+                        <div class="invalid-feedback">User ID is required</div>
+                    </div>
+                    <div id="guardian_container" class="mb-3" style="display: none;">
+                        <!-- Guardian selector will be dynamically added here -->
+                    </div>
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Patient Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required>
+                        <div class="invalid-feedback">Patient name is required</div>
                     </div>
                     <div class="mb-3">
                         <label for="date" class="form-label">Date</label>
                         <input type="date" class="form-control" id="date" name="date" required>
+                        <div class="invalid-feedback">Please select a valid appointment date</div>
                     </div>
                     <div class="mb-3">
                         <label for="time" class="form-label">Time</label>
                         <input type="time" class="form-control" id="time" name="time" required>
+                        <div class="invalid-feedback">Appointment time is required</div>
                     </div>
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        <div class="invalid-feedback">Please provide a description for this appointment</div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveAppointment">Save Appointment</button>
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        data-bs-dismiss="modal">Close</button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        id="saveAppointment">Save Appointment</button>
             </div>
         </div>
     </div>
@@ -184,19 +257,26 @@
                     <input type="hidden" id="edit_appointment_id" name="appointment_prikey">
                     <div class="mb-3">
                         <label for="edit_user_id" class="form-label">User ID</label>
-                        <input type="text" class="form-control" id="edit_user_id" name="user_id" required>
+                        <input type="text" class="form-control" id="edit_user_id" name="user_id" readonly>
+                    </div>
+                    <div class="mb-3"> 
+                        <label for="edit_patient_name" class="form-label">Patient Name</label>
+                        <input type="text" class="form-control" id="edit_patient_name" name="full_name" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="edit_date" class="form-label">Date</label>
                         <input type="date" class="form-control" id="edit_date" name="date" required>
+                        <div class="invalid-feedback">Please select a valid appointment date</div>
                     </div>
                     <div class="mb-3">
                         <label for="edit_time" class="form-label">Time</label>
                         <input type="time" class="form-control" id="edit_time" name="time" required>
+                        <div class="invalid-feedback">Appointment time is required</div>
                     </div>
                     <div class="mb-3">
                         <label for="edit_description" class="form-label">Description</label>
                         <textarea class="form-control" id="edit_description" name="description" rows="3" required></textarea>
+                        <div class="invalid-feedback">Please provide a description for this appointment</div>
                     </div>
                 </form>
             </div>

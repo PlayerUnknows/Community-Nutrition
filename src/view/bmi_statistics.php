@@ -1,10 +1,34 @@
-<?php
-require_once __DIR__ . '/../controllers/ReportController.php';
-?>
-
 <div class="container-fluid mt-4">
     <!-- Date Filter Section -->
     
+    <!-- Export buttons -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-eye"></i> Preview Report
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" data-preview="bmi-distribution">BMI Distribution</a></li>
+                    <li><a class="dropdown-item" href="#" data-preview="female-bmi">Female BMI Distribution</a></li>
+                    <li><a class="dropdown-item" href="#" data-preview="male-bmi">Male BMI Distribution</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-preview="bmi-category">BMI Category Distribution</a></li>
+                    <li><a class="dropdown-item" href="#" data-preview="bmi-table">BMI Distribution Details</a></li>
+                </ul>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" data-export="excel" data-type="bmi-category">BMI Category Distribution</a></li>
+                    <li><a class="dropdown-item" href="#" data-export="excel" data-type="bmi-table">BMI History</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
     <!-- Chart Section -->
     <div class="row">
@@ -14,12 +38,14 @@ require_once __DIR__ . '/../controllers/ReportController.php';
                     <h5 class="mb-0"><i class="fas fa-weight"></i> BMI Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <div class="input-group">
-                            <input type="text" id="overallDateRange" class="form-control" placeholder="Select date range">
-                            <button class="btn btn-success" id="applyOverallDateRange">
-                                <i class="fas fa-check"></i> Apply
-                            </button>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" id="bmiDateRange" class="form-control" placeholder="Select date range">
+                                <button class="btn btn-warning" id="applyBmiDateRange">
+                                    <i class="fas fa-check"></i> Apply
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -38,14 +64,6 @@ require_once __DIR__ . '/../controllers/ReportController.php';
                     <h5 class="mb-0"><i class="fas fa-venus"></i> Female BMI Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <div class="input-group">
-                            <input type="text" id="femaleDateRange" class="form-control" placeholder="Select date range">
-                            <button class="btn btn-pink" id="applyFemaleDateRange">
-                                <i class="fas fa-check"></i> Apply
-                            </button>
-                        </div>
-                    </div>
                     <div class="chart-container">
                         <canvas id="femaleBmiChart"></canvas>
                     </div>
@@ -58,14 +76,6 @@ require_once __DIR__ . '/../controllers/ReportController.php';
                     <h5 class="mb-0"><i class="fas fa-mars"></i> Male BMI Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <div class="input-group">
-                            <input type="text" id="maleDateRange" class="form-control" placeholder="Select date range">
-                            <button class="btn btn-blue" id="applyMaleDateRange">
-                                <i class="fas fa-check"></i> Apply
-                            </button>
-                        </div>
-                    </div>
                     <div class="chart-container">
                         <canvas id="maleBmiChart"></canvas>
                     </div>
@@ -102,46 +112,55 @@ require_once __DIR__ . '/../controllers/ReportController.php';
     </div>
 </div>
 
-<!-- Table Section -->
-<div class="row mt-4">
+<!-- BMI Statistics Table -->
+<div class="row mb-4">
     <div class="col-12">
         <div class="card shadow">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-table"></i> BMI Distribution Details</h5>
-                <div class="d-flex gap-2">
-                    <div class="input-group">
-                        <span class="input-group-text">Show</span>
-                        <select id="entriesSelect" class="form-select" style="width: 70px;">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="-1">All</option>
-                        </select>
-                        <span class="input-group-text">entries</span>
-                    </div>
-                    <div class="input-group">
-                        <input type="text" id="dateRangePicker" class="form-control" placeholder="Select date range">
-                        <button class="btn btn-primary" id="applyDateRange">
-                            <i class="fas fa-check"></i> Apply
-                        </button>
-                    </div>
-                </div>
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="fas fa-table"></i> BMI History</h5>
             </div>
             <div class="card-body">
+                <!-- Search and Entries Controls -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <!-- Show entries on the left -->
+                            <div class="d-flex align-items-center">
+                                <label class="me-2">Show</label>
+                                <select id="bmiTableEntriesSelect" class="form-select form-select-sm" style="width: 70px;">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="-1">All</option>
+                                </select>
+                                <label class="ms-2">entries</label>
+                            </div>
+
+                            <!-- Search bar on the right with only search icon -->
+                            <div class="input-group input-group-sm" style="width: 200px;">
+                                <input type="text" id="bmiTableSearch" class="form-control form-control-sm" placeholder="Search records...">
+                                <span class="input-group-text border-start-0">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
                 <div class="table-responsive">
-                    <table id="bmiTable" class="table table-striped table-bordered display nowrap w-100">
+                    <table id="bmiTable" class="table table-striped table-bordered" style="width:100%">
                         <thead>
                             <tr>
-                                <th class="all">Date</th>
-                                <th class="min-tablet">Patient ID</th>
-                                <th class="min-tablet">Patient Name</th>
-                                <th class="min-tablet">Age</th>
-                                <th class="min-tablet">Sex</th>
-                                <th class="all">BMI Status</th>
+                                <th>Date</th>
+                                <th>Patient Name</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Height (cm)</th>
+                                <th>Weight (kg)</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Data will be populated by DataTables -->
                         </tbody>
                     </table>
                 </div>
@@ -326,6 +345,41 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
 .daterangepicker td.active:hover {
     background-color: #0000CD;
 }
+
+/* Add these styles to your existing styles section */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    display: inline-block;
+    text-align: center;
+    min-width: 100px;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+/* Ensure text is visible on all badges */
+.status-badge.bg-warning {
+    color: black !important;
+}
+
+.status-badge.bg-danger,
+.status-badge.bg-success {
+    color: white !important;
+}
 </style>
 
 <!-- Load dependencies in correct order -->
@@ -340,6 +394,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
 <script src="../../node_modules/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
 <script src="../../node_modules/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
 
+<link rel="stylesheet" href="../../node_modules/@fortawesome/fontawesome-free/css/all.min.css">
 <link rel="stylesheet" type="text/css" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" type="text/css" href="../../node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css">
 
@@ -349,7 +404,8 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
 <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
 <script src="../../node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
 
-<!-- Initialize your custom script after all dependencies are loaded -->
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Ensure all required libraries are loaded

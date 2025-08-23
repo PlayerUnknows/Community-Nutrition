@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once '../models/patient_model.php';
+require_once '../models/Patient Profile/patient_model.php';
 
 class PatientController {
     public function getAllPatients() {

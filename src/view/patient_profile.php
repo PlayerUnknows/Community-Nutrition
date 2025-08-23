@@ -1,15 +1,3 @@
-<?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-try {
-    require_once '../models/patient_model.php';
-    $patients = getPatients();
-} catch (Exception $e) {
-    error_log("Error loading patients: " . $e->getMessage());
-    $patients = [];
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,52 +11,8 @@ try {
     <link href="../../node_modules/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link href="../../node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css" rel="stylesheet">
     
-    <style>
-        .table-responsive {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-        }
-        #patientTable {
-            width: 100% !important;
-            margin: 0 !important;
-        }
-        .dataTables_wrapper .dataTables_scroll {
-            margin-bottom: 0.5rem;
-        }
-        .dataTables_wrapper .dataTables_scrollBody {
-            border-bottom: 1px solid #dee2e6;
-        }
-        .dataTables_scrollHead {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-        .dataTables_scrollBody::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .dataTables_scrollBody::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        .dataTables_scrollBody::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        #patientTable td, #patientTable th {
-            padding: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        /* Hide DataTables' default search box */
-        .dataTables_filter {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="../../assets/css/patient.css">
+ 
 </head>
 <body>
     <div class="container-fluid px-4">
@@ -115,24 +59,7 @@ try {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (!empty($patients)): ?>
-                                <?php foreach ($patients as $patient): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($patient['patient_fam_id']); ?></td>
-                                        <td><?php echo htmlspecialchars($patient['patient_id']); ?></td>
-                                        <td><?php echo htmlspecialchars($patient['patient_fname']); ?></td>
-                                        <td><?php echo htmlspecialchars($patient['patient_lname']); ?></td>
-                                        <td><?php echo htmlspecialchars($patient['age']); ?></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-info view-patient" 
-                                                    data-id="<?php echo htmlspecialchars($patient['patient_id']); ?>"
-                                                    data-details='<?php echo htmlspecialchars(json_encode($patient), ENT_QUOTES, 'UTF-8'); ?>'>
-                                                <i class="fas fa-eye"></i> View
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                          
                         </tbody>
                     </table>
                 </div>
@@ -168,24 +95,5 @@ try {
     <script src="../../node_modules/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
     <script src="../script/patient_profile.js"></script>
 
-    <script>
-    // // Debug script loading
-    // $(document).ready(function() {
-    //     console.log('Document ready');
-    //     console.log('jQuery version:', $.fn.jquery);
-    //     console.log('DataTables version:', $.fn.dataTable.version);
-    //     console.log('Bootstrap version:', typeof bootstrap !== 'undefined' ? bootstrap.Alert.VERSION : 'not loaded');
-        
-    //     // Check if table exists and has data
-    //     console.log('Table exists:', $('#patientTable').length > 0);
-    //     console.log('Table rows:', $('#patientTable tbody tr').length);
-        
-    //     // Check if search input exists
-    //     console.log('Search input exists:', $('#patientSearch').length > 0);
-        
-    //     // Check if per page select exists
-    //     console.log('Per page select exists:', $('#patientPerPage').length > 0);
-    // });
-    // </script>
 </body>
 </html>

@@ -9,7 +9,7 @@ class Appointment {
 
     public function getAllAppointments() {
         try {
-            $query = "SELECT appointment_prikey, user_id, date, time, description, 
+            $query = "SELECT appointment_prikey, user_id, full_name, date, time, description, 
                      CASE WHEN description LIKE '[CANCELLED]%' THEN 'cancelled' ELSE 'active' END as status 
                      FROM " . $this->table . " 
                      ORDER BY date ASC, time ASC";
@@ -43,7 +43,7 @@ class Appointment {
 
     public function getAppointmentById($id) {
         try {
-            $query = "SELECT appointment_prikey, user_id, date, time, description,
+            $query = "SELECT appointment_prikey, user_id, full_name, date, time, description,
                      CASE WHEN description LIKE '[CANCELLED]%' THEN 'cancelled' ELSE 'active' END as status 
                      FROM " . $this->table . " 
                      WHERE appointment_prikey = ?";
@@ -58,16 +58,17 @@ class Appointment {
         }
     }
 
-    public function createAppointment($user_id, $date, $time, $description) {
+    public function createAppointment($user_id, $full_name, $date, $time, $description) {
         try {
-            $query = "INSERT INTO " . $this->table . " (user_id, date, time, description) 
-                     VALUES (?, ?, ?, ?)";
+            $query = "INSERT INTO " . $this->table . " (user_id, full_name, date, time, description) 
+                     VALUES (?, ?, ?, ?, ?)";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1, $user_id);
-            $stmt->bindParam(2, $date);
-            $stmt->bindParam(3, $time);
-            $stmt->bindParam(4, $description);
+            $stmt->bindParam(2, $full_name);
+            $stmt->bindParam(3, $date);
+            $stmt->bindParam(4, $time);
+            $stmt->bindParam(5, $description);
             
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -76,7 +77,7 @@ class Appointment {
         }
     }
 
-    public function updateAppointment($id, $user_id, $date, $time, $description) {
+    public function updateAppointment($id, $user_id, $full_name, $date, $time, $description) {
         try {
             // First check if appointment is cancelled
             $checkQuery = "SELECT description FROM " . $this->table . " 

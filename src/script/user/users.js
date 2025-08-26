@@ -37,7 +37,7 @@ $(document).ready(function () {
 
     $.ajax({
       url: "../controllers/UserController.php?action=fetchUsers",
-      type: "POST",
+      type: "GET",
       data: {
         page: currentPage,
         length: itemsPerPage,
@@ -84,12 +84,12 @@ $(document).ready(function () {
                     <td>${user.email}</td>
                     <td>
                         <span class="badge bg-${
-                          user.role === "Administrator"
+                          user.role_text === "Administrator"
                             ? "primary"
-                            : user.role === "Brgy Health Worker"
+                            : user.role_text === "Brgy Health Worker"
                             ? "success"
                             : "info"
-                        }">${user.role}</span>
+                        }">${user.role_text}</span>
                     </td>
                     <td>${user.created_at}</td>
                     <td>
@@ -229,7 +229,7 @@ $(document).ready(function () {
     const userId = $(this).data("id");
     $.ajax({
       url: "../controllers/UserController.php?action=fetchSingleUser",
-      type: "POST",
+      type: "GET",
       data: { user_id: userId },
       success: function (response) { 
         if (response.success) {
@@ -240,7 +240,7 @@ $(document).ready(function () {
                             <div class="text-start">
                                 <p><strong>User ID:</strong> ${user.user_id}</p>
                                 <p><strong>Name:</strong> ${user.full_name}</p>
-                                <p><strong>Role:</strong> ${user.role}</p>
+                                <p><strong>Role:</strong> ${user.role_text}</p>
                                 <p><strong>Created At:</strong> ${user.created_at}</p>
                             </div>
                         `,
@@ -283,6 +283,8 @@ $(document).ready(function () {
                     type: "POST",
                     data: { user_id: userId },
                     success: function(response) {
+                        console.log('Delete user response:', response);
+                        
                         if (response.success) {
                             // Refresh table immediately
                             loadUsers();
@@ -329,7 +331,7 @@ $(document).ready(function () {
     setTimeout(() => {
         $.ajax({
             url: "../controllers/UserController.php?action=fetchSingleUser",
-            type: "POST",
+            type: "GET",
             data: { user_id: userId },
             success: function (response) {
                 if (response.success) {
@@ -373,6 +375,8 @@ $(document).ready(function () {
                                         data: { user_id: userId, email, role },
                                         dataType: "json"
                                     }).then(response => {
+                                        console.log('Edit user response:', response);
+                                        
                                         if (!response.success) {
                                             throw new Error(response.message || 'Failed to update user');
                                         }
@@ -400,7 +404,7 @@ $(document).ready(function () {
                     });
 
                     // Set the correct role option
-                    $("#editRole").val(user.role);
+                    $("#editRole").val(user.role_text);
                 } else {
                     Toast.fire({
                         icon: 'error',

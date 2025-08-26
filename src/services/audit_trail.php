@@ -6,6 +6,9 @@ function logAuditTrail($userId, $username, $action, $details = '') {
     
     $userAgent = $_SERVER['HTTP_USER_AGENT'];
     
+    // Debug logging
+    error_log("logAuditTrail called - UserId: $userId, Username: $username, Action: $action, Details: $details");
+    
     try { 
         $stmt = $conn->prepare("INSERT INTO audit_trail (user_id, username, action, user_agent, details) 
                                VALUES (:user_id, :username, :action, :user_agent, :details)");
@@ -17,6 +20,7 @@ function logAuditTrail($userId, $username, $action, $details = '') {
         $stmt->bindParam(':details', $details);
         
         $stmt->execute();
+        error_log("logAuditTrail - Insert successful");
         return true;
     } catch(PDOException $e) {
         error_log("Audit Trail Error: " . $e->getMessage());

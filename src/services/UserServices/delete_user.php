@@ -1,90 +1,68 @@
 <?php
-require_once __DIR__ . '/../../config/dbcon.php';
+require_once __DIR__ . '/../../core/BaseService.php';
+require_once __DIR__ . '/../../models/User.php';
 
-header('Content-Type: application/json');
-session_start();
+class DeleteUserService extends BaseService{
+    public function run(){
+        $this->requireMethod('POST');
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
-    exit;
-}
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-    exit;
-}
+        $userId = $_POST['user_id'] ?? null;
+        if (!$userId) {
+            $this->respondError('User ID is required');
+        }
 
-// Get and validate user ID
-$userId = isset($_POST['user_id']) ? trim($_POST['user_id']) : '';
+        $user = new User($this->dbcon);
+        $userData = $user->getUserById($userId);
 
-if (empty($userId)) {
-    echo json_encode([
-        'success' => false, 
-        'message' => 'User ID is required',
-        'received_id' => $userId
-    ]);
-    exit;
-}
+        if (!$userData) {
+            $this->respondError('User not found', 404);
+        }
 
-try {
-    $conn = connect();
-    
-    // Check if user exists
-    $stmt = $conn->prepare("SELECT email, role FROM account_info WHERE user_id = :userId");
-    $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
-    $stmt->execute();
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$user) {
-        echo json_encode([
-            'success' => false, 
-            'message' => 'User not found', 
-            'user_id' => $userId
-        ]);
-        exit;
-    }
-    
-    // Prevent self-deletion
-    if ($userId === $_SESSION['user_id']) {
-        echo json_encode(['success' => false, 'message' => 'Cannot delete your own account']);
-        exit;
-    }
-    
-    // Map role number to readable name
-    $roleMap = [
-        '1' => 'Parent',
-        '2' => 'Brgy Health Worker',
-        '3' => 'Administrator'
-    ];
-    $readableRole = isset($roleMap[$user['role']]) ? $roleMap[$user['role']] : $user['role'];
-    
-    // Begin transaction
-    $conn->beginTransaction();
-    
-    // Delete user
-    $stmt = $conn->prepare("DELETE FROM account_info WHERE user_id = :userId");
-    $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
-    $stmt->execute();
-    
-    // Commit transaction
-    $conn->commit();
-    
-    echo json_encode([
-        'success' => true, 
-        'message' => 'User deleted successfully',
-        'deleted_user' => [
+        // Prevent self-deletion
+        if (isset($_SESSION['user_id']) && $userId == $_SESSION['user_id']) {
+            $this->respondError('Cannot delete your own account');
+        }
+
+        // Map role number to readable name
+        $roleMap = [
+            '1' => 'Parent',
+            '2' => 'Brgy Health Worker',
+            '3' => 'Administrator'
+        ];
+        $readableRole = isset($roleMap[$userData['role']]) ? $roleMap[$userData['role']] : $userData['role'];
+
+        // Begin transaction
+        $this->dbcon->beginTransaction();
+
+        try {
+            // First delete related records in notifications table
+            $stmt = $this->dbcon->prepare("DELETE FROM notifications WHERE user_id = :userId");
+            $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
+            $stmt->execute();
+
+            // Then delete from account_info
+            $stmt = $this->dbcon->prepare("DELETE FROM account_info WHERE user_id = :userId");
+            $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
+            $stmt->execute();
+
+            $this->dbcon->commit();
+        } catch (Exception $e) {
+            $this->dbcon->rollback();
+            $this->respondError('Failed to delete user: ' . $e->getMessage());
+        }
+
+        $this->respondSuccessWithAudit([
             'id' => $userId,
-            'email' => $user['email'],
+            'email' => $userData['email'],
             'role' => $readableRole
-        ]
-    ]);
-    
-} catch (PDOException $e) {
-    if ($conn->inTransaction()) {
-        $conn->rollBack();
+        ], 'User deleted successfully', 'DELETE', 'User deleted: ' . $userData['email']);
     }
-    error_log("Delete User Error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Database error occurred']);
 }
-?>
+
+$service = new DeleteUserService();
+$service->run();

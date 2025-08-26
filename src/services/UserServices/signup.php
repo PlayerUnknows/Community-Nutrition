@@ -1,15 +1,13 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-require_once __DIR__ . '/../../config/dbcon.php';
+require_once __DIR__ . '/../../core/BaseService.php';
 require_once __DIR__ . '/../../models/User.php';
 
-header('Content-Type: application/json');
-session_start();
+class SignupService extends BaseService {
+    public function run() {
+        session_start();
 
-try {
+        $this->requireMethod('POST');
+
     $email = $_POST['email'];
     $role = intval($_POST['role']); // Ensure role is an integer
     $firstName = $_POST['firstName'];
@@ -26,24 +24,67 @@ try {
     $conn = connect();
     $user = new User($conn);
     
-    $result = $user->createUser($email, $firstName, $middleName, $lastName, $suffix, $role);
+    try {
+        $result = $user->createUser($email, $firstName, $middleName, $lastName, $suffix, $role);
 
-    if ($result['success']) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Signup successful! Please check your credentials.',
-            'userId' => $result['userId'],
-            'tempPassword' => $result['tempPassword']
-        ]);
-    } else {
+        if ($result['success']) {
+            // Log audit trail for successful user creation
+            $this->logSignupAudit($email, $role, $firstName, $lastName);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Signup successful! Please check your credentials.',
+                'userId' => $result['userId'],
+                'tempPassword' => $result['tempPassword']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]);
+        }
+    } catch (Exception $e) {
+        error_log("Signup error: " . $e->getMessage());
         echo json_encode([
             'success' => false,
-            'message' => $result['message']
+            'message' => $e->getMessage()
         ]);
     }
-} catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+
+    }
+
+    private function logSignupAudit($email, $role, $firstName, $lastName) {
+        // Get the creator's information (current logged-in user)
+        $creatorEmail = $_SESSION['email'] ?? 'System';
+        
+        // Map role number to text
+        $roleText = $this->mapRoleToText($role);
+        
+        // Construct the full name
+        $fullName = trim($firstName . ' ' . $lastName);
+        
+        // Create detailed audit message
+        $details = "New user created: $fullName ($email) - Role: $roleText by $creatorEmail";
+        
+        // Log to audit trail using BaseService method
+        BaseService::logAuditTrail('SIGNUP', $details);
+    }
+
+    private function mapRoleToText($roleNumber) {
+        switch ($roleNumber) {
+            case 1:
+                return 'Parent';
+            case 2:
+                return 'Brgy Health Worker';
+            case 3:
+                return 'Administrator';
+            default:
+                return 'Unknown';
+        }
+    }
 }
+
+$service = new SignupService();
+$service->run();
+
+?>

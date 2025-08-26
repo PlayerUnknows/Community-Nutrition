@@ -281,24 +281,22 @@ class SessionManager {
   async logout() {
     try {
       this.isLoggingOut = true;
-      console.log("Initiating logout process...");
+  
 
       // Determine the correct path based on the current page location
       let logoutUrl;
 
       if (window.location.pathname.includes("/view/")) {
         // If we're in the /view/ directory structure
-        logoutUrl = "../../src/services/logout_handler.php";
+        logoutUrl = "../../src/controllers/UserController.php?action=logout";
       } else if (window.location.pathname.includes("/src/")) {
         // If we're in another src subdirectory
-        logoutUrl = "../services/logout_handler.php";
+        logoutUrl = "../../src/controllers/UserController.php?action=logout";
       } else {
         // Default path (for root or unknown locations)
-        logoutUrl = "/src/services/logout_handler.php";
+        logoutUrl = "../../src/controllers/UserController.php?action=logout";
       }
 
-      console.log("Current path:", window.location.pathname);
-      console.log("Using logout URL:", logoutUrl);
 
       // Show loading state
       Swal.fire({
@@ -328,7 +326,7 @@ class SessionManager {
       });
 
       const data = await response.json();
-      console.log("Logout response:", data);
+
 
       await Swal.fire({
         title: "Logged Out",

@@ -380,4 +380,4 @@ require_once '../includes/header.php';
 
 <!-- Scripts -->
 
-<script src="../script/monitoring.js"></script>
+<script src="../script/monitoring/monitoring.js"></script>

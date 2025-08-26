@@ -14,7 +14,6 @@ $(document).ready(function () {
     "click",
     "#logoutButton, .logout-button, button:contains('Logout'), a:contains('Logout')",
     function (e) {
-      console.log("Logout button clicked");
       e.preventDefault();
 
       Swal.fire({
@@ -36,11 +35,10 @@ $(document).ready(function () {
         },
       }).then((result) => {
         if (result.isConfirmed) {
-          console.log("Logout confirmed");
-
+  
           // If session manager exists, use it for logout
           if (window.sessionManager) {
-            console.log("Using session manager for logout");
+
             window.sessionManager.isLoggingOut = true;
             window.sessionManager.logout();
             return;
@@ -53,9 +51,9 @@ $(document).ready(function () {
           // Get the correct path to logout_handler.php based on current location
           let basePath;
           if (window.location.pathname.includes("/view/")) {
-            basePath = "../../src/services/logout_handler.php";
+            basePath = "../../src/controllers/UserController.php?action=logout";
           } else {
-            basePath = "/src/services/logout_handler.php";
+            basePath = "../../src/controllers/UserController.php?action=logout";
           }
           console.log("Using logout endpoint:", basePath);
 

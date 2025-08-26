@@ -106,7 +106,7 @@ if ($debug) {
     <script src="node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
     <!-- Link to your separate JS file -->
-    <script src="/src/script/login.js"></script>
+    <script src="/src/script/user/login.js"></script>
 
     <!-- For service worker and caching
     <script src="/src/script/sw-reg.js"></script>-->

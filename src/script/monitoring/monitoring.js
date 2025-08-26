@@ -312,7 +312,8 @@ window.MonitoringModule = (function () {
           },
         ],
         ajax: {
-          url: "../services/fetch_monitoring.php",
+          url: "../controllers/MonitoringController.php?action=fetchAllMonitoring",
+          method: "GET",
           dataSrc: function (json) {
             return json.status === "success" ? json.data : [];
           },
@@ -385,7 +386,7 @@ window.MonitoringModule = (function () {
     // Add export handler
     $("#exportMonitoringBtn").on("click", function () {
       $.ajax({
-        url: "../services/export_monitoring.php",
+        url: "../controllers/MonitoringController.php?action=exportData",
         method: "GET",
         xhrFields: {
           responseType: "blob",

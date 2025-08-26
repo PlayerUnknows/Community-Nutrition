@@ -1,87 +1,82 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
-require_once __DIR__ . '/../../config/dbcon.php';
+require_once __DIR__ . '/../../core/BaseService.php';
 require_once __DIR__ . '/../../models/User.php';
 
-header('Content-Type: application/json');
-session_start();
+class UpdateProfileService extends BaseService{
 
-try {
-    // Get the POST data
-    $newEmail = $_POST['newEmail'] ?? null;
-    $currentPassword = $_POST['currentPassword'] ?? '';
-    $newPassword = $_POST['newPassword'] ?? null;
-
-    // Get current user's ID from session
-    $userId = $_SESSION['user_id'] ?? null;
-
-    if (!$userId) {
-        throw new Exception('User not authenticated');
-    }
-
-    // Create database connection and User model
-    $conn = connect();
-    $user = new User($conn);
-
-    // Verify current password first
-    $currentUser = $user->getUserById($userId);
-    if (!$currentUser || !password_verify($currentPassword, $currentUser['password'])) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Current password is incorrect'
-        ]);
-        exit;
-    }
-
-    // Prepare update data
-    $updates = [];
-    if ($newEmail && $newEmail !== $currentUser['email']) {
-        // Check if email already exists
-        if ($user->emailExists($newEmail)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Email address is already in use'
-            ]);
-            exit;
+    public function run(){
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
-        $updates['email'] = $newEmail;
-    }
+        $this->requireMethod('POST');
 
-    if ($newPassword) {
-        $updates['password'] = password_hash($newPassword, PASSWORD_BCRYPT);
-    }
+        $newEmail = $_POST['newEmail'] ?? null;
+        $currentPassword = $_POST['currentPassword'] ?? '';
+        $newPassword = $_POST['newPassword'] ?? null;
 
-    // If there are updates to make
-    if (!empty($updates)) {
-        $result = $user->updateProfile($userId, $updates);
-        if ($result) {
-            // Update session email if email was changed
-            if (isset($updates['email'])) {
-                $_SESSION['email'] = $updates['email'];
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if (!$userId) {
+            $this->respondError('User not authenticated');
+        }
+
+        $user = new User($this->dbcon);
+
+        $currentUser = $user->getUserById($userId);
+        if (!$currentUser) {
+            $this->respondError('User not found');
+        }
+
+        // Verify current password first
+        if (!$currentUser || !password_verify($currentPassword, $currentUser['password'])) {
+            $this->respondError('Current password is incorrect');
+        }
+        
+        // Store old values for audit trail
+        $oldEmail = $currentUser['email'];
+        $changes = [];
+
+        // Prepare update data
+        $updates = [];
+        if ($newEmail && $newEmail !== $currentUser['email']) {
+            // Check if email already exists
+            if ($user->emailExists($newEmail)) {
+                $this->respondError('Email address is already in use');
             }
-
-            echo json_encode([
-                'success' => true,
-                'message' => 'Profile updated successfully'
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to update profile'
-            ]);
+            $updates['email'] = $newEmail;
+            $changes[] = "Email: '$oldEmail' → '$newEmail'";
         }
-    } else {
-        echo json_encode([
-            'success' => true,
-            'message' => 'No changes were made'
-        ]);
+
+        if ($newPassword) {
+            $updates['password'] = password_hash($newPassword, PASSWORD_BCRYPT);
+            $changes[] = "Password: [changed]";
+        }
+
+        // If there are updates to make
+        if (!empty($updates)) {
+            $result = $user->updateProfile($userId, $updates);
+            if ($result) {
+                // Update session email if email was changed
+                if (isset($updates['email'])) {
+                    $_SESSION['email'] = $updates['email'];
+                }
+
+                $auditDetails = 'Profile updated for user: ' . $currentUser['email'];
+                if (!empty($changes)) {
+                    $auditDetails .= ' | Changes: ' . implode(', ', $changes);
+                }
+                $this->respondSuccessWithAudit('Profile updated successfully', 'Profile updated successfully', 'UPDATE', $auditDetails);
+            } else {
+                $this->respondError('Failed to update profile');
+            }
+        } else {
+            $this->respondSuccess('No changes were made');
+        }
     }
-} catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
 }
+
+$service = new UpdateProfileService();
+$service->run();
+?>

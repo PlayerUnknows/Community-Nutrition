@@ -31,7 +31,13 @@ class AuditTrail {
         // Map actions to audit trail constants
         $auditAction = $this->mapAction($action);
         
-        return logAuditTrail($userId, $username, $auditAction, $details);
+        // Debug logging
+        error_log("AuditTrail::log - Action: $action, Mapped: $auditAction, UserId: $userId, Username: $username");
+        
+        $result = logAuditTrail($userId, $username, $auditAction, $details);
+        error_log("AuditTrail::log - Result: " . ($result ? 'success' : 'failed'));
+        
+        return $result;
     }
 
     private function mapAction($action) {

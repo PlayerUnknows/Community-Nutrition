@@ -1,15 +1,16 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-require_once __DIR__ . '/../../config/dbcon.php';
+require_once __DIR__ . '/../../core/BaseService.php';
 require_once __DIR__ . '/../../models/User.php';
 
-header('Content-Type: application/json');
-session_start();
+class LoginService extends BaseService {
+public function run() {
+     // Start session if not already started
+     if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    $this->requireMethod('POST');
 
-try {
     $login = $_POST['login'] ?? $_POST['email']; // Support both login and email keys
     $password = $_POST['password'];
 
@@ -44,9 +45,11 @@ try {
             'message' => 'Invalid login credentials.'
         ]);
     }
-} catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error during login. Please try again.'
-    ]);
 }
+
+}
+
+$service = new LoginService();
+$service->run();
+
+?>

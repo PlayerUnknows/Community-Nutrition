@@ -1,28 +1,42 @@
 <?php
 require_once __DIR__ . '/../models/MonitoringModel.php';
 
-class MonitoringController {
+require_once '../core/BaseController.php';
+
+class MonitoringController extends BaseController {
     private $model;
 
     public function __construct() {
+        parent::__construct();
         $this->model = new MonitoringModel();
     }
 
+  
     public function fetchAllMonitoring() {
-        // error_log("Fetching all monitoring records...");
-        $records = $this->model->getAllMonitoringRecords();
+        $serviceUrl = __DIR__ . '/../services/MonitoringServices/fetch_monitoring.php';
+        $getData = [];
+        $response = $this->serviceManager->call($serviceUrl, $getData, 'GET');
         
-        if ($records !== false) {
-            $response = ['status' => 'success', 'data' => $records];
-            error_log("Sending response with " . count($records) . " records");
-        } else {
-            $response = ['status' => 'error', 'message' => 'Failed to fetch monitoring records'];
-            error_log("Error: Failed to fetch monitoring records");
-        }
-        
-        header('Content-Type: application/json');
-        echo json_encode($response);
+        $this->respond($response);
     }
+
+    public function exportData() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        // Add audit logging
+        $this->auditTrail->log('export', "User exported monitoring data successfully");
+        
+        // Call the service directly - it will handle CSV output
+        $serviceUrl = __DIR__ . '/../services/MonitoringServices/export_monitoring.php';
+        include $serviceUrl;
+            
+    }
+
+
+
+
+
 
     public function getMonitoringDetails() {
         header('Content-Type: application/json');
@@ -54,64 +68,6 @@ class MonitoringController {
         } catch (Exception $e) {
             error_log("Error in getMonitoringDetails: " . $e->getMessage());
             echo json_encode(['status' => 'error', 'message' => 'Failed to fetch record details']);
-        }
-    }
-
-    public function exportData() {
-        error_log("Starting data export in controller...");
-        
-        $records = $this->model->exportMonitoringData();
-        if (!$records) {
-            error_log("No records found for export");
-            return false;
-        }
-        
-        try {
-            error_log("Processing " . count($records) . " records for export");
-            
-            // Generate filename
-            $filename = "monitoring_data_" . date('Y-m-d_H-i-s') . ".csv";
-            
-            // Log the export
-            require_once __DIR__ . '/../services/audit_trail.php';
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-            if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
-                logFileExport(
-                    $_SESSION['user_id'],
-                    $_SESSION['email'],
-                    $filename,
-                    'CSV',
-                    'Monitoring Data'
-                );
-            }
-            
-            // Set headers for CSV download
-            header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
-            
-            // Create output stream
-            $output = fopen('php://output', 'w');
-            
-            // Add UTF-8 BOM for Excel compatibility
-            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            // Write headers
-            fputcsv($output, array_keys($records[0]), ',', '"', '\\');
-            
-            // Write data
-            foreach ($records as $record) {
-                fputcsv($output, $record, ',', '"', '\\');
-            }
-            
-            fclose($output);
-            error_log("CSV file generated successfully");
-            return true;
-            
-        } catch (Exception $e) {
-            error_log("Error generating CSV: " . $e->getMessage());
-            return false;
         }
     }
 
@@ -258,4 +214,46 @@ class MonitoringController {
             echo json_encode(['status' => 'error', 'message' => 'Import failed: ' . $e->getMessage()]);
         }
     }
+
+    // Handle incoming requests
+    public function handleRequest(){
+        if (isset($_GET['action'])) {
+            switch ($_GET['action']) {
+                case 'fetchAllMonitoring':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $this->fetchAllMonitoring();
+                    }
+                    break;
+                case 'getMonitoringDetails':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $this->getMonitoringDetails();
+                    }
+                    break;
+                case 'getPatientCheckups':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $this->getPatientCheckups();
+                    }
+                    break;
+                case 'importData':
+                    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $this->importData();
+                    }
+                    break;
+                case 'downloadTemplate':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $this->downloadTemplate();
+                    }
+                    break;
+                case 'exportData':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $this->exportData();
+                    }
+                    break;
+            }
+        }
+    }
 }
+
+// Instantiate the controller and handle the request
+$controller = new MonitoringController();
+$controller->handleRequest();

@@ -1,7 +1,6 @@
 <?php
 
-class User
-{
+class User {
     private $conn;
 
     // Constants for role-specific ID prefixes
@@ -11,64 +10,48 @@ class User
         3 => 'ADM'   // Admin
     ];
 
-    public function __construct($db)
-    {
+    public function __construct($db) {
         $this->conn = $db;
     }
 
     // Create new user with role
-    public function createUser($email, $firstName, $middleName, $lastName, $suffix, $role)
-    {
-        try {
-            // Generate a unique role-specific ID
-            $userId = $this->generateRoleSpecificId($role);
+    public function createUser($email, $firstName, $middleName, $lastName, $suffix, $role) {
+        // Generate a unique role-specific ID
+        $userId = $this->generateRoleSpecificId($role);
 
-            // Generate a temporary password
-            $tempPassword = $this->generateTemporaryPassword();
+        // Generate a temporary password
+        $tempPassword = $this->generateTemporaryPassword();
 
-            $sql = "INSERT INTO account_info (user_id, email, first_name, middle_name, last_name, suffix, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $this->conn->prepare($sql);
-            $result = $stmt->execute([
-                $userId,
-                $email,
-                $firstName,
-                $middleName,
-                $lastName,
-                $suffix,
-                password_hash($tempPassword, PASSWORD_BCRYPT),
-                $role
-            ]);
+        $sql = "INSERT INTO account_info (user_id, email, first_name, middle_name, last_name, suffix, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        $result = $stmt->execute([
+            $userId,
+            $email,
+            $firstName,
+            $middleName,
+            $lastName,
+            $suffix,
+            password_hash($tempPassword, PASSWORD_BCRYPT),
+            $role
+        ]);
 
-            if ($result) {
-                // Log the account creation in audit trail
-                require_once __DIR__ . '/../services/audit_trail.php';
-                logUserAuth($userId, $email, AUDIT_REGISTER);
-
-                // Return both the user ID and temporary password
-                return [
-                    'success' => true,
-                    'userId' => $userId,
-                    'tempPassword' => $tempPassword
-                ];
-            }
-
+        if ($result) {
+            // Return both the user ID and temporary password
             return [
-                'success' => false,
-                'message' => 'Failed to create account'
+                'success' => true,
+                'userId' => $userId,
+                'tempPassword' => $tempPassword
             ];
-        } catch (PDOException $e) {
-            // Handle duplicate email error specifically
-            if ($e->getCode() == '23000') { // SQLSTATE for unique constraint violation
-                throw new Exception('The email address is already in use.');
-            }
-            // Rethrow other exceptions
-            throw $e;
         }
+
+        return [
+            'success' => false,
+            'message' => 'Failed to create account'
+        ];
     }
 
     // Generate role-specific ID with prefix and primary key
-    private function generateRoleSpecificId($role)
-    {
+    private function generateRoleSpecificId($role){
         // Get the prefix based on role
         $prefix = self::ID_PREFIX[$role] ?? 'USR'; // Default to 'USR' if role not found
 
@@ -83,8 +66,7 @@ class User
     }
 
     // Generate a random temporary password
-    private function generateTemporaryPassword()
-    {
+    private function generateTemporaryPassword(){
         $length = 12;
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
         $password = '';
@@ -97,8 +79,7 @@ class User
     }
 
     // Get the next primary key value from the database
-    private function getNextPrimaryKey()
-    {
+    private function getNextPrimaryKey(){
         $sql = "SELECT AUTO_INCREMENT 
                 FROM INFORMATION_SCHEMA.TABLES 
                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'account_info'";
@@ -108,8 +89,7 @@ class User
     }
 
     // Login user
-    public function login($loginIdentifier, $password)
-    {
+    public function login($loginIdentifier, $password){
         $sql = "SELECT * FROM account_info WHERE email = ? OR user_id = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$loginIdentifier, $loginIdentifier]);
@@ -133,9 +113,6 @@ class User
             $_SESSION['role'] = $user['role'];
             $_SESSION['login_time'] = time();
 
-            require_once __DIR__ . '/../services/audit_trail.php';
-            logUserAuth($user['user_id'], $user['email'], AUDIT_LOGIN);
-
             $redirectPage = $this->getRedirectPage($user['role']);
             return [
                 'user_id' => $user['user_id'],
@@ -148,12 +125,8 @@ class User
     }
 
     // Logout user
-    public function logout()
-    {
+    public function logout() {
         if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
-            require_once __DIR__ . '/../services/audit_trail.php';
-            logUserAuth($_SESSION['user_id'], $_SESSION['email'], AUDIT_LOGOUT);
-
             // Clear all session data
             session_unset();
             session_destroy();
@@ -166,8 +139,7 @@ class User
     }
 
     // Determine redirect page based on role number
-    private function getRedirectPage($role)
-    {
+    private function getRedirectPage($role){
         switch ($role) {
             case 3:
                 return '../src/view/admin.php';
@@ -178,48 +150,35 @@ class User
     }
 
     // Fetch user by ID
-    public function getUserById($id)
-    {
+    public function getUserById($id){
         $sql = "SELECT * FROM account_info WHERE user_id = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateProfile($userId, $updates)
-    {
-        try {
-            $setClauses = [];
-            $params = [];
+    public function updateProfile($userId, $updates){
+        $setClauses = [];
+        $params = [];
 
-            foreach ($updates as $field => $value) {
-                $setClauses[] = "$field = ?";
-                $params[] = $value;
-            }
-
-            // Add userId to params
-            $params[] = $userId;
-
-            $sql = "UPDATE account_info SET " . implode(', ', $setClauses) . " WHERE user_id = ?";
-            $stmt = $this->conn->prepare($sql);
-
-            return $stmt->execute($params);
-        } catch (PDOException $e) {
-            error_log("Error updating profile: " . $e->getMessage());
-            return false;
+        foreach ($updates as $field => $value) {
+            $setClauses[] = "$field = ?";
+            $params[] = $value;
         }
+
+        // Add userId to params
+        $params[] = $userId;
+
+        $sql = "UPDATE account_info SET " . implode(', ', $setClauses) . " WHERE user_id = ?";
+        $stmt = $this->conn->prepare($sql);
+
+        return $stmt->execute($params);
     }
 
-    public function emailExists($email)
-    {
-        try {
-            $sql = "SELECT COUNT(*) FROM account_info WHERE email = ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$email]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log("Error checking email existence: " . $e->getMessage());
-            return false;
-        }
+    public function emailExists($email){
+        $sql = "SELECT COUNT(*) FROM account_info WHERE email = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$email]);
+        return $stmt->fetchColumn() > 0;
     }
 }

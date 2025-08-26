@@ -351,7 +351,7 @@
 </script>
 
 <!-- Your custom scripts -->
-<script src="/src/script/signup.js"></script>
+<script src="/src/script/user/signup.js"></script>
 <script src="/src/script/loader.js"></script>
 
 </body>

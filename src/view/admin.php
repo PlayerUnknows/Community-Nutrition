@@ -256,14 +256,14 @@ require_once __DIR__ . '/../includes/header.php';
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
     <!-- Custom Scripts - Load in specific order -->
-    <script src="../script/monitoring.js"></script>
+    <script src="../script/monitoring/monitoring.js"></script>
     <script src="../script/bmi_statistics.js"></script>
     <script src="../script/audit_trail.js"></script>
     <script src="../script/appointments.js"></script>
-    <script src="../script/users.js"></script>
+    <script src="../script/user/users.js"></script>
     <script src="../script/overall_report.js"></script>
     <script src="../script/dropdrown.js"></script>
-    <script src="../script/logout.js"></script>
+    <script src="../script/user/logout.js"></script>
     <script src="../script/session.js"></script>
     <script src="../script/admin.js"></script>
 

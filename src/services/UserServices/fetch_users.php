@@ -1,43 +1,39 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+require_once __DIR__ . '/../../core/BaseService.php';
 
-require_once __DIR__ . '/../../config/dbcon.php';
+class FetchUsersService extends BaseService{
+    public function run(){
+        $this->requireMethod('GET');
 
-header('Content-Type: application/json');
+        // Order by created_at DESC
+        $stmt = $this->dbcon->prepare("SELECT * FROM account_info ORDER BY created_at DESC");
+        $stmt->execute();
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-try {
-    $conn = connect();
+        // Map role number to text
+        foreach ($users as &$user) {
+            $user['role_text'] = $this->mapRoleToText($user['role']);
+        }
 
-    // Get all users
-    $query = "SELECT 
-        user_id,
-        email,
-        CASE role
-            WHEN '1' THEN 'Parent'
-            WHEN '2' THEN 'Brgy Health Worker'
-            WHEN '3' THEN 'Administrator'
-            ELSE role
-        END AS role,
-        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
-        FROM account_info
-        ORDER BY created_at DESC";
+        $this->respondSuccess($users, 'Users fetched successfully');
+    }
 
-    $stmt = $conn->prepare($query);
-    $stmt->execute();
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    private function mapRoleToText($roleNumber) {
+        switch ($roleNumber) {
+            case 1:
+                return 'Parent';
 
-    echo json_encode([
-        'success' => true,
-        'data' => $users
-    ]);
-} catch (Exception $e) {
-    error_log('Fetch users error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Failed to fetch users: ' . $e->getMessage(),
-        'data' => []
-    ]);
+            case 2:
+                return 'Brgy Health Worker';
+            case 3:
+                return 'Administrator';
+            default:
+                return 'Unknown';
+        }
+    }
 }
+
+$service = new FetchUsersService();
+$service->run();
+
+?>

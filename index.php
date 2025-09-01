@@ -1,4 +1,7 @@
 <?php
+// Include security configuration first (temporarily disabled for testing)
+// require_once __DIR__ . '/src/config/security.php';
+
 // Debug flag - set to false in production
 $debug = false;
 

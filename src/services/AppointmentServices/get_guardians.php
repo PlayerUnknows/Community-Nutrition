@@ -13,10 +13,10 @@ class GetGuardiansService extends BaseService {
       $patientId = isset($_POST['patient_id']) ? $_POST['patient_id'] : 
                   (isset($_POST['user_id']) ? $_POST['user_id'] : null);
                   
-      if (empty($patientId)) {
-          $this->respondError('Patient ID is required');
-          return;
-      }
+                           if (empty($patientId)) {
+            echo json_encode(['success' => false, 'message' => 'Patient ID is required']);
+            return;
+        }
       
       // Clean the patient ID - remove any extra text after the actual ID
       // Patient ID format is typically PAT followed by numbers
@@ -24,20 +24,20 @@ class GetGuardiansService extends BaseService {
       if (preg_match('/^(PAT\d+)/', $patientId, $matches)) {
           $patientId = $matches[1];
      
-      } else {
+                           } else {
 
-          $this->respondError('Invalid patient ID format. Please use format: PAT followed by numbers (e.g., PAT202504040045)');
-          return;
-      }
+            echo json_encode(['success' => false, 'message' => 'Invalid patient ID format. Please use format: PAT followed by numbers (e.g., PAT202504040045)']);
+            return;
+        }
   
       try {
           // Use the model's methods instead of accessing private dbcon directly
           $patient = $appointment->getPatientById($patientId);
           
-          if (!$patient) {
-              $this->respondError('Patient ID not found: ' . $patientId);
-              return;
-          }
+                                           if (!$patient) {
+                echo json_encode(['success' => false, 'message' => 'Patient ID not found: ' . $patientId]);
+                return;
+            }
           
           // Get the patient_fam_id from the patient record
           $patientFamId = $patient['patient_fam_id']; 
@@ -50,24 +50,24 @@ class GetGuardiansService extends BaseService {
               $father = trim($guardian['father_fname'] . ' ' . $guardian['father_lname']);
               $mother = trim($guardian['mother_fname'] . ' ' . $guardian['mother_lname']);
               
-              // Ensure at least one guardian is available
-              if (empty($father) && empty($mother)) {
-                  $this->respondError('Guardian information is incomplete for this patient');
-                  return;
-              }
-              
-              // Return the guardian information
-              $response = [
-                  'father' => $father,
-                  'mother' => $mother,
-              ];
-              echo json_encode($response);
-          } else {
-              $this->respondError('No guardians found for this patient');
-          }
-      } catch (Exception $e) {
-          $this->respondError('Failed to fetch guardians: ' . $e->getMessage(), 500);
-      }
+                                                           // Ensure at least one guardian is available
+                if (empty($father) && empty($mother)) {
+                    echo json_encode(['success' => false, 'message' => 'Guardian information is incomplete for this patient']);
+                    return;
+                }
+                
+                // Return the guardian information
+                $response = [
+                    'father' => $father,
+                    'mother' => $mother,
+                ];
+                echo json_encode(['success' => true, 'data' => $response, 'message' => 'Guardian information fetched successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No guardians found for this patient']);
+            }
+                           } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Failed to fetch guardians: ' . $e->getMessage()]);
+        }
     }
 }
 $service = new GetGuardiansService();

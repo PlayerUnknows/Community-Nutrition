@@ -6,4 +6,4 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once INCLUDES_PATH . 'check_auth.php';
 require_once INCLUDES_PATH . 'check_admin.php';
-?> 
+?>

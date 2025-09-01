@@ -92,7 +92,7 @@ var appointmentManager = {
     });
 
     // Handle length change
-    $("#appointmentsPerPage").on("change", function () {
+    $("#appointmentsPerPage").on("change", function () { 
       table.page.len($(this).val()).draw();
     });
 
@@ -115,7 +115,7 @@ var appointmentManager = {
       const appointmentId = $(this).data("id");
       // Get appointment details
       $.ajax({
-        url: "/src/controllers/AppointmentController.php?action=getAppointment",
+        url: "/src/controllers/AppointmentController.php?action=getAppointmentToEdit",
         type: "GET",
         data: { id: appointmentId },
         success: function (appointment) {
@@ -406,6 +406,20 @@ $(document).ready(function () {
         form.querySelectorAll(".invalid-feedback").forEach((feedback) => {
           feedback.style.display = "none";
         });
+        
+        // Reset patient validation message
+        const validationMessage = document.getElementById("patient-validation-message");
+        if (validationMessage) {
+          validationMessage.style.display = "none";
+          validationMessage.innerHTML = "";
+        }
+        
+        // Hide guardian container
+        const guardianContainer = document.getElementById("guardian_container");
+        if (guardianContainer) {
+          guardianContainer.style.display = "none";
+          guardianContainer.innerHTML = "";
+        }
       }
 
       const saveButton = document.getElementById("saveAppointment");
@@ -472,6 +486,32 @@ $(document).ready(function () {
         }
       }
 
+      // Special validation for user_id (patient ID)
+      if (inputName === "user_id") {
+        const patientIdPattern = /^PAT\d+$/;
+        if (!patientIdPattern.test(value)) {
+          input.classList.add("is-invalid");
+          if (feedbackEl && feedbackEl.classList.contains("invalid-feedback")) {
+            feedbackEl.textContent = "Please enter a valid patient ID (PAT followed by numbers)";
+            feedbackEl.style.display = "block";
+          }
+          
+          // Hide guardian container for invalid format
+          const guardianContainer = document.getElementById("guardian_container");
+          if (guardianContainer) {
+            guardianContainer.style.display = "none";
+            guardianContainer.innerHTML = "";
+          }
+          
+          return false;
+        }
+        
+        // Check if patient exists in database (only if format is valid)
+        if (patientIdPattern.test(value)) {
+          debouncedCheckPatient(value, input);
+        }
+      }
+
       // If all validations pass
       input.classList.add("is-valid");
       if (feedbackEl && feedbackEl.classList.contains("invalid-feedback")) {
@@ -479,6 +519,130 @@ $(document).ready(function () {
       }
       return true;
     }
+
+    // Debounce function to limit API calls
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Function to check if patient exists in database
+    function checkPatientExists(patientId, inputElement) {
+      const validationMessage = document.getElementById("patient-validation-message");
+      const guardianContainer = document.getElementById("guardian_container");
+      
+      // Show loading state
+      validationMessage.innerHTML = '<div class="text-info"><i class="fas fa-spinner fa-spin"></i> Checking patient ID...</div>';
+      validationMessage.style.display = "block";
+      
+      // Hide guardian container while checking
+      if (guardianContainer) {
+        guardianContainer.style.display = "none";
+      }
+      
+      $.ajax({
+        url: "/src/controllers/AppointmentController.php",
+        type: "POST",
+        data: {
+          action: "checkPatientExists",
+          user_id: patientId
+        },
+        success: function(response) {
+          if (response.exists) {
+            // Patient exists - show success message
+            validationMessage.innerHTML = '<div class="text-success"><i class="fas fa-check-circle"></i> ' + response.message + '</div>';
+            inputElement.classList.remove("is-invalid");
+            inputElement.classList.add("is-valid");
+            
+            // Auto-fill patient name if available
+            if (response.patient_name) {
+              const fullNameField = document.getElementById("full_name");
+              if (fullNameField && !fullNameField.value) {
+                fullNameField.value = response.patient_name;
+              }
+            }
+            
+            // Show guardian dropdown for existing patient
+            if (guardianContainer) {
+              guardianContainer.style.display = "block";
+              // Trigger guardian lookup
+              loadGuardians(patientId);
+            }
+          } else {
+            // Patient doesn't exist - show error message
+            validationMessage.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-circle"></i> ' + response.message + '</div>';
+            inputElement.classList.remove("is-valid");
+            inputElement.classList.add("is-invalid");
+            
+            // Hide guardian container for non-existing patient
+            if (guardianContainer) {
+              guardianContainer.style.display = "none";
+            }
+          }
+        },
+        error: function() {
+          validationMessage.innerHTML = '<div class="text-warning"><i class="fas fa-exclamation-triangle"></i> Unable to verify patient ID</div>';
+          
+          // Hide guardian container on error
+          if (guardianContainer) {
+            guardianContainer.style.display = "none";
+          }
+        }
+      });
+    }
+
+    // Function to load guardians for a patient
+    function loadGuardians(patientId) {
+      const guardianContainer = document.getElementById("guardian_container");
+      
+      if (!guardianContainer) return;
+      
+      // First, get the guardian data
+      $.ajax({
+        url: "/src/controllers/AppointmentController.php",
+        type: "POST",
+        data: {
+          action: "getGuardians",
+          user_id: patientId
+        },
+        success: function(response) {
+          if (response.father || response.mother) {
+            // Create guardian dropdown with all options already loaded
+            let guardianHtml = '<label class="form-label">Guardian</label>';
+            guardianHtml += '<select class="form-control" id="guardian_select" name="guardian">';
+            guardianHtml += '<option value="">Select a guardian</option>';
+            
+            if (response.father && response.father.trim()) {
+              guardianHtml += '<option value="' + response.father + '">' + response.father + ' (Father)</option>';
+            }
+            
+            if (response.mother && response.mother.trim()) {
+              guardianHtml += '<option value="' + response.mother + '">' + response.mother + ' (Mother)</option>';
+            }
+            
+            guardianHtml += '</select>';
+            guardianHtml += '<div class="form-text">Select the guardian who will accompany the patient</div>';
+            
+            guardianContainer.innerHTML = guardianHtml;
+          } else {
+            guardianContainer.innerHTML = '<div class="text-warning"><i class="fas fa-exclamation-triangle"></i> No guardian information available for this patient</div>';
+          }
+        },
+        error: function() {
+          guardianContainer.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Failed to load guardian information</div>';
+        }
+      });
+    }
+
+    // Debounced version of checkPatientExists
+    const debouncedCheckPatient = debounce(checkPatientExists, 500);
 
     // Function to validate the entire form
     function validateForm() {
@@ -492,6 +656,19 @@ $(document).ready(function () {
             isValid = false;
           }
         });
+        
+        // Additional check: ensure patient exists if user_id is valid
+        const userIdInput = document.getElementById("user_id");
+        if (userIdInput && userIdInput.value.trim()) {
+          const patientIdPattern = /^PAT\d+$/;
+          if (patientIdPattern.test(userIdInput.value.trim())) {
+            // Check if the patient validation message shows an error
+            const validationMessage = document.getElementById("patient-validation-message");
+            if (validationMessage && validationMessage.innerHTML.includes("text-danger")) {
+              isValid = false;
+            }
+          }
+        }
       }
 
       return isValid;

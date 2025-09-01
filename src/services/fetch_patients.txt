@@ -1,5 +1,8 @@
 <?php
-include '../includes/dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
+
+$con = connect();
+
 
 // Initialize response array
 $response = array(
@@ -17,22 +20,26 @@ try {
     // Search functionality
     if (isset($_POST['search']['value']) && !empty($_POST['search']['value'])) {
         $searchValue = $_POST['search']['value'];
-        $searchQuery = " WHERE patient_fname LIKE '%$searchValue%' 
-                        OR patient_lname LIKE '%$searchValue%' 
-                        OR patient_id LIKE '%$searchValue%' 
-                        OR patient_food_restrictions LIKE '%$searchValue%' 
-                        OR patient_medical_history LIKE '%$searchValue%'";
+        $searchQuery = " WHERE patient_fname LIKE :search 
+                        OR patient_lname LIKE :search 
+                        OR patient_id LIKE :search 
+                        OR patient_food_restrictions LIKE :search 
+                        OR patient_medical_history LIKE :search";
     }
 
     // Get total records count
-    $stmt = mysqli_query($con, "SELECT COUNT(*) as total FROM patient_info");
-    $totalRecords = mysqli_fetch_assoc($stmt)['total'];
+    $stmt = $con->prepare("SELECT COUNT(*) as total FROM patient_info");
+    $stmt->execute();
+    $totalRecords = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     $response['recordsTotal'] = intval($totalRecords);
 
     // Get filtered records count
     if (!empty($searchQuery)) {
-        $stmt = mysqli_query($con, "SELECT COUNT(*) as total FROM patient_info" . $searchQuery);
-        $filteredRecords = mysqli_fetch_assoc($stmt)['total'];
+        $stmt = $con->prepare("SELECT COUNT(*) as total FROM patient_info" . $searchQuery);
+        $searchParam = "%$searchValue%";
+        $stmt->bindParam(':search', $searchParam);
+        $stmt->execute();
+        $filteredRecords = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         $response['recordsFiltered'] = intval($filteredRecords);
     } else {
         $response['recordsFiltered'] = $response['recordsTotal'];
@@ -51,11 +58,19 @@ try {
 
     // Final query
     $query = $baseQuery . $searchQuery . $orderBy . $limit;
-    $result = mysqli_query($con, $query);
+    $stmt = $con->prepare($query);
+    
+    if (!empty($searchQuery)) {
+        $searchParam = "%$searchValue%";
+        $stmt->bindParam(':search', $searchParam);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Format data for DataTables
     $data = array();
-    while ($row = mysqli_fetch_assoc($result)) {
+    foreach ($result as $row) {
         $data[] = array(
             'patient_fam_id' => $row['patient_fam_id'],
             'patient_id' => $row['patient_id'],

@@ -120,7 +120,8 @@ function checkForRedirectLoop($maxRedirects = 3, $timeWindow = 10)
     }
 
     // Check if this is an actual page load (not an AJAX call or asset request)
-    $isPageLoad = true;
+    $isPageLoad = !isset($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest';
 
     // If this is a true page load, increment the counter
     if ($isPageLoad) {
@@ -178,7 +179,7 @@ function handleRedirectLoop($errorMessage = "Too many redirects detected. Sessio
     }
 
     // Set a cookie to indicate we've reset the session
-    setcookie('session_reset_time', time(), time() + 300, '/');
+    setcookie('session_reset_time', (string)time(), time() + 300, '/');
 
     // For debugging: log this event
     logSessionError('Redirect loop detected. Resetting session.');

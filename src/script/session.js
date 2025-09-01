@@ -136,7 +136,6 @@ class SessionManager {
       timeSinceLastActivity < this.activityResetThreshold &&
       timeSinceLastReset >= this.activityResetThreshold
     ) {
-      console.log("Activity detected, resetting session timer");
       this.resetTimer();
     }
   }
@@ -191,11 +190,6 @@ class SessionManager {
           this.showWarning();
         }
 
-        console.log(
-          `Time until session expires: ${Math.floor(
-            timeUntilExpire / 60
-          )} minutes and ${timeUntilExpire % 60} seconds`
-        );
       }
     } catch (error) {
       console.error("Session check failed:", error);
@@ -262,13 +256,11 @@ class SessionManager {
       );
       const response = await fetch(endpoint);
       const data = await response.json();
-      console.log("Session reset response:", data);
 
       // Update last reset time
       this.lastResetTime = now;
 
       if (!data.success) {
-        console.warn("Session reset failed:", data.message);
         if (!data.session_data || !data.session_data.user_id) {
           this.handleSessionTimeout();
         }

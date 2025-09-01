@@ -43,20 +43,20 @@ class AuditTrail {
     private function mapAction($action) {
         switch (strtolower($action)) {
             case 'login':
-                return AUDIT_LOGIN;
+                return defined('AUDIT_LOGIN') ? AUDIT_LOGIN : 'LOGIN';
             case 'logout':
-                return AUDIT_LOGOUT;
+                return defined('AUDIT_LOGOUT') ? AUDIT_LOGOUT : 'LOGOUT';
             case 'signup':
             case 'register':
-                return AUDIT_REGISTER;
+                return defined('AUDIT_REGISTER') ? AUDIT_REGISTER : 'REGISTER';
             case 'create':
-                return AUDIT_CREATE;
+                return defined('AUDIT_CREATE') ? AUDIT_CREATE : 'CREATE';
             case 'update':
-                return AUDIT_UPDATE;
+                return defined('AUDIT_UPDATE') ? AUDIT_UPDATE : 'UPDATE';
             case 'delete':
-                return AUDIT_DELETE;
+                return defined('AUDIT_DELETE') ? AUDIT_DELETE : 'DELETE';
             case 'view':
-                return AUDIT_VIEW;
+                return defined('AUDIT_VIEW') ? AUDIT_VIEW : 'VIEW';
             default:
                 return strtoupper($action);
         }

@@ -1,0 +1,19 @@
+parameters:
+    # Paths to analyze
+    paths:
+        - src
+    
+    # Exclude paths (if needed)
+    excludePaths:
+        - src/websocket/*
+        - src/tools/*
+    
+    # Level of analysis (0-9, higher = more strict)
+    level: 5
+    
+    # Ignore specific errors if needed
+    ignoreErrors:
+        # Add specific error patterns to ignore here if needed
+    
+    # Disable some strict checks that might cause issues
+    treatPhpDocTypesAsCertain: false

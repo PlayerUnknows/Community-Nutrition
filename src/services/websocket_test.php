@@ -1,34 +1,35 @@
 <?php
 // WebSocket Connectivity Test Script
 
-// Check PHP WebSocket Extension
+function fail(string $message): void {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => $message
+    ], JSON_PRETTY_PRINT);
+    exit;
+}
+
+// Check PHP Sockets Extension
 if (!extension_loaded('sockets')) {
-    die(json_encode([
-        'success' => false, 
-        'message' => 'PHP Sockets extension not loaded. Please enable in php.ini.'
-    ]));
+    fail('PHP Sockets extension not loaded. Please enable in php.ini.');
 }
 
 // Check Ratchet Library
 $composerAutoloadPath = __DIR__ . '/../../vendor/autoload.php';
 if (!file_exists($composerAutoloadPath)) {
-    die(json_encode([
-        'success' => false, 
-        'message' => 'Composer dependencies not installed. Run "composer install".'
-    ]));
+    fail('Composer dependencies not installed. Run "composer install".');
 }
 
 // Test Database Connection
+$auditCount = 0;
 try {
-    require_once 'dbcon.php';
+    require_once __DIR__ . '/../config/dbcon.php';
     $conn = connect();
     $stmt = $conn->query("SELECT COUNT(*) FROM audit_trail");
-    $auditCount = $stmt->fetchColumn();
+    $auditCount = (int) $stmt->fetchColumn();
 } catch (Exception $e) {
-    die(json_encode([
-        'success' => false, 
-        'message' => 'Database connection failed: ' . $e->getMessage()
-    ]));
+    fail('Database connection failed: ' . $e->getMessage());
 }
 
 // WebSocket Server Configuration
@@ -39,19 +40,31 @@ $websocketConfig = [
 ];
 
 // Perform basic socket connection test
-$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-$result = socket_connect($socket, $websocketConfig['host'], $websocketConfig['port']);
+$connectionStatus = 'Not Connected';
+if ($socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) {
+    if (@socket_connect($socket, $websocketConfig['host'], $websocketConfig['port'])) {
+        $connectionStatus = 'Connected';
+    } else {
+        $connectionStatus = 'Failed: ' . socket_strerror(socket_last_error($socket));
+    }
+    socket_close($socket);
+} else {
+    $connectionStatus = 'Socket creation failed: ' . socket_strerror(socket_last_error());
+}
 
-$connectionStatus = $result ? 'Connected' : 'Not Connected';
-socket_close($socket);
+// Store raw checks
+$checks = [
+    'sockets_extension' => extension_loaded('sockets'),
+    'ratchet_library'   => file_exists($composerAutoloadPath),
+];
 
-// Prepare comprehensive diagnostic report
+// Build final report
 $diagnosticReport = [
     'success' => true,
     'message' => 'WebSocket environment looks good!',
     'php_version' => phpversion(),
-    'sockets_extension' => extension_loaded('sockets') ? 'Enabled' : 'Disabled',
-    'ratchet_library' => file_exists($composerAutoloadPath) ? 'Installed' : 'Not Installed',
+    'sockets_extension' => $checks['sockets_extension'] ? 'Enabled' : 'Disabled',
+    'ratchet_library'   => $checks['ratchet_library'] ? 'Installed' : 'Not Installed',
     'audit_trail_records' => $auditCount,
     'websocket_server' => [
         'host' => $websocketConfig['host'],
@@ -62,4 +75,3 @@ $diagnosticReport = [
 
 header('Content-Type: application/json');
 echo json_encode($diagnosticReport, JSON_PRETTY_PRINT);
-?>

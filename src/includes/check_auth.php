@@ -10,4 +10,4 @@ if (!isset($_SESSION['user_id'])) {
 function isAuthenticated() {
     return isset($_SESSION['user_id']);
 }
-?> 
+?>

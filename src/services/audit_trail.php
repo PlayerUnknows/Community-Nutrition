@@ -1,6 +1,25 @@
 <?php
 require_once __DIR__ . '/../config/dbcon.php';
 
+// Constants for audit trail actions
+define('AUDIT_LOGIN', 'LOGIN');
+define('AUDIT_LOGOUT', 'LOGOUT');
+define('AUDIT_REGISTER', 'REGISTER');
+define('AUDIT_CREATE', 'CREATE');
+define('AUDIT_UPDATE', 'UPDATE');
+define('AUDIT_DELETE', 'DELETE');
+define('AUDIT_VIEW', 'VIEW');
+
+// File operation constants
+define('AUDIT_FILE_DOWNLOAD', 'FILE_DOWNLOAD');
+define('AUDIT_FILE_EXPORT', 'FILE_EXPORT');
+define('AUDIT_FILE_IMPORT', 'FILE_IMPORT');
+
+// Event operation constants
+define('AUDIT_EVENT_CREATE', 'EVENT_CREATE');
+define('AUDIT_EVENT_UPDATE', 'EVENT_UPDATE');
+define('AUDIT_EVENT_DELETE', 'EVENT_DELETE');
+
 function logAuditTrail($userId, $username, $action, $details = '') {
     $conn = connect();
     
@@ -109,25 +128,6 @@ function getAuditTrails($filters = [], $limit = 100) {
         return [];
     }
 }
-
-// Constants for audit trail actions
-define('AUDIT_LOGIN', 'LOGIN');
-define('AUDIT_LOGOUT', 'LOGOUT');
-define('AUDIT_REGISTER', 'REGISTER');
-define('AUDIT_CREATE', 'CREATE');
-define('AUDIT_UPDATE', 'UPDATE');
-define('AUDIT_DELETE', 'DELETE');
-define('AUDIT_VIEW', 'VIEW');
-
-// File operation constants
-define('AUDIT_FILE_DOWNLOAD', 'FILE_DOWNLOAD');
-define('AUDIT_FILE_EXPORT', 'FILE_EXPORT');
-define('AUDIT_FILE_IMPORT', 'FILE_IMPORT');
-
-// Event operation constants
-define('AUDIT_EVENT_CREATE', 'EVENT_CREATE');
-define('AUDIT_EVENT_UPDATE', 'EVENT_UPDATE');
-define('AUDIT_EVENT_DELETE', 'EVENT_DELETE');
 
 // Function to log file downloads
 function logFileDownload($userId, $username, $filename, $fileType = '') {

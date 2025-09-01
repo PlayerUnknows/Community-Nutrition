@@ -10,4 +10,4 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== '3') {
 function isAdmin() {
     return isset($_SESSION['role']) && $_SESSION['role'] === '3';
 }
-?> 
+?>

@@ -10,7 +10,11 @@ class BaseService{
     
 
     public function __construct(){
-        header('Content-Type: application/json');
+        // Set proper headers for CORS
+      header('Access-Control-Allow-Origin: *');
+      header('Access-Control-Allow-Methods: POST');
+      header('Access-Control-Allow-Headers: Content-Type');
+      header('Content-Type: application/json');
 
         $this->dbcon = connect();
         if(!$this->dbcon) {

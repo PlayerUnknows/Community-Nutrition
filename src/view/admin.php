@@ -256,7 +256,6 @@ require_once __DIR__ . '/../includes/header.php';
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
     <!-- Custom Scripts - Load in specific order -->
-    <script src="../script/monitoring/monitoring.js"></script>
     <script src="../script/bmi_statistics.js"></script>
     <script src="../script/audit_trail.js"></script>
     <script src="../script/appointments.js"></script>

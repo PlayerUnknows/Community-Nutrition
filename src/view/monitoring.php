@@ -297,9 +297,9 @@ require_once '../includes/header.php';
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" id="viewHistoryBtn">
+                <!-- <button type="button" class="btn btn-info" id="viewHistoryBtn">
                     <i class="fas fa-history"></i> View History
-                </button>
+                </button> -->
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -366,6 +366,22 @@ require_once '../includes/header.php';
                             You can download the template using the "Download Template" button.
                         </small>
                     </div>
+                    <div class="alert alert-warning">
+                        <small>
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            <strong>Important:</strong> Make sure all patient names are filled in your CSV file. 
+                            Empty patient names will cause import to fail.
+                            <br>
+                            <a href="../tools/validate_csv.php" target="_blank" class="alert-link">
+                                <i class="fas fa-check-circle"></i> Validate your CSV file first
+                            </a>
+                            <br>
+                            <a href="../tools/fix_csv_headers.php" target="_blank" class="alert-link">
+                                <i class="fas fa-tools"></i> Fix CSV header issues (BOM/invisible characters)
+                            </a>
+
+                        </small>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -381,3 +397,8 @@ require_once '../includes/header.php';
 <!-- Scripts -->
 
 <script src="../script/monitoring/monitoring.js"></script>
+<script src="../script/monitoring/fetch_monitoring.js"></script>
+<script src="../script/monitoring/monitoring_user_other_details.js"></script>
+<script src="../script/monitoring/export_monitoring.js"></script>
+<script src="../script/monitoring/import_monitoring.js"></script>
+<script src="../script/monitoring/download_monitoring.js"></script>

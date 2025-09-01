@@ -2,13 +2,94 @@
 require_once __DIR__ . '/../config/dbcon.php';
 
 class MonitoringModel {
-    private $conn;
+    private $dbcon;
 
     public function __construct() {
-        $this->conn = connect();
+        $this->dbcon = connect();
     }
 
- 
+
+    public function fetchAllMonitoring() {
+        $query = "SELECT * FROM checkup_info ORDER BY checkup_prikey DESC";
+        $stmt = $this->dbcon->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function exportMonitoringDataModel() {
+        $query = "SELECT 
+            patient_name,
+            patient_id,
+            patient_fam_id,
+            age,
+            sex,
+            weight,
+            height,
+            bp,
+            temperature,
+            weight_category,
+            findings,
+            date_of_appointment,
+            time_of_appointment,
+            place,
+            finding_growth,
+            finding_bmi,
+            arm_circumference,
+            arm_circumference_status,
+            created_at
+        FROM checkup_info 
+        ORDER BY created_at DESC";
+
+        $stmt = $this->dbcon->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getImportQuery() {
+        return "INSERT INTO checkup_info (
+            patient_id, patient_fam_id, age, sex, weight, height, bp, temperature,
+            weight_category, findings, date_of_appointment, time_of_appointment,
+            place, finding_growth, finding_bmi, arm_circumference,
+            arm_circumference_status, patient_name, checkup_unique_id, created_at
+        ) VALUES (
+            :patient_id, :patient_fam_id, :age, :sex, :weight, :height, :bp, :temperature,
+            :weight_category, :findings, :date_of_appointment, :time_of_appointment,
+            :place, :finding_growth, :finding_bmi, :arm_circumference,
+            :arm_circumference_status, :patient_name, :checkup_unique_id, NOW()
+        )";
+    }
+
+
+    public function getMonitoringDetails($field, $useLike,$value){ 
+        $query = "SELECT 
+        checkup_prikey,
+        weight_category,
+        finding_bmi,
+        finding_growth,
+        height,
+        bp,
+        temperature,
+        arm_circumference,
+        arm_circumference_status,
+        findings,
+        date_of_appointment,
+        time_of_appointment,
+        place,
+        created_at,
+        weight
+    FROM checkup_info 
+    WHERE {$field} " . ($useLike ? "LIKE :value" : "= :value") . "
+    ORDER BY checkup_prikey DESC";
+
+    $stmt = $this->dbcon->prepare($query);
+
+    $stmt->bindParam(':value', $value, PDO::PARAM_STR);
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC); 
+    return $results;
+
+    }
+
     public function getPatientCheckups($patientId) {
         error_log("Getting checkups for patient ID: " . $patientId);
         
@@ -29,7 +110,7 @@ class MonitoringModel {
         ORDER BY date_of_appointment DESC, created_at DESC";
         
         try {
-            $stmt = $this->conn->prepare($query);
+            $stmt = $this->dbcon->prepare($query);
             $stmt->bindParam(':patientId', $patientId, PDO::PARAM_STR);
             $stmt->execute();
             
@@ -43,143 +124,5 @@ class MonitoringModel {
         }
     }
 
-    public function getMonitoringByPrikey($id) {
-        $query = "SELECT 
-            checkup_prikey,
-            weight_category,
-            finding_bmi,
-            finding_growth,
-            arm_circumference,
-            arm_circumference_status,
-            findings,
-            date_of_appointment,
-            time_of_appointment,
-            place,
-            created_at
-        FROM checkup_info 
-        WHERE checkup_prikey = :id";
-        
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error fetching by prikey: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function getMonitoringByUniqueId($id) {
-        $query = "SELECT 
-            checkup_prikey,
-            weight_category,
-            finding_bmi,
-            finding_growth,
-            height,
-            bp,
-            temperature,
-            arm_circumference,
-            arm_circumference_status,
-            findings,
-            date_of_appointment,
-            time_of_appointment,
-            place,
-            created_at,
-            height,
-            weight  
-        FROM checkup_info 
-        WHERE checkup_unique_id LIKE :id";
-        
-        try {
-            $stmt = $this->conn->prepare($query);
-            $pattern = $id . '%';
-            $stmt->bindParam(':id', $pattern, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error fetching by unique id: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function importMonitoringData($file) {
-        try {
-            $handle = fopen($file, 'r');
-            if (!$handle) {
-                throw new Exception('Could not open file');
-            }
-    
-            // Read headers
-            $headers = fgetcsv($handle);
-            if (!$headers) {
-                throw new Exception('Invalid CSV format');
-            }
-    
-            $this->conn->beginTransaction();
-            $successCount = 0;
-            $rowCount = 0;
-    
-            $query = "INSERT INTO checkup_info (
-                patient_id, patient_fam_id, age, sex, weight, height, bp, temperature,
-                weight_category, findings, date_of_appointment, time_of_appointment,
-                place, finding_growth, finding_bmi, arm_circumference,
-                arm_circumference_status,patient_name, checkup_unique_id, created_at
-            ) VALUES (
-                :patient_id, :patient_fam_id, :age, :sex, :weight, :height, :bp, :temperature,
-                :weight_category, :findings, :date_of_appointment, :time_of_appointment,
-                :place, :finding_growth, :finding_bmi, :arm_circumference,
-                :arm_circumference_status, :patient_name, :checkup_unique_id, NOW()
-            )";
-    
-            $stmt = $this->conn->prepare($query);
-    
-            // Skip header row and process data
-            while (($row = fgetcsv($handle)) !== false) {
-                $rowCount++;
-                if (count($row) !== count($headers)) {
-                    continue; // Skip invalid rows
-                }
-    
-                $data = array_combine($headers, $row);
-    
-                // Ensure patient_id exists
-                if (empty($data['patient_id'])) {
-                    error_log("Skipping row $rowCount: Missing patient_id");
-                    continue;
-                }
-    
-                // Generate checkup_unique_id with correct format
-                $current_datetime = date('YmdHis'); // YYYYMMDDHHMMSS format
-                $random_string = bin2hex(random_bytes(13)); // 8-character random string
-                $data['checkup_unique_id'] = $data['patient_id'] . '_' . $current_datetime . '_' . $random_string;
-    
-                try {
-                    $stmt->execute($data);
-                    $successCount++;
-                } catch (PDOException $e) {
-                    error_log("Error importing row $rowCount: " . $e->getMessage());
-                    continue;
-                }
-            }
-    
-            fclose($handle);
-            $this->conn->commit();
-    
-            return [
-                'status' => 'success',
-                'message' => "Successfully imported $successCount out of $rowCount records"
-            ];
-    
-        } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
-            }
-            return [
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ];
-        }
-    }
-    
+  
 }

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/MonitoringModel.php';
 
-require_once '../core/BaseController.php';
+require_once __DIR__ . '/../core/BaseController.php';
 
 class MonitoringController extends BaseController {
     private $model;
@@ -33,42 +33,42 @@ class MonitoringController extends BaseController {
             
     }
 
+    public function importData() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
-
-
+        // Add audit logging
+        $this->auditTrail->log('import', "User imported monitoring data successfully");
+        
+        $serviceUrl = __DIR__ . '/../services/MonitoringServices/import_monitoring.php';
+        $getData = [];
+        $response = $this->serviceManager->call($serviceUrl, $getData, 'POST');
+        
+        $this->respond($response);
+    }
 
 
     public function getMonitoringDetails() {
-        header('Content-Type: application/json');
-        
-        if (!isset($_GET['id'])) {
-            echo json_encode(['status' => 'error', 'message' => 'ID not provided']);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Check if required parameters are provided
+        if (!isset($_GET['field']) || !isset($_GET['useLike']) || !isset($_GET['value'])) {
+            $this->respondError('Missing required parameters: field, useLike, value');
             return;
         }
 
-        try {
-            $id = trim($_GET['id']);
-            error_log("Controller - Raw ID from GET: " . $id);
-            
-            // Check if the ID is numeric or a PAT format
-            if (is_numeric($id)) {
-                // Search by checkup_prikey
-                $record = $this->model->getMonitoringByPrikey($id);
-            } else {
-                // Search by checkup_unique_id
-                $record = $this->model->getMonitoringByUniqueId($id);
-            }
-            
-            if ($record) {
-                echo json_encode(['status' => 'success', 'data' => $record]);
-            } else {
-                error_log("Controller - No record found for ID: " . $id);
-                echo json_encode(['status' => 'error', 'message' => 'Record not found']);
-            }
-        } catch (Exception $e) {
-            error_log("Error in getMonitoringDetails: " . $e->getMessage());
-            echo json_encode(['status' => 'error', 'message' => 'Failed to fetch record details']);
-        }
+        $serviceUrl = __DIR__ . '/../services/MonitoringServices/get_monitoring_details.php';
+        $getData = [
+            'field' => $_GET['field'],
+            'useLike' => $_GET['useLike'],
+            'value' => $_GET['value']
+        ];
+        $response = $this->serviceManager->call($serviceUrl, $getData, 'GET');
+        
+        $this->respond($response);
     }
 
     public function getPatientCheckups() {
@@ -95,125 +95,17 @@ class MonitoringController extends BaseController {
     }
 
     public function downloadTemplate() {
-        $filename = 'monitoring_template.csv';
-        $headers = [
-            'patient_id',
-            'patient_fam_id',
-            'age',
-            'sex',
-            'weight',
-            'height',
-            'bp',
-            'temperature',
-            'weight_category',
-            'findings',
-            'date_of_appointment',
-            'time_of_appointment',
-            'place',
-            'finding_growth',
-            'finding_bmi',
-            'arm_circumference',
-            'arm_circumference_status',
-            'patient_name'  
-        ];
-
-        // Log the template download
-        require_once __DIR__ . '/../services/audit_trail.php';
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
-            logFileDownload(
-                $_SESSION['user_id'],
-                $_SESSION['email'],
-                $filename,
-                'CSV Template'
-            );
-        }
 
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        
-        $output = fopen('php://output', 'w');
-        fputcsv($output, $headers, ',', '"', '\\');
-        
-        // Add a sample row
-        $sampleRow = [
-            'PAT123',
-            'FAM123',
-            '5',
-            'M',
-            '20.5',
-            '110.2',
-            '90/60',
-            '36.5',
-            'Normal',
-            'Healthy',
-            date('Y-m-d'),
-            '09:00',
-            'Health Center',
-            'Normal',
-            'Normal',
-            '15.5',
-            'Normal',
-            'John Doe'
-        ];
-        fputcsv($output, $sampleRow, ',', '"', '\\');
-        fclose($output);
+        $this->auditTrail->log('download', "User downloaded monitoring template successfully");
+
+        // Call the service directly - it will handle CSV output
+        $serviceUrl = __DIR__ . '/../services/MonitoringServices/download_template.php';
+        include $serviceUrl;
     }
  
-
-    public function importData() {
-        header('Content-Type: application/json');
-        
-        if (!isset($_FILES['importFile']) || $_FILES['importFile']['error'] !== UPLOAD_ERR_OK) {
-            echo json_encode(['status' => 'error', 'message' => 'No file uploaded or upload error']);
-            return;
-        }
-
-        $file = $_FILES['importFile']['tmp_name'];
-        $originalFilename = $_FILES['importFile']['name'];
-        
-        try {
-            require_once __DIR__ . '/../services/audit_trail.php';
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-
-            $result = $this->model->importMonitoringData($file);
-            
-            // Log the import attempt
-            if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
-                logFileImport(
-                    $_SESSION['user_id'],
-                    $_SESSION['email'],
-                    $originalFilename,
-                    'Monitoring Data',
-                    $result['status'],
-                    $result['message']
-                );
-            }
-
-            if ($result['status'] === 'success') {
-                echo json_encode(['status' => 'success', 'message' => $result['message']]);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => $result['message']]);
-            }
-        } catch (Exception $e) {
-            // Log the failed import
-            if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
-                logFileImport(
-                    $_SESSION['user_id'],
-                    $_SESSION['email'],
-                    $originalFilename,
-                    'Monitoring Data',
-                    'error',
-                    'Import failed: ' . $e->getMessage()
-                );
-            }
-            echo json_encode(['status' => 'error', 'message' => 'Import failed: ' . $e->getMessage()]);
-        }
-    }
 
     // Handle incoming requests
     public function handleRequest(){

@@ -1,5 +1,2 @@
-
-version 4.6
-Updated part
-
-Admin.php = view users
+use 
+    (.\run-phpstan.bat) -> to test and dispaly errors

@@ -1,28 +1,15 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once '../models/Patient Profile/patient_model.php';
 
 class PatientController {
     public function getAllPatients() {
-        try {
             $patients = getPatients();
             echo json_encode([
                 'status' => 'success',
                 'data' => $patients
             ]);
-        } catch (Exception $e) {
-            error_log("Error in getAllPatients: " . $e->getMessage());
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Failed to fetch patients'
-            ]);
-        }
     }
-
     public function getPatientDetails($patientId) {
-        try {
             $patient = getPatientById($patientId);
             if ($patient) {
                 echo json_encode([
@@ -35,17 +22,10 @@ class PatientController {
                     'message' => 'Patient not found'
                 ]);
             }
-        } catch (Exception $e) {
-            error_log("Error in getPatientDetails: " . $e->getMessage());
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Failed to fetch patient details'
-            ]);
-        }
     }
 }
 
-// Handle incoming requests
+// // Handle incoming requests
 header('Content-Type: application/json');
 
 $controller = new PatientController();

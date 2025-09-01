@@ -1,10 +1,12 @@
 <?php
-class Appointment {
-    private $conn;
-    private $table = 'appointments';
 
-    public function __construct($db) {
-        $this->conn = $db;
+require_once __DIR__ . '/../config/dbcon.php';
+class Appointment {
+    private $dbcon;
+    private $table = 'appointments'; 
+
+    public function __construct() {
+        $this->dbcon = connect();
     }
 
     public function getAllAppointments() {
@@ -13,7 +15,7 @@ class Appointment {
                      CASE WHEN description LIKE '[CANCELLED]%' THEN 'cancelled' ELSE 'active' END as status 
                      FROM " . $this->table . " 
                      ORDER BY date ASC, time ASC";
-            $stmt = $this->conn->prepare($query);
+            $stmt = $this->dbcon->prepare($query);
             $stmt->execute();
             return $stmt;
         } catch (PDOException $e) {
@@ -32,7 +34,7 @@ class Appointment {
                   ORDER BY a.date ASC, a.time ASC";
 
         try {
-            $stmt = $this->conn->prepare($query);
+            $stmt = $this->dbcon->prepare($query);
             $stmt->execute();
             return $stmt;
         } catch (PDOException $e) {
@@ -42,39 +44,27 @@ class Appointment {
     }
 
     public function getAppointmentById($id) {
-        try {
             $query = "SELECT appointment_prikey, user_id, full_name, date, time, description,
                      CASE WHEN description LIKE '[CANCELLED]%' THEN 'cancelled' ELSE 'active' END as status 
                      FROM " . $this->table . " 
                      WHERE appointment_prikey = ?";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(1, $id);
+            $stmt = $this->dbcon->prepare($query);
+            $stmt->bindParam(1, $id, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt;
-        } catch (PDOException $e) {
-            error_log("Error in getAppointmentById: " . $e->getMessage());
-            throw $e;
-        }
     }
 
     public function createAppointment($user_id, $full_name, $date, $time, $description) {
-        try {
             $query = "INSERT INTO " . $this->table . " (user_id, full_name, date, time, description) 
                      VALUES (?, ?, ?, ?, ?)";
-            
-            $stmt = $this->conn->prepare($query);
+     
+            $stmt = $this->dbcon->prepare($query);
             $stmt->bindParam(1, $user_id);
             $stmt->bindParam(2, $full_name);
             $stmt->bindParam(3, $date);
             $stmt->bindParam(4, $time);
             $stmt->bindParam(5, $description);
-            
             return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error in createAppointment: " . $e->getMessage());
-            throw $e;
-        }
     }
 
     public function updateAppointment($id, $user_id, $full_name, $date, $time, $description) {
@@ -82,7 +72,7 @@ class Appointment {
             // First check if appointment is cancelled
             $checkQuery = "SELECT description FROM " . $this->table . " 
                          WHERE appointment_prikey = ? AND description NOT LIKE '[CANCELLED]%'";
-            $checkStmt = $this->conn->prepare($checkQuery);
+            $checkStmt = $this->dbcon->prepare($checkQuery);
             $checkStmt->bindParam(1, $id);
             $checkStmt->execute();
             
@@ -94,7 +84,7 @@ class Appointment {
                      SET user_id = ?, date = ?, time = ?, description = ? 
                      WHERE appointment_prikey = ?";
             
-            $stmt = $this->conn->prepare($query);
+            $stmt = $this->dbcon->prepare($query);
             $stmt->bindParam(1, $user_id);
             $stmt->bindParam(2, $date);
             $stmt->bindParam(3, $time);
@@ -113,7 +103,7 @@ class Appointment {
             // First get the current description
             $query = "SELECT description FROM " . $this->table . " 
                      WHERE appointment_prikey = ? AND description NOT LIKE '[CANCELLED]%'";
-            $stmt = $this->conn->prepare($query);
+            $stmt = $this->dbcon->prepare($query);
             $stmt->bindParam(1, $id);
             $stmt->execute();
             
@@ -125,7 +115,7 @@ class Appointment {
                               SET description = ? 
                               WHERE appointment_prikey = ?";
                 
-                $updateStmt = $this->conn->prepare($updateQuery);
+                $updateStmt = $this->dbcon->prepare($updateQuery);
                 $updateStmt->bindParam(1, $newDesc);
                 $updateStmt->bindParam(2, $id);
                 
@@ -142,12 +132,38 @@ class Appointment {
         try {
             $query = "DELETE FROM " . $this->table . " WHERE appointment_prikey = ?";
             
-            $stmt = $this->conn->prepare($query);
+            $stmt = $this->dbcon->prepare($query);
             $stmt->bindParam(1, $id);
             
             return $stmt->execute();
         } catch (PDOException $e) {
             error_log("Error in deleteAppointment: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getPatientById($patientId) {
+        try {
+            $query = "SELECT * FROM patient_info WHERE patient_id = ?";
+            $stmt = $this->dbcon->prepare($query);
+            $stmt->bindParam(1, $patientId);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getPatientById: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getFamilyById($familyId) {
+        try {
+            $query = "SELECT * FROM family_info WHERE patient_fam_id = ?";
+            $stmt = $this->dbcon->prepare($query);
+            $stmt->bindParam(1, $familyId);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getFamilyById: " . $e->getMessage());
             throw $e;
         }
     }

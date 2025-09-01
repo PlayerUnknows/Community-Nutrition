@@ -183,6 +183,69 @@
     .btn i {
         margin-right: 5px;
     }
+    
+    /* Patient validation message styles */
+    #patient-validation-message {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    #patient-validation-message .text-success {
+        color: #198754 !important;
+    }
+    
+    #patient-validation-message .text-danger {
+        color: #dc3545 !important;
+    }
+    
+    #patient-validation-message .text-warning {
+        color: #ffc107 !important;
+    }
+    
+    #patient-validation-message .text-info {
+        color: #0dcaf0 !important;
+    }
+    
+    #patient-validation-message i {
+        margin-right: 0.5rem;
+    }
+    
+    /* Guardian container styles */
+    #guardian_container {
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        margin-bottom: 1rem;
+    }
+    
+    #guardian_container:empty {
+        display: none !important;
+    }
+    
+    #guardian_container .text-info,
+    #guardian_container .text-warning,
+    #guardian_container .text-danger {
+        margin: 0;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    #guardian_container .text-info {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+    }
+    
+    #guardian_container .text-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+    }
+    
+    #guardian_container .text-danger {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
 </style>
 
 <!-- Add Appointment Modal -->
@@ -203,9 +266,15 @@
             <div class="modal-body">
                 <form id="appointmentForm">
                     <div class="mb-3">
-                        <label for="user_id" class="form-label">User ID</label>
-                        <input type="text" class="form-control" id="user_id" name="user_id" required>
-                        <div class="invalid-feedback">User ID is required</div>
+                        <label for="user_id" class="form-label">Patient ID</label>
+                        <input type="text" class="form-control" id="user_id" name="user_id" 
+                               pattern="PAT\d+" 
+                               placeholder="e.g., PAT202504040045"
+                               title="Please enter a valid patient ID (PAT followed by numbers)"
+                               required>
+                        <div class="invalid-feedback">Please enter a valid patient ID (PAT followed by numbers)</div>
+                        <div class="form-text">Format: PAT followed by numbers (e.g., PAT202504040045)</div>
+                        <div id="patient-validation-message" class="mt-2" style="display: none;"></div>
                     </div>
                     <div id="guardian_container" class="mb-3" style="display: none;">
                         <!-- Guardian selector will be dynamically added here -->
@@ -256,7 +325,7 @@
                 <form id="editAppointmentForm">
                     <input type="hidden" id="edit_appointment_id" name="appointment_prikey">
                     <div class="mb-3">
-                        <label for="edit_user_id" class="form-label">User ID</label>
+                        <label for="edit_user_id" class="form-label">Patient ID</label>
                         <input type="text" class="form-control" id="edit_user_id" name="user_id" readonly>
                     </div>
                     <div class="mb-3"> 

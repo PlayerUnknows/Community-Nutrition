@@ -1,36 +1,13 @@
 <?php
 require_once __DIR__ . '/../../core/BaseService.php';
+require_once __DIR__ . '/../../models/MonitoringModel.php';
 
 class ExportMonitoringService extends BaseService {
     public function run(){
         $this->requireMethod('GET');
 
-        $query = "SELECT 
-            patient_name,
-            patient_id,
-            patient_fam_id,
-            age,
-            sex,
-            weight,
-            height,
-            bp,
-            temperature,
-            weight_category,
-            findings,
-            date_of_appointment,
-            time_of_appointment,
-            place,
-            finding_growth,
-            finding_bmi,
-            arm_circumference,
-            arm_circumference_status,
-            created_at
-        FROM checkup_info 
-        ORDER BY created_at DESC";
-
-        $stmt = $this->dbcon->prepare($query);
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $monitoringModel = new MonitoringModel();
+        $results = $monitoringModel->exportMonitoringDataModel();
         
         // Output CSV directly instead of returning JSON
         $filename = "monitoring_data_" . date('Y-m-d_H-i-s') . ".csv";

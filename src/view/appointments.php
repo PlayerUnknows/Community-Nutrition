@@ -269,11 +269,11 @@
                         <label for="user_id" class="form-label">Patient ID</label>
                         <input type="text" class="form-control" id="user_id" name="user_id" 
                                pattern="PAT\d+" 
-                               placeholder="e.g., PAT202504040045"
+                               placeholder="e.g., PAT2025XXXXXXXX"
                                title="Please enter a valid patient ID (PAT followed by numbers)"
                                required>
                         <div class="invalid-feedback">Please enter a valid patient ID (PAT followed by numbers)</div>
-                        <div class="form-text">Format: PAT followed by numbers (e.g., PAT202504040045)</div>
+                        <div class="form-text">Format: PAT followed by numbers (e.g., PAT2025XXXXXXXX)</div>
                         <div id="patient-validation-message" class="mt-2" style="display: none;"></div>
                     </div>
                     <div id="guardian_container" class="mb-3" style="display: none;">

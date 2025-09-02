@@ -26,7 +26,7 @@ class GetGuardiansService extends BaseService {
      
       } else {
 
-          $this->respondError('Invalid patient ID format. Please use format: PAT followed by numbers (e.g., PAT202504040045)');
+          $this->respondError('Invalid patient ID format. Please use format: PAT followed by numbers (e.g., PAT2025XXXXXXXX)');
           return;
       }
   

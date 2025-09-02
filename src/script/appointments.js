@@ -34,6 +34,7 @@ var appointmentManager = {
         { data: "date", defaultContent: "" },
         { data: "time", defaultContent: "" },
         { data: "description", defaultContent: "" },
+        { data: "guardian", defaultContent: "" },
         {
           data: null,
           defaultContent: "",
@@ -62,7 +63,7 @@ var appointmentManager = {
                         `;
           },
         },
-        { data: "status", defaultContent: "" },
+       
       ],
       order: [[1, "desc"]], // Order by date column descending
       pageLength: 5,
@@ -144,6 +145,17 @@ var appointmentManager = {
           $("#edit_date").val(moment(appointment.date).format("YYYY-MM-DD"));
           $("#edit_time").val(appointment.time);
           $("#edit_description").val(appointment.description);
+          
+          // Set the current guardian selection after loading options
+          setTimeout(() => {
+            if (appointment.guardian && appointment.guardian !== 'Not specified') {
+              $("#edit_guardian").val(appointment.guardian);
+            }
+          }, 500);
+          
+          // Load guardian options for this patient
+         
+          loadGuardiansForEdit(appointment.user_id);
 
           // Reset form validation state - using the global function
           window.resetEditForm();
@@ -218,11 +230,39 @@ var appointmentManager = {
             type: "POST",
             data: { id: appointmentId },
             success: function (response) {
-              Swal.fire(
-                "Cancelled!",
-                "The appointment has been cancelled.",
-                "success"
-              );
+              // Log response for debugging
+              console.log("Cancel appointment response:", response);
+              
+              // Show detailed success message with cancellation details if available
+              if (response.cancellation_details) {
+                const details = response.cancellation_details;
+                Swal.fire({
+                  icon: "success",
+                  title: "Appointment Cancelled Successfully!",
+                  html: `
+                    <div class="text-start">
+                      <p><strong>Cancellation Details:</strong></p>
+                      <ul class="text-start">
+                        <li><strong>Appointment ID:</strong> ${details.appointment_id}</li>
+                        <li><strong>Patient:</strong> ${details.patient_name}</li>
+                        <li><strong>Patient ID:</strong> ${details.patient_id}</li>
+                        <li><strong>Date:</strong> ${details.appointment_date}</li>
+                        <li><strong>Time:</strong> ${details.appointment_time}</li>
+                        <li><strong>Cancelled At:</strong> ${details.cancelled_at}</li>
+                      </ul>
+                    </div>
+                  `,
+                  confirmButtonText: "OK"
+                });
+              } else {
+                // Show simple success message
+                Swal.fire(
+                  "Cancelled!",
+                  "The appointment has been cancelled.",
+                  "success"
+                );
+              }
+              
               table.ajax.reload();
             },
             error: function (xhr, status, error) {
@@ -234,6 +274,74 @@ var appointmentManager = {
     });
   },
 };
+// end of var
+
+// Function to load guardians for edit form (global scope)
+function loadGuardiansForEdit(patientId) {
+  const editGuardianSelect = document.getElementById("edit_guardian");
+  if (!editGuardianSelect) {
+    console.error("edit_guardian element not found!");
+    return;
+  }
+  
+  // Clear existing options
+  editGuardianSelect.innerHTML = '<option value="">Select a guardian</option>';
+  
+  $.ajax({
+    url: "/src/controllers/AppointmentController.php",
+    type: "POST",
+    data: {
+      action: "getGuardians",
+      user_id: patientId
+    },
+            success: function(response) {
+
+          
+          if (response.success && response.data) {
+            const guardianData = response.data;
+            
+            if (guardianData.father || guardianData.mother) {
+              if (guardianData.father && guardianData.father.trim()) {
+                const fatherOption = document.createElement('option');
+                fatherOption.value = guardianData.father;
+                fatherOption.textContent = guardianData.father + ' (Father)';
+                editGuardianSelect.appendChild(fatherOption);
+              }
+              
+              if (guardianData.mother && guardianData.mother.trim()) {
+                const motherOption = document.createElement('option');
+                motherOption.value = guardianData.mother;
+                motherOption.textContent = guardianData.mother + ' (Mother)';
+                editGuardianSelect.appendChild(motherOption);
+              }
+            } else {
+              // Add a message option if no guardians available
+              const noGuardianOption = document.createElement('option');
+              noGuardianOption.value = "";
+              noGuardianOption.textContent = "No guardian information available";
+              noGuardianOption.disabled = true;
+              editGuardianSelect.appendChild(noGuardianOption);
+            }
+          } else {
+            // Add a message option if response is not successful
+            const noGuardianOption = document.createElement('option');
+            noGuardianOption.value = "";
+            noGuardianOption.textContent = response.message || "No guardian information available";
+            noGuardianOption.disabled = true;
+            editGuardianSelect.appendChild(noGuardianOption);
+          }
+        },
+            error: function(xhr, status, error) {
+          console.error("Error loading guardians:", {xhr, status, error});
+          // Add error option
+          const errorOption = document.createElement('option');
+          errorOption.value = "";
+          errorOption.textContent = "Failed to load guardian information";
+          errorOption.disabled = true;
+          editGuardianSelect.appendChild(errorOption);
+        }
+  });
+}
 
 // Function to validate edit input (move to global scope)
 window.validateEditInput = function (input) {
@@ -624,12 +732,13 @@ $(document).ready(function () {
       if (!guardianContainer) return;
       
       // First, get the guardian data
+      console.log("Sending guardian request for patient:", patientId);
       $.ajax({
         url: "/src/controllers/AppointmentController.php",
         type: "POST",
         data: {
           action: "getGuardians",
-          user_id: patientId
+          patient_id: patientId
         },
         success: function(response) {
           // Check if the response is successful and contains data
@@ -667,6 +776,8 @@ $(document).ready(function () {
         }
       });
     }
+
+
 
     // Debounced version of checkPatientExists
     const debouncedCheckPatient = debounce(checkPatientExists, 500);
@@ -874,6 +985,7 @@ $(document).ready(function () {
         date: $("#date").val(),
         time: $("#time").val(),
         description: $("#description").val(),
+        guardian: $("#guardian_select").val() || null,
       };
 
       // Show loading state
@@ -891,9 +1003,43 @@ $(document).ready(function () {
           },
         });
 
-        // Show success state
+        // Log response for debugging
+        console.log("Add appointment response:", response);
+
+        // Show success state with appointment details
         saveButton.innerHTML = '<i class="fas fa-check"></i> Saved!';
         saveButton.className = "btn btn-success";
+
+        // Show detailed success message with appointment details
+        if (response.appointment_details) {
+          const details = response.appointment_details;
+          Swal.fire({
+            icon: "success",
+            title: "Appointment Created Successfully!",
+            html: `
+              <div class="text-start">
+                <p><strong>Appointment Details:</strong></p>
+                <ul class="text-start">
+                  <li><strong>Patient:</strong> ${details.patient_name}</li>
+                  <li><strong>Patient ID:</strong> ${details.patient_id}</li>
+                  <li><strong>Date:</strong> ${details.appointment_date}</li>
+                  <li><strong>Time:</strong> ${details.appointment_time}</li>
+                  <li><strong>Description:</strong> ${details.description}</li>
+                  ${details.guardian && details.guardian !== 'Not specified' ? `<li><strong>Guardian:</strong> ${details.guardian}</li>` : ''}
+                </ul>
+              </div>
+            `,
+            confirmButtonText: "OK"
+          });
+        } else {
+          // Show simple success message
+          Swal.fire({
+            icon: "success",
+            title: "Appointment Created!",
+            text: "Appointment created successfully!",
+            confirmButtonText: "OK"
+          });
+        }
 
         // Refresh table
         await appointmentManager.init();
@@ -901,7 +1047,7 @@ $(document).ready(function () {
         // Close modal after delay
         setTimeout(() => {
           hideModal();
-        }, 1000);
+        }, 2000);
       } catch (error) {
         console.log("Appointment creation failed:", error);
 
@@ -954,6 +1100,7 @@ $(document).ready(function () {
         user_id: $("#edit_user_id").val(),
         date: $("#edit_date").val(),
         time: $("#edit_time").val(),
+        guardian: $("#edit_guardian").val(),
         description: $("#edit_description").val(),
       };
 
@@ -970,7 +1117,55 @@ $(document).ready(function () {
           data: JSON.stringify(formData),
         });
 
-        // Show success state
+  
+
+        // Show success state with change details
+        let successMessage = "Appointment updated successfully!";
+        
+        // Get current guardian selection for display
+        const currentGuardian = $("#edit_guardian").val() || "Not specified";
+        
+        // If there are change details, show them
+        if (response.changes && response.changes.length > 0) {
+          const changeDetails = response.changes.map(change => 
+            `${change.field}: '${change.old_value}' → '${change.new_value}'`
+          ).join('\n');
+          
+          successMessage = `Appointment updated successfully!\n\nChanges made:\n${changeDetails}`;
+          
+          // Show detailed success message
+          Swal.fire({
+            icon: "success",
+            title: "Appointment Updated!",
+            text: `Updated: ${response.change_summary}`,
+            html: `
+              <div class="text-start">
+                <p><strong>Changes made:</strong></p>
+                <ul class="text-start">
+                  ${response.changes.map(change => 
+                    `<li><strong>${change.field}:</strong> '${change.old_value}' → '${change.new_value}'</li>`
+                  ).join('')}
+                </ul>
+                <p class="mt-3"><strong>Current Guardian:</strong> ${currentGuardian}</p>
+              </div>
+            `,
+            confirmButtonText: "OK"
+          });
+        } else {
+          // Show simple success message with guardian info
+          Swal.fire({
+            icon: "success",
+            title: "Appointment Updated!",
+            text: "Appointment updated successfully!",
+            html: `
+              <div class="text-start">
+                <p><strong>Current Guardian:</strong> ${currentGuardian}</p>
+              </div>
+            `,
+            confirmButtonText: "OK"
+          });
+        }
+        
         updateButton.innerHTML = '<i class="fas fa-check"></i> Updated!';
         updateButton.className = "btn btn-success";
 
@@ -980,7 +1175,7 @@ $(document).ready(function () {
         // Close modal after delay
         setTimeout(() => {
           hideEditModal();
-        }, 1000);
+        }, 2000);
       } catch (error) {
         console.log("Appointment update failed:", error);
 

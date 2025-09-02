@@ -43,8 +43,8 @@
                             <th>Date</th>
                             <th>Time</th>
                             <th>Description</th>
+                            <th>Guardian</th>
                             <th style="min-width: 160px;">Actions</th>
-                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -333,6 +333,13 @@
                         <input type="text" class="form-control" id="edit_patient_name" name="full_name" readonly>
                     </div>
                     <div class="mb-3">
+                        <label for="edit_guardian" class="form-label">Guardian</label>
+                        <select class="form-control" id="edit_guardian" name="guardian">
+                            <option value="">Select a guardian</option>
+                        </select>
+                        <div class="form-text">Select the guardian who will accompany the patient</div>
+                    </div>
+                    <div class="mb-3">
                         <label for="edit_date" class="form-label">Date</label>
                         <input type="date" class="form-control" id="edit_date" name="date" required>
                         <div class="invalid-feedback">Please select a valid appointment date</div>
@@ -356,3 +363,7 @@
         </div>
     </div>
 </div>
+
+
+<!-- <script src="/src/script/appointment/fetch_appointment.js"></script> -->
+

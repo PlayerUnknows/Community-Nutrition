@@ -25,7 +25,8 @@ class FetchDataToEditService extends BaseService {
                     'date' => $row['date'],
                     'time' => $row['time'],
                     'description' => $row['description'],
-                    'status' => $row['status']
+                    'status' => $row['status'],
+                    'guardian' => $row['guardian']
                 );
                 echo json_encode(['success' => true, 'data' => $appointmentData, 'message' => 'Appointment data fetched successfully']);
             } else {
@@ -37,7 +38,7 @@ class FetchDataToEditService extends BaseService {
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'id' => $id ?? 'unknown'
+                'id' => $id
             ]);
             
             echo json_encode(['success' => false, 'message' => 'Failed to fetch data to edit: ' . $e->getMessage()]);

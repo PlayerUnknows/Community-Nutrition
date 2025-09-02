@@ -66,13 +66,13 @@ class StoreAppointmentsService extends BaseService {
         try {
             $patient = $appointment->getPatientById($data['user_id']);
             if (!$patient) {
-                Logger::warning("StoreAppointmentsService: Patient not found", ['user_id' => $data['user_id']]);
+
                 echo json_encode(['success' => false, 'message' => 'Patient ID not found: ' . $data['user_id']]);
                 return;
             }
             Logger::info("StoreAppointmentsService: Patient found", ['user_id' => $data['user_id'], 'patient_name' => $patient['patient_fname'] . ' ' . $patient['patient_lname']]);
         } catch (Exception $e) {
-            Logger::error("StoreAppointmentsService: Error checking patient existence", ['error' => $e->getMessage()]);
+    
             echo json_encode(['success' => false, 'message' => 'Error verifying patient: ' . $e->getMessage()]);
             return;
         }
@@ -83,14 +83,39 @@ class StoreAppointmentsService extends BaseService {
                 $data['full_name'],
                 $date,
                 $data['time'],
-                $data['description']
+                $data['description'],
+                $data['guardian'] ?? null
             );
 
             if ($result) {
-                Logger::info("StoreAppointmentsService: Appointment created successfully");
-                echo json_encode(['success' => true, 'message' => 'Appointment created successfully']);
+                // Log detailed appointment creation for audit trail
+                $appointmentDetails = [
+                    'patient_id' => $data['user_id'],
+                    'patient_name' => $data['full_name'],
+                    'appointment_date' => $date,
+                    'appointment_time' => $data['time'],
+                    'description' => $data['description'],
+                    'guardian' => $data['guardian'] ?? 'Not specified'
+                ];
+                
+                // Create detailed log message
+                $logMessage = "New appointment created - Patient: {$data['full_name']} ({$data['user_id']}), Date: {$date}, Time: {$data['time']}, Description: {$data['description']}";
+                if (isset($data['guardian']) && !empty($data['guardian'])) {
+                    $logMessage .= ", Guardian: {$data['guardian']}";
+                }
+                
+
+                
+                // Return success response with appointment details
+                $response = [
+                    'success' => true, 
+                    'message' => 'Appointment created successfully',
+                    'appointment_details' => $appointmentDetails
+                ];
+                
+                echo json_encode($response);
             } else {
-                Logger::warning("StoreAppointmentsService: Failed to create appointment");
+    
                 echo json_encode(['success' => false, 'message' => 'Failed to create appointment']);
             }
         } catch (Exception $e) {

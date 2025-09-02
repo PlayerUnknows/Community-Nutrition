@@ -21,7 +21,6 @@ class AppointmentController extends BaseController {
 
 
     public function getAppointments() {
-        Logger::info("getAppointments: Processing appointments...");
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/fetch_all_patients.php';
         $getData = [];
         $results = $this->serviceManager->call($serviceUrl, $getData, 'GET');
@@ -40,20 +39,56 @@ class AppointmentController extends BaseController {
 
     
     public function addAppointment() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        $this->auditTrail->log('add', "User added appointment successfully");
-        
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/store_appointments.php';
         $postData = $_POST;
         $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
 
+        // Log detailed audit trail if appointment was created successfully
+        if (isset($result['success']) && $result['success'] && isset($result['appointment_details'])) {
+            $details = $result['appointment_details'];
+            $auditMessage = "New appointment created - Patient: {$details['patient_name']} ({$details['patient_id']}), Date: {$details['appointment_date']}, Time: {$details['appointment_time']}";
+            if (isset($details['guardian']) && $details['guardian'] !== 'Not specified') {
+                $auditMessage .= ", Guardian: {$details['guardian']}";
+            }
+            $this->auditTrail->log('add', $auditMessage);
+        } else {
+            $this->auditTrail->log('add', "User attempted to add appointment");
+        }
 
         // Return the service response
         $this->respond($result);
-      }
+    }
+      
 
+      public function updateAppointment() { 
+        $serviceUrl = __DIR__ . '/../services/AppointmentServices/update_patient_appointment.php';
+        $postData = $_POST;
+        $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
+        
+        // Log audit trail with specific changes if available
+        if (isset($result['changes']) && !empty($result['changes'])) {
+            $changeDetails = [];
+            foreach ($result['changes'] as $change) {
+                $changeDetails[] = "{$change['field']}: '{$change['old_value']}' → '{$change['new_value']}'";
+            }
+            $changeSummary = implode(', ', $changeDetails);
+            $this->auditTrail->log('Update', "User updated appointment - Changes: {$changeSummary}");
+        } else {
+            $this->auditTrail->log('Update', "User updated appointment successfully");
+        }
+        
+        $this->respond($result);
+    }
+
+    
+    public function getGuardians() {
+        $serviceUrl = __DIR__ . '/../services/AppointmentServices/get_guardians.php';
+        $postData = $_POST;
+        $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
+        
+        // Return the service response
+        $this->respond($result);
+    }
       
     public function checkPatientExists() {
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/check_patient_exists.php';
@@ -65,14 +100,26 @@ class AppointmentController extends BaseController {
       }
 
       
-    public function getGuardians() {
-        $serviceUrl = __DIR__ . '/../services/AppointmentServices/get_guardians.php';
+
+    public function cancelAppointment() {
+        $serviceUrl = __DIR__ . '/../services/AppointmentServices/cancel_appointment.php';
         $postData = $_POST;
         $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
+
+        // Log detailed audit trail if appointment was cancelled successfully
+        if (isset($result['success']) && $result['success'] && isset($result['cancellation_details'])) {
+            $details = $result['cancellation_details'];
+            $auditMessage = "Appointment cancelled - ID: {$details['appointment_id']}, Patient: {$details['patient_name']} ({$details['patient_id']}), Date: {$details['appointment_date']}, Time: {$details['appointment_time']}";
+            $this->auditTrail->log('cancel', $auditMessage);
+        } else {
+            $this->auditTrail->log('cancel', "User attempted to cancel appointment");
+        }
         
-        // Return the service response
         $this->respond($result);
-      }
+    }
+
+
+    // This part are Optional for the future 
 
     // public function getUpcomingAppointments1() {
     //     try {
@@ -99,116 +146,13 @@ class AppointmentController extends BaseController {
     //     }
     // }
 
-       public function getUpcomingAppointments() {
+    public function getUpcomingAppointments() {
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/get_upcoming_appointments.php';
         $getData = [];
         $result = $this->serviceManager->call($serviceUrl, $getData, 'GET');
         
         // Return the service response
         $this->respond($result);
-    }
-
-
-
-    
-    
-
-    public function updateAppointment() {
-        // Check if it's a JSON request
-        $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
-        
-        if (strpos($contentType, 'application/json') !== false) {
-            // Handle JSON input
-            $data = json_decode(file_get_contents('php://input'), true);
-        } else {
-            // Handle regular POST data
-            $data = $_POST;
-        }
-        
-        // Debug received data
-        error_log("Update Appointment Data: " . print_r($data, true));
-        
-        if (!isset($data['id']) || !isset($data['user_id']) || !isset($data['date']) || !isset($data['time']) || !isset($data['description'])) {
-            $this->respondError('Missing required fields');
-            return;
-        }
-
-        try {
-            // Get the full name from the existing appointment
-            $result = $this->model->getAppointmentById($data['id']);
-            $appointment = $result->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$appointment) {
-                $this->respondError('Appointment not found');
-                return;
-            }
-            
-            $full_name = $appointment['full_name'];
-            
-            // Validate date
-            // Extract month, day and year from input date
-            $dateParts = explode('-', $data['date']);
-                    if (count($dateParts) !== 3) {
-            $this->respondError('Invalid date format - must be YYYY-MM-DD');
-            return;
-        }
-            
-            $year = (int)$dateParts[0];
-            $month = (int)$dateParts[1]; 
-            $day = (int)$dateParts[2];
-
-            // Validate date components
-                    if (!checkdate($month, $day, $year)) {
-            $this->respondError('Invalid date values');
-            return;
-        }
-
-            $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-                    if ($date < date('Y-m-d')) {
-            $this->respondError('Please select today or a future date for your appointment');
-            return;
-        }
-            
-                $result = $this->model->updateAppointment(
-                $data['id'],
-                $data['user_id'],
-                $full_name,   // Add the full_name parameter
-                $date,
-                $data['time'],
-                $data['description']
-            );
-            
-            if ($result) {
-                header('Content-Type: application/json');
-                echo json_encode(['message' => 'Appointment updated successfully']);
-            } else {
-                $this->respondError('Failed to update appointment');
-            }
-        } catch (Exception $e) {
-            error_log("Error in updateAppointment: " . $e->getMessage());
-            $this->respondError('Failed to update appointment: ' . $e->getMessage(), 500);
-        }
-    }
-
-    public function cancelAppointment() {
-        if (!isset($_POST['id'])) {
-            $this->respondError('Appointment ID is required');
-            return;
-        }
-
-        try {
-            $id = $_POST['id'];
-            $result = $this->model->cancelAppointment($id);
-            
-            if ($result) {
-                $this->respondSuccess([], 'Appointment cancelled successfully');
-            } else {
-                $this->respondError('Failed to cancel appointment');
-            }
-        } catch (Exception $e) {
-            error_log("Error in cancelAppointment: " . $e->getMessage());
-            $this->respondError('Failed to cancel appointment: ' . $e->getMessage(), 500);
-        }
     }
 
     public function deleteAppointment() {
@@ -232,8 +176,8 @@ class AppointmentController extends BaseController {
         }
     }
 
-
 }
+
 
 // Handle API requests
 header('Access-Control-Allow-Origin: *');

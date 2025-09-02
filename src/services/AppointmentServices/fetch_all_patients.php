@@ -19,7 +19,8 @@ class FetchAllPatientsService extends BaseService {
                 'date' => $row['date'],
                 'time' => $row['time'],
                 'description' => $row['description'],
-                'status' => $row['status']
+                'status' => $row['status'],
+                'guardian' => $row['guardian']
             );
         }
         echo json_encode([

@@ -88,7 +88,55 @@ class User {
         return $stmt->fetchColumn();
     }
 
-    // Login user
+        // Login user with hashed password from client
+    public function loginWithHash($loginIdentifier, $hashedPassword){
+        $sql = "SELECT * FROM account_info WHERE email = ? OR user_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$loginIdentifier, $loginIdentifier]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            // Since we're receiving a SHA-256 hash from the client,
+            // we need to verify it against the stored bcrypt hash
+            // We'll use a different approach - we'll hash the stored bcrypt hash
+            // and compare it with the client hash
+            
+            $storedHash = $user['password'];
+            
+            // Hash the stored bcrypt hash with SHA-256 for comparison
+            $storedHashSha256 = hash('sha256', $storedHash);
+            
+            if ($hashedPassword === $storedHashSha256) {
+                // Only start session if not already started
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+
+                // Clear any existing redirect counts to prevent issues
+                if (isset($_SESSION['redirect_count'])) {
+                    unset($_SESSION['redirect_count']);
+                    unset($_SESSION['last_redirect_time']);
+                }
+
+                // Set session data
+                $_SESSION['user_id'] = $user['user_id'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['login_time'] = time();
+
+                $redirectPage = $this->getRedirectPage($user['role']);
+                return [
+                    'user_id' => $user['user_id'],
+                    'email' => $user['email'],
+                    'role' => $user['role'],
+                    'redirect' => $redirectPage
+                ];
+            }
+        }
+        return false;
+    }
+
+    // Login user (legacy method for backward compatibility)
     public function login($loginIdentifier, $password){
         $sql = "SELECT * FROM account_info WHERE email = ? OR user_id = ?";
         $stmt = $this->conn->prepare($sql);

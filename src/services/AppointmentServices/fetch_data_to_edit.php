@@ -9,7 +9,8 @@ class FetchDataToEditService extends BaseService {
         $appointment = new Appointment();
         
         if (!isset($_GET['id'])) {
-            return ['success' => false, 'message' => 'Data to edit ID is required'];
+            echo json_encode(['success' => false, 'message' => 'Data to edit ID is required']);
+            return;
         }
 
         try {
@@ -26,10 +27,10 @@ class FetchDataToEditService extends BaseService {
                     'description' => $row['description'],
                     'status' => $row['status']
                 );
-                return ['success' => true, 'data' => $appointmentData];
+                echo json_encode(['success' => true, 'data' => $appointmentData, 'message' => 'Appointment data fetched successfully']);
             } else {
                 Logger::warning("FetchDataToEditService: No appointment found with ID: $id");
-                return ['success' => false, 'message' => 'Data to edit not found'];
+                echo json_encode(['success' => false, 'message' => 'Data to edit not found']);
             }
         } catch (Exception $e) {
             Logger::error("FetchDataToEditService: Exception occurred", [
@@ -39,7 +40,7 @@ class FetchDataToEditService extends BaseService {
                 'id' => $id ?? 'unknown'
             ]);
             
-            return ['success' => false, 'message' => 'Failed to fetch data to edit: ' . $e->getMessage()];
+            echo json_encode(['success' => false, 'message' => 'Failed to fetch data to edit: ' . $e->getMessage()]);
         }
     }
 }

@@ -118,7 +118,15 @@ var appointmentManager = {
         url: "/src/controllers/AppointmentController.php?action=getAppointmentToEdit",
         type: "GET",
         data: { id: appointmentId },
-        success: function (appointment) {
+        success: function (response) {
+          // Check if the response is successful and contains data
+          if (!response.success || !response.data) {
+            Swal.fire("Error!", response.message || "Failed to fetch appointment details.", "error");
+            return;
+          }
+          
+          const appointment = response.data;
+          
           // Create or get BS modal instance
           let bsEditModal = bootstrap.Modal.getInstance(
             document.getElementById("editAppointmentModal")
@@ -555,17 +563,28 @@ $(document).ready(function () {
           user_id: patientId
         },
         success: function(response) {
-          if (response.exists) {
+          // Check if the response is successful and contains data
+          if (!response.success || !response.data) {
+            validationMessage.innerHTML = '<div class="text-warning"><i class="fas fa-exclamation-triangle"></i> Unable to verify patient ID</div>';
+            if (guardianContainer) {
+              guardianContainer.style.display = "none";
+            }
+            return;
+          }
+          
+          const patientData = response.data;
+          
+          if (patientData.exists) {
             // Patient exists - show success message
-            validationMessage.innerHTML = '<div class="text-success"><i class="fas fa-check-circle"></i> ' + response.message + '</div>';
+            validationMessage.innerHTML = '<div class="text-success"><i class="fas fa-check-circle"></i> ' + patientData.message + '</div>';
             inputElement.classList.remove("is-invalid");
             inputElement.classList.add("is-valid");
             
             // Auto-fill patient name if available
-            if (response.patient_name) {
+            if (patientData.patient_name) {
               const fullNameField = document.getElementById("full_name");
               if (fullNameField && !fullNameField.value) {
-                fullNameField.value = response.patient_name;
+                fullNameField.value = patientData.patient_name;
               }
             }
             
@@ -577,7 +596,7 @@ $(document).ready(function () {
             }
           } else {
             // Patient doesn't exist - show error message
-            validationMessage.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-circle"></i> ' + response.message + '</div>';
+            validationMessage.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-circle"></i> ' + patientData.message + '</div>';
             inputElement.classList.remove("is-valid");
             inputElement.classList.add("is-invalid");
             
@@ -613,18 +632,26 @@ $(document).ready(function () {
           user_id: patientId
         },
         success: function(response) {
-          if (response.father || response.mother) {
+          // Check if the response is successful and contains data
+          if (!response.success || !response.data) {
+            guardianContainer.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-circle"></i> ' + (response.message || 'Failed to load guardian information') + '</div>';
+            return;
+          }
+          
+          const guardianData = response.data;
+          
+          if (guardianData.father || guardianData.mother) {
             // Create guardian dropdown with all options already loaded
             let guardianHtml = '<label class="form-label">Guardian</label>';
             guardianHtml += '<select class="form-control" id="guardian_select" name="guardian">';
             guardianHtml += '<option value="">Select a guardian</option>';
             
-            if (response.father && response.father.trim()) {
-              guardianHtml += '<option value="' + response.father + '">' + response.father + ' (Father)</option>';
+            if (guardianData.father && guardianData.father.trim()) {
+              guardianHtml += '<option value="' + guardianData.father + '">' + guardianData.father + ' (Father)</option>';
             }
             
-            if (response.mother && response.mother.trim()) {
-              guardianHtml += '<option value="' + response.mother + '">' + response.mother + ' (Mother)</option>';
+            if (guardianData.mother && guardianData.mother.trim()) {
+              guardianHtml += '<option value="' + guardianData.mother + '">' + guardianData.mother + ' (Mother)</option>';
             }
             
             guardianHtml += '</select>';

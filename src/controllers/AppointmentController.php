@@ -25,25 +25,33 @@ class AppointmentController extends BaseController {
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/fetch_all_patients.php';
         $getData = [];
         $results = $this->serviceManager->call($serviceUrl, $getData, 'GET');
-        echo json_encode($results);
-        exit;
+        $this->respond($results);
     }
 
     
     public function getAppointmentToEdit() {
       $serviceUrl = __DIR__ . '/../services/AppointmentServices/fetch_data_to_edit.php';
       $getData = ['id' => $_GET['id'] ?? null];
-      $this->serviceManager->call($serviceUrl, $getData, 'GET');
+      $result = $this->serviceManager->call($serviceUrl, $getData, 'GET');
+      
+      // Return the service response
+      $this->respond($result);
     }
 
     
     public function addAppointment() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $this->auditTrail->log('add', "User added appointment successfully");
+        
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/store_appointments.php';
         $postData = $_POST;
         $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
-        
-        // Echo the service response back to the client
-        echo json_encode($result);
+
+
+        // Return the service response
+        $this->respond($result);
       }
 
       
@@ -52,8 +60,8 @@ class AppointmentController extends BaseController {
         $postData = $_POST;
         $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
         
-        // Echo the service response back to the client
-        echo json_encode($result);
+        // Return the service response
+        $this->respond($result);
       }
 
       
@@ -62,8 +70,8 @@ class AppointmentController extends BaseController {
         $postData = $_POST;
         $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
         
-        // Echo the service response back to the client
-        echo json_encode($result);
+        // Return the service response
+        $this->respond($result);
       }
 
     // public function getUpcomingAppointments1() {
@@ -94,7 +102,10 @@ class AppointmentController extends BaseController {
        public function getUpcomingAppointments() {
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/get_upcoming_appointments.php';
         $getData = [];
-        $this->serviceManager->call($serviceUrl, $getData, 'GET');
+        $result = $this->serviceManager->call($serviceUrl, $getData, 'GET');
+        
+        // Return the service response
+        $this->respond($result);
     }
 
 
@@ -190,8 +201,7 @@ class AppointmentController extends BaseController {
             $result = $this->model->cancelAppointment($id);
             
             if ($result) {
-                header('Content-Type: application/json');
-                echo json_encode(['message' => 'Appointment cancelled successfully']);
+                $this->respondSuccess([], 'Appointment cancelled successfully');
             } else {
                 $this->respondError('Failed to cancel appointment');
             }
@@ -212,8 +222,7 @@ class AppointmentController extends BaseController {
             $result = $this->model->deleteAppointment($id);
             
             if ($result) {
-                header('Content-Type: application/json');
-                echo json_encode(['message' => 'Appointment deleted successfully']);
+                $this->respondSuccess([], 'Appointment deleted successfully');
             } else {
                 $this->respondError('Failed to delete appointment');
             }

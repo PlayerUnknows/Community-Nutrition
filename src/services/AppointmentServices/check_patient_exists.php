@@ -12,7 +12,7 @@ class CheckPatientExistsService extends BaseService {
         $data = $_POST;
         
         if (!isset($data['user_id']) || empty($data['user_id'])) {
-            echo json_encode(['exists' => false, 'message' => 'Patient ID is required']);
+            echo json_encode(['success' => true, 'data' => ['exists' => false, 'message' => 'Patient ID is required']]);
             return;
         }
 
@@ -21,7 +21,7 @@ class CheckPatientExistsService extends BaseService {
         if (preg_match('/^(PAT\d+)/', $patientId, $matches)) {
             $patientId = $matches[1];
         } else {
-            echo json_encode(['exists' => false, 'message' => 'Invalid patient ID format']);
+            echo json_encode(['success' => true, 'data' => ['exists' => false, 'message' => 'Invalid patient ID format']]);
             return;
         }
 
@@ -29,17 +29,17 @@ class CheckPatientExistsService extends BaseService {
             $patient = $appointment->getPatientById($patientId);
             if ($patient) {
                 $patientName = $patient['patient_fname'] . ' ' . $patient['patient_lname'];
-                echo json_encode([
+                echo json_encode(['success' => true, 'data' => [
                     'exists' => true, 
                     'message' => 'Patient found: ' . $patientName,
                     'patient_name' => $patientName
-                ]);
+                ]]);
             } else {
-                echo json_encode(['exists' => false, 'message' => 'Patient ID not found in database']);
+                echo json_encode(['success' => true, 'data' => ['exists' => false, 'message' => 'Patient ID not found in database']]);
             }
         } catch (Exception $e) {
             Logger::error("CheckPatientExistsService: Error checking patient", ['error' => $e->getMessage()]);
-            echo json_encode(['exists' => false, 'message' => 'Error checking patient: ' . $e->getMessage()]);
+            echo json_encode(['success' => true, 'data' => ['exists' => false, 'message' => 'Error checking patient: ' . $e->getMessage()]]);
         }
     }
 }

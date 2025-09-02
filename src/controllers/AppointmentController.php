@@ -30,7 +30,7 @@ class AppointmentController extends BaseController {
     
     public function getAppointmentToEdit() {
       $serviceUrl = __DIR__ . '/../services/AppointmentServices/fetch_data_to_edit.php';
-      $getData = ['id' => $_GET['id'] ?? null];
+      $getData = ['id' => $_POST['appointment_id'] ?? null];
       $result = $this->serviceManager->call($serviceUrl, $getData, 'GET');
       
       // Return the service response
@@ -146,7 +146,7 @@ class AppointmentController extends BaseController {
     //     }
     // }
 
-    public function getUpcomingAppointments() {
+       public function getUpcomingAppointments() {
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/get_upcoming_appointments.php';
         $getData = [];
         $result = $this->serviceManager->call($serviceUrl, $getData, 'GET');

@@ -258,7 +258,7 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Custom Scripts - Load in specific order -->
     <script src="../script/bmi_statistics.js"></script>
     <script src="../script/audit_trail.js"></script>
-    <script src="../script/appointments.js"></script>
+ 
     <script src="../script/user/users.js"></script>
     <script src="../script/overall_report.js"></script>
     <script src="../script/dropdrown.js"></script>

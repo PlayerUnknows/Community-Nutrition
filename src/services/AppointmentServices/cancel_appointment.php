@@ -9,14 +9,14 @@ class CancelAppointmentService extends BaseService {
 
         $appointments = new Appointment();
 
-        if (!isset($_POST['id'])) {
+        if (!isset($_POST['appointment_id'])) {
             echo json_encode(['success' => false, 'message' => 'Appointment ID is required']);
             return;
         }
 
         
         try {
-            $id = $_POST['id'];
+            $id = $_POST['appointment_id'];
             
             // First get the appointment details before cancelling
             $appointmentResult = $appointments->getAppointmentById($id);

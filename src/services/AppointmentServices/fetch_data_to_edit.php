@@ -21,7 +21,7 @@ class FetchDataToEditService extends BaseService {
                 $appointmentData = array(
                     'appointment_prikey' => $row['appointment_prikey'],
                     'user_id' => $row['user_id'],
-                    'full_name' => $row['full_name'],
+                    'patient_name' => $row['full_name'],
                     'date' => $row['date'],
                     'time' => $row['time'],
                     'description' => $row['description'],

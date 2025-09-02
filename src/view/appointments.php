@@ -281,7 +281,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="full_name" class="form-label">Patient Name</label>
-                        <input type="text" class="form-control" id="full_name" name="full_name" required>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required readonly>
                         <div class="invalid-feedback">Patient name is required</div>
                     </div>
                     <div class="mb-3">
@@ -335,7 +335,6 @@
                     <div class="mb-3">
                         <label for="edit_guardian" class="form-label">Guardian</label>
                         <select class="form-control" id="edit_guardian" name="guardian">
-                            <option value="">Select a guardian</option>
                         </select>
                         <div class="form-text">Select the guardian who will accompany the patient</div>
                     </div>
@@ -364,6 +363,20 @@
     </div>
 </div>
 
+<!-- utilities -->
+<script src="../script/appointment/utils/check_patient_exists.js"></script>
+<script src="../script/appointment/utils/fetch_guardians.js"></script>
+<script src="../script/appointment/utils/show_and_hide_modal_for_add.js"></script>
+<script src="../script/appointment/utils/validations_inputs.js"></script>
+<script src="../script/appointment/utils/validations_form.js"></script>
+<script src="../script/appointment/utils/reset_form.js"></script>
 
-<!-- <script src="/src/script/appointment/fetch_appointment.js"></script> -->
+
+<!-- main scripts-->
+  <script src="../script/appointment/fetch_appointment.js"></script>
+  <script src="../script/appointment/add_appointment.js"></script>
+  <script src="../script/appointment/edit_button_fetch_appointment.js"></script>
+  <script src="../script/appointment/update_appointment.js"></script>
+  <script src="../script/appointment/cancel_appointment.js"></script>
+  <script src="../script/appointments.js"></script>
 

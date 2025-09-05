@@ -38,10 +38,30 @@
           $("#edit_date").val(appointment.date);
           $("#edit_time").val(appointment.time);
           $("#edit_description").val(appointment.description);
-          $("#edit_guardian").val(appointment.guardian || "");
           
-                       // Load guardians for the patient
-           loadGuardiansForEdit(appointment.user_id, appointment.guardian);
+          // Store the current guardian value for later use
+          const currentGuardianValue = appointment.guardian || "";
+          
+          // Store original values for change detection
+          window.originalAppointmentValues = {
+            date: appointment.date,
+            time: appointment.time,
+            guardian: appointment.guardian || "",
+            description: appointment.description
+          };
+          
+        
+          
+          // Load guardians for the patient
+          loadGuardiansForEdit(appointment.user_id, currentGuardianValue);
+
+            // Reset the update button to its original state
+            const updateButton = document.querySelector('#updateAppointment');
+            if (updateButton) {
+              updateButton.disabled = false;
+              updateButton.className = 'btn btn-primary';
+              updateButton.innerHTML = 'Update Appointment';
+            }
           
           // Show the edit modal
           $("#editAppointmentModal").modal("show");
@@ -74,15 +94,24 @@ function loadGuardiansForEdit(patientId, currentGuardian = "") {
       return;
     }
   
+    // Clear existing options first to prevent accumulation
+    editGuardianSelect.innerHTML = "";
+    
+    // Add default empty option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = "";
+    defaultOption.textContent = "-- Select Guardian --";
+    editGuardianSelect.appendChild(defaultOption);
+  
     $.ajax({
       url: "/src/controllers/AppointmentController.php",
       type: "POST",
       data: {
         action: "getGuardians",
-        patient_id: patientId
+        user_id: patientId
       },
       success: function(response) {
-        
+  
         if (response.success && response.data) {
           const guardianData = response.data;
           
@@ -104,6 +133,14 @@ function loadGuardiansForEdit(patientId, currentGuardian = "") {
             // After adding all options, set the current guardian value
             if (currentGuardian && currentGuardian.trim()) {
               editGuardianSelect.value = currentGuardian;
+   
+              
+              // Also set the value in the form field as a fallback
+              $("#edit_guardian").val(currentGuardian);
+            } else {
+              // If no current guardian, select the default option
+              editGuardianSelect.value = "";
+  
             }
           } else {
             // Add a message option if no guardians available

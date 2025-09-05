@@ -11,7 +11,7 @@ function validateEditForm() {
       // Validate each required input that's not readonly
       form
         .querySelectorAll(".form-control[required]:not([readonly])")
-        .forEach((input) => {
+        .forEach((input) => { 
           if (!window.validateEditInput(input)) {
             isValid = false;
           }
@@ -38,14 +38,49 @@ $("#updateAppointment").on("click", async function (e) {
       return;
     }
 
-    // Get form data
+    // Get current form values
+    const currentValues = {
+      date: $("#edit_date").val(),
+      time: $("#edit_time").val(),
+      guardian: $("#edit_guardian").val() || "",
+      description: $("#edit_description").val()
+    };
+
+    // Check if any changes were made
+    const originalValues = window.originalAppointmentValues || {};
+    const changedFields = {};
+    const hasChanges = Object.keys(currentValues).some(key => {
+      const hasChanged = currentValues[key] !== originalValues[key];
+      changedFields[key] = hasChanged;
+      return hasChanged;
+    });
+
+    // Highlight changed fields visually
+    highlightChangedFields(changedFields);
+
+    if (!hasChanges) {
+      // No changes made - show toast message
+      Swal.fire({
+        icon: "info",
+        title: "No Changes Made",
+        text: "There are no changes to update. The appointment remains unchanged.",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+      return;
+    }
+
+    // Get form data for update
     const formData = {
       id: $("#edit_appointment_id").val(),
       user_id: $("#edit_user_id").val(),
-      date: $("#edit_date").val(),
-      time: $("#edit_time").val(),
-      guardian: $("#edit_guardian").val(),
-      description: $("#edit_description").val(),
+      date: currentValues.date,
+      time: currentValues.time,
+      guardian: currentValues.guardian,
+      description: currentValues.description,
     };
 
     // Show loading state
@@ -65,7 +100,7 @@ $("#updateAppointment").on("click", async function (e) {
       let successMessage = "Appointment updated successfully!";
       
       // Get current guardian selection for display
-      const currentGuardian = $("#edit_guardian").val() || "Not specified";
+      const currentGuardian = currentValues.guardian || "Not specified";
       
       // If there are change details, show them
       if (response.changes && response.changes.length > 0) {
@@ -152,6 +187,23 @@ $("#updateAppointment").on("click", async function (e) {
   });
 
 
+     // Function to highlight changed fields
+     function highlightChangedFields(changedFields) {
+       const fieldMappings = {
+         date: '#edit_date',
+         time: '#edit_time',
+         guardian: '#edit_guardian',
+         description: '#edit_description'
+       };
+       
+       Object.keys(changedFields).forEach(field => {
+         const selector = fieldMappings[field];
+         if (selector && changedFields[field]) {
+           $(selector).addClass('is-modified');
+         }
+       });
+     }
+
      // Function to reset edit form and button state
      function resetEditForm() {
        const form = document.getElementById("editAppointmentForm");
@@ -162,12 +214,29 @@ $("#updateAppointment").on("click", async function (e) {
          form.querySelectorAll(".form-control").forEach((input) => {
            input.classList.remove("is-invalid");
            input.classList.remove("is-valid");
+           input.classList.remove("is-modified"); // Remove modification highlighting
          });
 
          // Reset all feedback messages
          form.querySelectorAll(".invalid-feedback").forEach((feedback) => {
            feedback.style.display = "none";
          });
+       }
+       
+       // Clear guardian dropdown to prevent accumulation
+       const editGuardianSelect = document.getElementById("edit_guardian");
+       if (editGuardianSelect) {
+         editGuardianSelect.innerHTML = "";
+         // Add default empty option
+         const defaultOption = document.createElement('option');
+         defaultOption.value = "";
+         defaultOption.textContent = "-- Select Guardian --";
+         editGuardianSelect.appendChild(defaultOption);
+       }
+       
+       // Clear original values for change detection
+       if (window.originalAppointmentValues) {
+         delete window.originalAppointmentValues;
        }
      }
 
@@ -218,6 +287,22 @@ $("#updateAppointment").on("click", async function (e) {
            ) {
              hideEditModal();
            }
+         });
+
+         // Real-time change detection for form fields
+         $('#editAppointmentModal').on('shown.bs.modal', function() {
+           // Add change event listeners to form fields
+           $('#edit_date, #edit_time, #edit_guardian, #edit_description').on('input change', function() {
+             const fieldName = this.id.replace('edit_', '');
+             const currentValue = $(this).val();
+             const originalValue = window.originalAppointmentValues ? window.originalAppointmentValues[fieldName] : '';
+             
+             if (currentValue !== originalValue) {
+               $(this).addClass('is-modified');
+             } else {
+               $(this).removeClass('is-modified');
+             }
+           });
          });
        });
 

@@ -44,23 +44,20 @@ var fetchAppointmentManager = {
             const appointmentId = row.appointment_prikey;
             const isCancelled = row.status === "cancelled";
             return `
-              <div class="btn-group">
-                <button class="btn btn-sm btn-primary edit-btn" data-id="${appointmentId}" ${
+              <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${appointmentId}" ${
               isCancelled ? "disabled" : ""
             }>
-                  <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-sm ${
-                  isCancelled ? "btn-secondary" : "btn-warning"
-                } cancel-btn" 
-                  data-id="${appointmentId}"
-                  ${isCancelled ? "disabled" : ""}>
-                  <i class="fas ${
-                    isCancelled ? "fa-ban" : "fa-times"
-                  }"></i> 
-                  ${isCancelled ? "Cancelled" : "Cancel"}
-                </button>
-              </div>
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="btn btn-sm ${
+                isCancelled ? "btn-outline-secondary" : "btn-outline-warning"
+              } cancel-btn" 
+                data-id="${appointmentId}"
+                ${isCancelled ? "disabled" : ""}>
+                <i class="fas ${
+                  isCancelled ? "fa-ban" : "fa-times"
+                }"></i> ${isCancelled ? "Cancelled" : "Cancel"}
+              </button>
             `;
           },
         },

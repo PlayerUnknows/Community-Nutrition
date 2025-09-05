@@ -18,7 +18,7 @@ class AppointmentController extends BaseController {
             $this->respondError('Database connection failed: ' . $e->getMessage(), 500);
         }
     }
-
+ 
 
     public function getAppointments() {
         $serviceUrl = __DIR__ . '/../services/AppointmentServices/fetch_all_patients.php';
@@ -60,25 +60,25 @@ class AppointmentController extends BaseController {
     }
       
 
-      public function updateAppointment() { 
-        $serviceUrl = __DIR__ . '/../services/AppointmentServices/update_patient_appointment.php';
-        $postData = $_POST;
-        $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
-        
-        // Log audit trail with specific changes if available
-        if (isset($result['changes']) && !empty($result['changes'])) {
-            $changeDetails = [];
-            foreach ($result['changes'] as $change) {
-                $changeDetails[] = "{$change['field']}: '{$change['old_value']}' → '{$change['new_value']}'";
-            }
-            $changeSummary = implode(', ', $changeDetails);
-            $this->auditTrail->log('Update', "User updated appointment - Changes: {$changeSummary}");
-        } else {
-            $this->auditTrail->log('Update', "User updated appointment successfully");
+    public function updateAppointment() { 
+    $serviceUrl = __DIR__ . '/../services/AppointmentServices/update_patient_appointment.php';
+    $postData = $_POST;
+    $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
+    
+    // Log audit trail with specific changes if available
+    if (isset($result['changes']) && !empty($result['changes'])) {
+        $changeDetails = [];
+        foreach ($result['changes'] as $change) {
+            $changeDetails[] = "{$change['field']}: '{$change['old_value']}' → '{$change['new_value']}'";
         }
-        
-        $this->respond($result);
+        $changeSummary = implode(', ', $changeDetails);
+        $this->auditTrail->log('Update', "User updated appointment - Changes: {$changeSummary}");
+    } else {
+        $this->auditTrail->log('Update', "User updated appointment successfully");
     }
+    
+    $this->respond($result);
+}
 
     
     public function getGuardians() {

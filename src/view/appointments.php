@@ -246,6 +246,18 @@
         background-color: #f8d7da;
         border: 1px solid #f5c6cb;
     }
+    
+    /* Modified field highlighting styles */
+    .form-control.is-modified {
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+        background-color: #fffbf0;
+    }
+    
+    .form-control.is-modified:focus {
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
 </style>
 
 <!-- Add Appointment Modal -->
@@ -378,5 +390,5 @@
   <script src="../script/appointment/edit_button_fetch_appointment.js"></script>
   <script src="../script/appointment/update_appointment.js"></script>
   <script src="../script/appointment/cancel_appointment.js"></script>
-  <script src="../script/appointments.js"></script>
+  <script src="../script/appointment/appointments.js"></script>
 

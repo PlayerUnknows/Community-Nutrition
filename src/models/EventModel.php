@@ -1,28 +1,35 @@
 <?php
 
 
-require_once '../config/dbcon.php';
+require_once __DIR__ . '/../config/dbcon.php';
 
 class EventModel {
-    private $conn;
+    private $dbcon;
 
-    public function __construct($conn) {
-        $this->conn = $conn;
+    public function __construct() {
+        $this->dbcon = connect();
     }
     
     public function getAllEvents() {
         $query = "SELECT * FROM event_info ORDER BY created_at DESC";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->dbcon->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getEventById($eventId) {
+        $query = "SELECT event_name_created, event_type, event_date FROM event_info WHERE event_prikey = ?";
+        $stmt = $this->dbcon->prepare($query);
+        $stmt->execute([$eventId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
+ 
     public function addEvent($data) {
         $query = "INSERT INTO event_info 
             (event_type, event_name_created, event_time, event_place, event_date, min_age, max_age, created_by, created_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->dbcon->prepare($query);
          $stmt->execute([
             $data['event_type'],
             $data['event_name'],
@@ -35,7 +42,7 @@ class EventModel {
         ]);
 
          // ✅ Get the last inserted ID
-    $eventId = $this->conn->lastInsertId();
+    $eventId = $this->dbcon->lastInsertId();
 
     return [
         'event_prikey' => $eventId,
@@ -51,7 +58,7 @@ class EventModel {
         $query = "UPDATE event_info 
             SET event_type = ?, event_name_created = ?, event_time = ?, event_place = ?, event_date = ?, min_age = ?, max_age = ?, edited_by = ?, updated_at = NOW() 
             WHERE event_prikey = ?";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->dbcon->prepare($query);
         return $stmt->execute([
             $data['event_type'],
             $data['event_name'],
@@ -68,7 +75,7 @@ class EventModel {
 
     public function deleteEvent($eventPrikey) {
         $query = "DELETE FROM event_info WHERE event_prikey = ?";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->dbcon->prepare($query);
         return $stmt->execute([$eventPrikey]);
     }
 }

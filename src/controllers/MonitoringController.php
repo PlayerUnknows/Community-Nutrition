@@ -142,7 +142,7 @@ class MonitoringController extends BaseController {
                     }
                     break;
             }
-        }
+        } 
     }
 }
 

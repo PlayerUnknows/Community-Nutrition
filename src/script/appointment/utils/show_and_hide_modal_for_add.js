@@ -11,6 +11,8 @@ function showModal() {
         return;
     }
 
+    console.log("Showing add appointment modal");
+
     // Show backdrop
     if (backdropEl) {
         backdropEl.classList.add("show");
@@ -50,6 +52,7 @@ function showModal() {
         return;
     }
 
+
     // Hide backdrop
     if (backdropEl) {
       backdropEl.classList.remove("show");
@@ -71,6 +74,11 @@ function showModal() {
     document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
   }
 
-// Make functions globally accessible
+// Make functions globally accessible with higher priority
+// Override any existing showModal/hideModal functions
 window.showModal = showModal;
 window.hideModal = hideModal;
+
+// Also create appointment-specific functions to avoid conflicts
+window.showAppointmentModal = showModal;
+window.hideAppointmentModal = hideModal;

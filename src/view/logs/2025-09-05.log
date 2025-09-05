@@ -1,0 +1,1 @@
+[2025-09-05 06:02:12] INFO: StoreEventService: New event created - Name: BTSS, Type: Vitamin A, Date: 2026-10-10, Time: 06:10, Place: TEST | Context: {"event_id":"177","event_name":"BTSS","event_type":"Vitamin A","event_date":"2026-10-10","event_time":"06:10","event_place":"TEST","min_age":"1","max_age":"3","created_by":"Roel sample Malubay"}

@@ -144,11 +144,6 @@ $(document).ready(function () {
               return moment(data).format("YYYY-MM-DD HH:mm:ss");
             },
           },
-          {
-            data: "count",
-            width: "10%",
-            defaultContent: "1",
-          },
         ],
         order: [[3, "desc"]],
         pageLength: 10,
@@ -175,6 +170,7 @@ $(document).ready(function () {
         drawCallback: function () {
           $(".dataTables_paginate > .pagination").addClass("pagination-sm");
           updateScrollIndicator();
+          applyProfessionalPaginationStyling();
         },
       });
   
@@ -509,4 +505,92 @@ $(document).ready(function () {
   $(window).on("unload", function () {
     hideLoadingBackdrop();
   });
+
+  // Function to apply professional pagination styling
+  function applyProfessionalPaginationStyling() {
+    // Add professional styling to pagination
+    $('.dataTables_paginate .pagination').css({
+      'margin': '0',
+      'justify-content': 'center'
+    });
+
+    // Style pagination buttons
+    $('.dataTables_paginate .pagination .page-link').css({
+      'color': '#007bff',
+      'background-color': '#ffffff',
+      'border': '1px solid #dee2e6',
+      'border-radius': '6px',
+      'margin': '0 2px',
+      'padding': '8px 12px',
+      'font-weight': '500',
+      'transition': 'all 0.3s ease',
+      'box-shadow': '0 1px 3px rgba(0,0,0,0.1)'
+    });
+
+    // Style active page
+    $('.dataTables_paginate .pagination .page-item.active .page-link').css({
+      'background-color': '#007bff',
+      'border-color': '#007bff',
+      'color': '#ffffff',
+      'font-weight': '600',
+      'box-shadow': '0 2px 6px rgba(0,123,255,0.3)'
+    });
+
+    // Style disabled buttons
+    $('.dataTables_paginate .pagination .page-item.disabled .page-link').css({
+      'color': '#6c757d',
+      'background-color': '#f8f9fa',
+      'border-color': '#dee2e6',
+      'cursor': 'not-allowed'
+    });
+
+    // Add hover effects
+    $('.dataTables_paginate .pagination .page-link').hover(
+      function() {
+        if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
+          $(this).css({
+            'background-color': 'rgba(0,123,255,0.1)',
+            'border-color': '#007bff',
+            'transform': 'translateY(-1px)',
+            'box-shadow': '0 2px 6px rgba(0,123,255,0.2)'
+          });
+        }
+      },
+      function() {
+        if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
+          $(this).css({
+            'background-color': '#ffffff',
+            'border-color': '#dee2e6',
+            'transform': 'translateY(0)',
+            'box-shadow': '0 1px 3px rgba(0,0,0,0.1)'
+          });
+        }
+      }
+    );
+
+    // Style info text
+    $('.dataTables_info').css({
+      'color': '#6c757d',
+      'font-size': '14px',
+      'font-weight': '500',
+      'padding': '8px 0'
+    });
+
+    // Style length menu
+    $('.dataTables_length select').css({
+      'border': '1px solid #dee2e6',
+      'border-radius': '6px',
+      'padding': '6px 12px',
+      'font-size': '14px',
+      'color': '#495057',
+      'background-color': '#ffffff',
+      'box-shadow': '0 1px 3px rgba(0,0,0,0.1)'
+    });
+
+    $('.dataTables_length label').css({
+      'color': '#495057',
+      'font-weight': '500',
+      'margin-bottom': '0'
+    });
+  }
 });

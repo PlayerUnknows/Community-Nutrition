@@ -80,7 +80,7 @@ window.initializeTable = function() {
             width: "100px",
             render: function (data, type, row) {
               return (
-                '<button class="btn btn-primary btn-sm btn-view" data-checkup-id="' +
+                '<button class="btn btn-sm btn-outline-primary btn-view" data-checkup-id="' +
                 row.checkup_unique_id +
                 '"><i class="fas fa-eye"></i> View</button>'
               );

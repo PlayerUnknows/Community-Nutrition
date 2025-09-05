@@ -48,17 +48,33 @@ class UpdatePatientAppointmentService extends BaseService {
                  'guardian' => $validations['guardian'] ?? 'Not specified'
              ];
              
+             // Debug logging
+             error_log("Old values: " . json_encode($oldValues));
+             error_log("New values: " . json_encode($newValues));
+             
              // Track what changes were made
              $changes = [];
              foreach ($oldValues as $field => $oldValue) {
-                 if ($oldValue != $newValues[$field]) {
+                 $newValue = $newValues[$field];
+                 
+                 // Normalize values for comparison (trim whitespace, handle nulls)
+                 $oldValueNormalized = trim($oldValue ?? '');
+                 $newValueNormalized = trim($newValue ?? '');
+                 
+                 // Debug logging for each field comparison
+                 error_log("Comparing field '$field': old='$oldValueNormalized' vs new='$newValueNormalized'");
+                 
+                 if ($oldValueNormalized !== $newValueNormalized) {
                      $changes[] = [
                          'field' => $field,
                          'old_value' => $oldValue,
-                         'new_value' => $newValues[$field]
+                         'new_value' => $newValue
                      ];
                  }
              }
+             
+             // Debug logging
+             error_log("UpdateAppointment changes detected: " . json_encode($changes));
              
              $result = $appointments->updateAppointment(
                  $validations['id'],
@@ -81,6 +97,11 @@ class UpdatePatientAppointmentService extends BaseService {
                      $response['changes'] = $changes;
                      $response['change_summary'] = "Updated: " . implode(', ', array_column($changes, 'field'));
                  }
+                 
+                 // Debug logging
+                 error_log("UpdateAppointment final response: " . json_encode($response));
+                 
+                 // Audit trail is handled by the controller
                  
                  echo json_encode($response);
              } else {

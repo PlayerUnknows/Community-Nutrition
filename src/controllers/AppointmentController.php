@@ -50,9 +50,9 @@ class AppointmentController extends BaseController {
             if (isset($details['guardian']) && $details['guardian'] !== 'Not specified') {
                 $auditMessage .= ", Guardian: {$details['guardian']}";
             }
-            $this->auditTrail->log('add', $auditMessage);
+            $this->auditTrail->log('create', $auditMessage);
         } else {
-            $this->auditTrail->log('add', "User attempted to add appointment");
+            $this->auditTrail->log('create', "User attempted to add appointment");
         }
 
         // Return the service response
@@ -65,6 +65,9 @@ class AppointmentController extends BaseController {
     $postData = $_POST;
     $result = $this->serviceManager->call($serviceUrl, $postData, 'POST');
     
+    // Debug logging to see what's returned
+    error_log("UpdateAppointment result: " . json_encode($result));
+    
     // Log audit trail with specific changes if available
     if (isset($result['changes']) && !empty($result['changes'])) {
         $changeDetails = [];
@@ -72,9 +75,9 @@ class AppointmentController extends BaseController {
             $changeDetails[] = "{$change['field']}: '{$change['old_value']}' → '{$change['new_value']}'";
         }
         $changeSummary = implode(', ', $changeDetails);
-        $this->auditTrail->log('Update', "User updated appointment - Changes: {$changeSummary}");
+        $this->auditTrail->log('update', "User updated appointment - Changes: {$changeSummary}");
     } else {
-        $this->auditTrail->log('Update', "User updated appointment successfully");
+        $this->auditTrail->log('update', "User updated appointment successfully");
     }
     
     $this->respond($result);

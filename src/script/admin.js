@@ -112,6 +112,12 @@
         // Hide any open modals before showing new content
         $(".modal").modal("hide");
 
+        // First, switch to the Nutrition Monitoring tab if not already active
+        const scheduleTab = $("#schedule-tab");
+        if (!scheduleTab.hasClass("active")) {
+          scheduleTab.tab("show");
+        }
+
         // Hide all sub-content first
         $("#schedule .sub-content").hide();
         
@@ -193,6 +199,12 @@
 
         // Hide any open modals
         $(".modal").modal("hide");
+
+        // First, switch to the Create Account tab if not already active
+        const accountTab = $("#acc-reg");
+        if (!accountTab.hasClass("active")) {
+          accountTab.tab("show");
+        }
 
         $(".sub-content").hide();
         $(`#${target}`).show();

@@ -52,6 +52,8 @@ class StoreAppointmentsService extends BaseService {
                     $logMessage .= ", Guardian: {$validations['guardian']}";
                 }
                 
+                // Audit trail is handled by the controller
+                
                 // Return success response with appointment details
                 $response = [
                     'success' => true, 
@@ -61,6 +63,7 @@ class StoreAppointmentsService extends BaseService {
                 
                 echo json_encode($response);
             } else {
+                // Audit trail is handled by the controller
                 echo json_encode(['success' => false, 'message' => 'Failed to create appointment']);
             }
         } catch (Exception $e) {

@@ -55,7 +55,7 @@ $(document).ready(function () {
         orderable: false,
         render: function (data, type, row) {
           return (
-            '<button class="btn btn-sm btn-info view-patient" data-id="' +
+            '<button class="btn btn-sm btn-outline-primary view-patient" data-id="' +
             row.patient_id +
             '">' +
             '<i class="fas fa-eye"></i> View</button>'

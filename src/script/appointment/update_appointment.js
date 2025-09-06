@@ -82,6 +82,10 @@ $("#updateAppointment").on("click", async function (e) {
       guardian: currentValues.guardian,
       description: currentValues.description,
     };
+    
+    // Debug logging
+    console.log("Form data being sent:", formData);
+    console.log("user_id value:", formData.user_id, "type:", typeof formData.user_id);
 
     // Show loading state
     updateButton.disabled = true;

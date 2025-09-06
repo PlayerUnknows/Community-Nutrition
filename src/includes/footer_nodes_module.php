@@ -31,6 +31,8 @@
 <script src="../script/user/logout.js"></script>
 <script src="../script/session.js"></script>
 <script src="../script/admin.js"></script>
+<script src="../script/user/profile_settings.js"></script>
+<script src="../script/user/display_settings.js"></script>
 
 <!-- Loading screen script -->
 <script>

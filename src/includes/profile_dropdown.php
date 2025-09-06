@@ -4,7 +4,7 @@
 
 <!-- Enhanced Profile Dropdown -->
 <div class="nav-item dropdown" style="position: relative; z-index: 1051;">
-    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(0,123,255,0.1); border-radius: 20px; padding: 8px 16px; border: 1px solid rgba(0,123,255,0.2); transition: all 0.3s ease;">
+    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="transition: all 0.3s ease;">
         <div class="profile-avatar me-2" style="width: 32px; height: 32px; background: linear-gradient(135deg, #007bff, #0056b3); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,123,255,0.3);">
             <i class="fas fa-user text-white" style="font-size: 14px;"></i>
         </div>
@@ -37,7 +37,7 @@
         </li>
         
         <!-- Display Settings -->
-        <li>
+        <!-- <li>
             <a class="dropdown-item d-flex align-items-center py-2 px-3" href="#" id="displaySettingsBtn" style="border-radius: 8px; transition: all 0.2s ease;">
                 <div class="icon-wrapper me-3" style="width: 32px; height: 32px; background: rgba(40,167,69,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-cog text-success"></i>
@@ -47,7 +47,7 @@
                     <small class="text-muted">Customize appearance</small>
                 </div>
             </a>
-        </li>
+        </li> -->
         
         <!-- Divider -->
         <li><hr class="dropdown-divider my-2" style="border-color: rgba(0,0,0,0.1);"></li>

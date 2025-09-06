@@ -86,7 +86,7 @@ class Appointment {
             $query = "UPDATE " . $this->table . " 
                      SET user_id = ?, date = ?, time = ?, description = ?, guardian = ? 
                      WHERE appointment_prikey = ?";
-            
+     
             $stmt = $this->dbcon->prepare($query);
             $stmt->bindParam(1, $user_id);
             $stmt->bindParam(2, $date);
@@ -95,7 +95,10 @@ class Appointment {
             $stmt->bindParam(5, $guardian);
             $stmt->bindParam(6, $id);
             
-            return $stmt->execute();
+            $result = $stmt->execute();
+            error_log("Appointment Model - updateAppointment result: " . ($result ? 'success' : 'failed'));
+            
+            return $result;
         } catch (PDOException $e) {
             error_log("Error in updateAppointment: " . $e->getMessage());
             throw $e;

@@ -1,16 +1,21 @@
 <?php
 
 class updateValidations{
-    public static function validate(array $data){
+    public static function validate(?array $data = null){
           // Check if it's a JSON request
           $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
         
           if (strpos($contentType, 'application/json') !== false) {
               // Handle JSON input
-              $data = json_decode(file_get_contents('php://input'), true);
+
+              $jsonInput = file_get_contents('php://input');
+              error_log("UpdateValidations JSON input: " . $jsonInput);
+              $data = json_decode($jsonInput, true);
+              error_log("UpdateValidations parsed JSON data: " . json_encode($data));
           } else {
               // Handle regular POST data
               $data = $_POST;
+              error_log("UpdateValidations using POST data: " . json_encode($data));
           }
 
           // Validate required fields
@@ -28,9 +33,22 @@ class updateValidations{
             return ['success' => false, 'message' => 'Invalid appointment ID'];
         }
 
-        // Validate user ID is numeric
-        if (!is_numeric($data['user_id']) || intval($data['user_id']) <= 0) {
-            return ['success' => false, 'message' => 'Invalid user ID'];
+        // Debug logging to see what data is being received
+        error_log("UpdateValidations received data: " . json_encode($data));
+        
+        // Validate user ID (can be numeric or string with prefix like PAT, FAM, etc.)
+        $userId = $data['user_id'] ?? null;
+        error_log("UpdateValidations - user_id value: " . var_export($userId, true) . " (type: " . gettype($userId) . ")");
+        
+        if (empty($userId)) {
+            error_log("UpdateValidations - Empty user_id");
+            return ['success' => false, 'message' => 'User ID is required'];
+        }
+        
+        // Check if it's a valid user ID (either numeric or string with prefix)
+        if (!is_numeric($userId) && !preg_match('/^[A-Z]{3}\d{8,}$/', $userId)) {
+            error_log("UpdateValidations - Invalid user_id format: " . $userId);
+            return ['success' => false, 'message' => 'Invalid user ID format'];
         }
 
         // Validate date format
@@ -53,25 +71,41 @@ class updateValidations{
             return ['success' => false, 'message' => 'Please select today or a future date for your appointment'];
         }
 
-        // Validate time format (basic validation)
-        if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $data['time'])) {
-            return ['success' => false, 'message' => 'Invalid time format. Use HH:MM format'];
+        // Validate and normalize time format
+        $timeInput = trim($data['time']);
+        $normalizedTime = null;
+
+        // Supported formats
+        $formats = ['H:i', 'H:i:s', 'g:i a', 'g:i A', 'g a', 'ga', 'H', 'ha']; 
+
+        foreach ($formats as $format) {
+            $dt = DateTime::createFromFormat($format, $timeInput);
+            if ($dt !== false) {
+                $normalizedTime = $dt->format('H:i'); // always store as HH:MM (24-hour)
+                break;
+            }
         }
+        
+        if (!$normalizedTime) {
+            return ['success' => false, 'message' => 'Invalid time format. Use HH:MM, HH:MM:SS, or with AM/PM'];
+        }
+    
 
         // Validate description length
         if (strlen(trim($data['description'])) > 500) {
             return ['success' => false, 'message' => 'Description cannot exceed 500 characters'];
         }
 
-        // Success + cleaned data return
         return [
             'success' => true,
+            'data' => [
             'id' => intval($data['id']),
-            'user_id' => intval($data['user_id']),
+                'user_id' => $userId, // Use the validated user_id (can be string or numeric)
             'date' => $date,
-            'time' => trim($data['time']),
+                'time' => $normalizedTime, // Use the normalized time
             'description' => trim($data['description']),
             'guardian' => isset($data['guardian']) ? trim($data['guardian']) : null
+            ]
         ];
     }
 }

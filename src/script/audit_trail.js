@@ -37,7 +37,7 @@ $(document).ready(function () {
         processing: true,
         serverSide: false,
         ajax: {
-          url: "../services/fetch_audit_trail.php",
+          url: "../services/AuditTrailServices/fetch_audit_trail.php",
           type: "GET",
           dataSrc: "data",
         },
@@ -209,7 +209,7 @@ $(document).ready(function () {
     const params = new URLSearchParams(formData);
 
     $.ajax({
-      url: "../services/fetch_audit_trail.php",
+      url: "../services/AuditTrailServices/fetch_audit_trail.php",
       method: "GET",
       data: params.toString(),
       success: function (response) {
@@ -432,73 +432,73 @@ $(document).ready(function () {
       keyboard: true, // Allow closing with Esc key
     });
 
-    // Update form submission handler
-    $("#importDataForm").on("submit", async function (e) {
-      e.preventDefault();
+    // Reserve for future purposes 
+    // $("#importDataForm").on("submit", async function (e) {
+    //   e.preventDefault();
 
-      const formData = new FormData(this);
-      const modal = bootstrap.Modal.getInstance(
-        document.getElementById("importDataModal")
-      );
+    //   const formData = new FormData(this);
+    //   const modal = bootstrap.Modal.getInstance(
+    //     document.getElementById("importDataModal")
+    //   );
 
-      showLoadingBackdrop();
+    //   showLoadingBackdrop();
 
-      try {
-        // Update this URL to match your project structure
-        const response = await $.ajax({
-          url: "../services/audit_trail/import_audit_data.php", // Updated path
-          type: "POST",
-          data: formData,
-          processData: false,
-          contentType: false,
-        });
+    //   try {
+    //     // Update this URL to match your project structure
+    //     const response = await $.ajax({
+    //       url: "../services/audit_trail/import_audit_data.php", // Updated path
+    //       type: "POST",
+    //       data: formData,
+    //       processData: false,
+    //       contentType: false,
+    //     });
 
-        // Hide modal first
-        if (modal) {
-          modal.hide();
-        }
+    //     // Hide modal first
+    //     if (modal) {
+    //       modal.hide();
+    //     }
 
-        // Wait for backdrop to be fully removed
-        await hideLoadingBackdrop();
+    //     // Wait for backdrop to be fully removed
+    //     await hideLoadingBackdrop();
 
-        if (response.success) {
-          await Swal.fire({
-            title: "Success!",
-            text: response.message || "Data imported successfully",
-            icon: "success",
-            confirmButtonText: "OK",
-          });
+    //     if (response.success) {
+    //       await Swal.fire({
+    //         title: "Success!",
+    //         text: response.message || "Data imported successfully",
+    //         icon: "success",
+    //         confirmButtonText: "OK",
+    //       });
 
-          if (auditTable) {
-            auditTable.ajax.reload();
-          }
-        } else {
-          await Swal.fire({
-            title: "Error!",
-            text: response.message || "Failed to import data",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-      } catch (error) {
-        console.error("Import error:", error);
+    //       if (auditTable) {
+    //         auditTable.ajax.reload();
+    //       }
+    //     } else {
+    //       await Swal.fire({
+    //         title: "Error!",
+    //         text: response.message || "Failed to import data",
+    //         icon: "error",
+    //         confirmButtonText: "OK",
+    //       });
+    //     }
+    //   } catch (error) {
+    //     console.error("Import error:", error);
 
-        // Hide modal first
-        if (modal) {
-          modal.hide();
-        }
+    //     // Hide modal first
+    //     if (modal) {
+    //       modal.hide();
+    //     }
 
-        // Wait for backdrop to be fully removed
-        await hideLoadingBackdrop();
+    //     // Wait for backdrop to be fully removed
+    //     await hideLoadingBackdrop();
 
-        await Swal.fire({
-          title: "Error!",
-          text: "An error occurred while importing data",
-          icon: "error",
-          confirmButtonText: "OK",
-        });
-      }
-    });
+    //     await Swal.fire({
+    //       title: "Error!",
+    //       text: "An error occurred while importing data",
+    //       icon: "error",
+    //       confirmButtonText: "OK",
+    //     });
+    //   }
+    // });
   });
 
   // Add cleanup on page unload

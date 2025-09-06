@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../config/dbcon.php';
-require_once __DIR__ . '/../services/audit_trail.php';
+require_once __DIR__ . '/../services/AuditTrailServices/audit_trail.php';
 
 
 class BaseService{

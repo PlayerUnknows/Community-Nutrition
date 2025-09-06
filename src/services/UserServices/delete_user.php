@@ -25,7 +25,7 @@ class DeleteUserService extends BaseService{
 
         // Prevent self-deletion
         if (isset($_SESSION['user_id']) && $userId == $_SESSION['user_id']) {
-            $this->respondError('Cannot delete your own account');
+            $this->respondError('You cannot delete your own account. Please ask another administrator to delete your account.');
         }
 
         // Map role number to readable name

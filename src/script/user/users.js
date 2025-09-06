@@ -285,26 +285,71 @@ $(document).ready(function () {
                     success: function(response) {
                         console.log('Delete user response:', response);
                         
-                        if (response.success) {
+                        // Ensure response is parsed if it's a string
+                        if (typeof response === 'string') {
+                            try {
+                                response = JSON.parse(response);
+                            } catch (e) {
+                                console.error('Failed to parse response:', e);
+                                Toast.fire({
+                                    icon: 'error',
+                                    title: 'Invalid response from server'
+                                });
+                                return;
+                            }
+                        }
+                        
+                        if (response && response.success) {
                             // Refresh table immediately
                             loadUsers();
                             
                             // Show toast notification independently
+                            console.log('Showing success toast');
                             Toast.fire({
                                 icon: 'success',
                                 title: 'Successfully deleted!'
+                            }).then(() => {
+                                console.log('Success toast was shown');
+                            }).catch((error) => {
+                                console.error('Error showing success toast:', error);
                             });
                         } else {
+                            // Show error toast with the message from server
+                            const errorMessage = response && response.message ? response.message : 'Failed to delete user';
+                            console.log('Showing error toast with message:', errorMessage);
                             Toast.fire({
                                 icon: 'error',
-                                title: response.message || 'Failed to delete user'
+                                title: errorMessage,
+                                timer: 5000, // Show error messages longer
+                                timerProgressBar: true
+                            }).then(() => {
+                                console.log('Error toast was shown');
+                            }).catch((error) => {
+                                console.error('Error showing toast:', error);
                             });
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('Delete user error:', {xhr, status, error});
+                        let errorMessage = 'Failed to connect to the server';
+                        
+                        // Try to get error message from response
+                        if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    errorMessage = response.message;
+                                }
+                            } catch (e) {
+                                // If response is not JSON, use default message
+                            }
+                        }
+                        
                         Toast.fire({
                             icon: 'error',
-                            title: 'Failed to connect to the server'
+                            title: errorMessage,
+                            timer: 5000,
+                            timerProgressBar: true
                         });
                     },
                     complete: function() {
@@ -377,8 +422,19 @@ $(document).ready(function () {
                                     }).then(response => {
                                         console.log('Edit user response:', response);
                                         
-                                        if (!response.success) {
-                                            throw new Error(response.message || 'Failed to update user');
+                                        // Ensure response is parsed if it's a string
+                                        if (typeof response === 'string') {
+                                            try {
+                                                response = JSON.parse(response);
+                                            } catch (e) {
+                                                console.error('Failed to parse response:', e);
+                                                throw new Error('Invalid response from server');
+                                            }
+                                        }
+                                        
+                                        if (!response || !response.success) {
+                                            const errorMessage = response && response.message ? response.message : 'Failed to update user';
+                                            throw new Error(errorMessage);
                                         }
                                         return response;
                                     }).then(resolve)

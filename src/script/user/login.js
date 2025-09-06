@@ -78,8 +78,7 @@ $(document).ready(function () {
       // Hash the password before sending (temporarily disabled)
       // const hashedPassword = await hashPassword(password);
       
-      // Clear the password field immediately for security
-      $("#password").val('');
+      // Don't clear password field yet - wait for response
 
       // Perform AJAX request with regular password (temporarily)
       $.ajax({
@@ -104,6 +103,9 @@ $(document).ready(function () {
               if (jsonResponse.success) {
                 // Check if user is an admin (role 3)
                 if (jsonResponse.role == 3) {
+                  // Clear password field for security before redirect
+                  // $("#password").val('');
+                  
                   // Clear any session cookies that might cause issues
                   document.cookie =
                     "session_reset_time=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";

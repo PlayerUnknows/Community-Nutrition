@@ -1,6 +1,6 @@
 <?php
 // Include the session helper functions
-require_once __DIR__ . '/session_helper.php';
+require_once __DIR__ . '/SessionServices/session_helper.php';
 
 // Ensure session is started
 ensureSessionStarted();

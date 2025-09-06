@@ -21,7 +21,7 @@ $(document).ready(function () {
         text: "Are you sure you want to log out?",
         icon: "question",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#3085d6", 
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, logout",
         cancelButtonText: "No, cancel",

@@ -11,8 +11,6 @@ function showModal() {
         return;
     }
 
-    console.log("Showing add appointment modal");
-
     // Show backdrop
     if (backdropEl) {
         backdropEl.classList.add("show");

@@ -253,8 +253,7 @@ $(document).ready(function() {
   // Also handle blur event for when user finishes typing
   $("#user_id").on("blur", function() {
     const patientId = $(this).val().trim();
-    
-    console.log('Patient ID field lost focus, value:', patientId);
+
     
     if (patientId.length >= 15) {
       console.log('Patient ID length sufficient on blur, checking patient existence...');

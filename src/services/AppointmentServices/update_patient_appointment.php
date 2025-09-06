@@ -9,15 +9,18 @@ class UpdatePatientAppointmentService extends BaseService {
         $this->requireMethod('POST');
         $appointments = new Appointment();
 
-        $validations = updateValidations::validate($_POST);
+
+        $validations = updateValidations::validate();
         if (!$validations['success']) {
+            error_log("UpdatePatientAppointmentService validation failed: " . json_encode($validations));
             echo json_encode($validations);
             return;
         }
 
  
          try {
-             $appointmentId = $validations['id'];
+             $validatedData = $validations['data'];
+             $appointmentId = $validatedData['id'];
              
              // Get the full name from the existing appointment
              $result = $appointments->getAppointmentById($appointmentId);
@@ -39,18 +42,16 @@ class UpdatePatientAppointmentService extends BaseService {
                  'guardian' => $appointment['guardian'] ?? 'Not specified'
              ];
              
-             // Store new values
+             // Store new values (using normalized data from validation)
              $newValues = [
-                 'user_id' => $validations['user_id'],
-                 'date' => $validations['date'],
-                 'time' => $validations['time'],
-                 'description' => $validations['description'],
-                 'guardian' => $validations['guardian'] ?? 'Not specified'
+                 'user_id' => $validatedData['user_id'],
+                 'date' => $validatedData['date'],
+                 'time' => $validatedData['time'], // This should be normalized by validation
+                 'description' => $validatedData['description'],
+                 'guardian' => $validatedData['guardian'] ?? 'Not specified'
              ];
              
-             // Debug logging
-             error_log("Old values: " . json_encode($oldValues));
-             error_log("New values: " . json_encode($newValues));
+       
              
              // Track what changes were made
              $changes = [];
@@ -72,41 +73,48 @@ class UpdatePatientAppointmentService extends BaseService {
                      ];
                  }
              }
+   
+            $result = $appointments->updateAppointment(
+                $validatedData['id'],
+                $validatedData['user_id'],
+                $full_name,
+                $validatedData['date'],
+                $validatedData['time'],
+                $validatedData['description'],
+                $validatedData['guardian']
+            );
              
-             // Debug logging
-             error_log("UpdateAppointment changes detected: " . json_encode($changes));
-             
-             $result = $appointments->updateAppointment(
-                 $validations['id'],
-                 $validations['user_id'],
-                 $full_name,
-                 $validations['date'],
-                 $validations['time'],
-                 $validations['description'],
-                 $validations['guardian']
-             );
-             
-             if ($result) {
-                 $response = [
-                     'success' => true, 
-                     'message' => 'Appointment updated successfully'
-                 ];
-                  
-                 // Include change details in response if there were changes
-                 if (!empty($changes)) {
-                     $response['changes'] = $changes;
-                     $response['change_summary'] = "Updated: " . implode(', ', array_column($changes, 'field'));
-                 }
+            if ($result) {
+                $response = [
+                    'success' => true, 
+                    'message' => 'Appointment updated successfully'
+                ];
                  
-                 // Debug logging
-                 error_log("UpdateAppointment final response: " . json_encode($response));
-                 
-                 // Audit trail is handled by the controller
-                 
-                 echo json_encode($response);
-             } else {
-                 echo json_encode(['success' => false, 'message' => 'Failed to update appointment']);
-             }
+                // Include change details in response if there were changes
+                if (!empty($changes)) {
+                    $response['changes'] = $changes;
+                    $response['change_summary'] = "Updated: " . implode(', ', array_column($changes, 'field'));
+                }
+                
+                // Include appointment details for audit trail (like event system does)
+                $response['appointment_details'] = [
+                    'appointment_id' => $validatedData['id'],
+                    'patient_name' => $full_name,
+                    'patient_id' => $validatedData['user_id'],
+                    'appointment_date' => $validatedData['date'],
+                    'appointment_time' => $validatedData['time'],
+                    'guardian' => $validatedData['guardian'] ?? 'Not specified'
+                ];
+                
+                // Debug logging
+                error_log("UpdateAppointment final response: " . json_encode($response));
+                
+                // Audit trail is handled by the controller
+                
+                echo json_encode($response);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update appointment']);
+            }
          } catch (Exception $e) {
              echo json_encode(['success' => false, 'message' => 'Failed to update appointment: ' . $e->getMessage()]);
          }

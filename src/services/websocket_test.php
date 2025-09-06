@@ -24,7 +24,7 @@ if (!file_exists($composerAutoloadPath)) {
 // Test Database Connection
 $auditCount = 0;
 try {
-    require_once __DIR__ . '/../config/dbcon.php';
+    require_once __DIR__ . '/../../config/dbcon.php';
     $conn = connect();
     $stmt = $conn->query("SELECT COUNT(*) FROM audit_trail");
     $auditCount = (int) $stmt->fetchColumn();

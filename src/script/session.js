@@ -142,20 +142,20 @@ class SessionManager {
 
   // Helper method to get the correct path to backend files
   getBackendPath(endpoint) {
-    let basePath = "../services/";
+    let basePath = "../services/SessionServices/";
 
     // If we're in a nested view folder, adjust the path
     if (window.location.pathname.includes("/view/")) {
       if (window.location.pathname.split("/").length > 4) {
         // We're in a deeper folder structure
-        basePath = "../../src/services/";
+        basePath = "../../src/services/SessionServices/";
       }
     } else if (
       window.location.pathname === "/" ||
       window.location.pathname.includes("/index.php")
     ) {
       // We're at the root or index page
-      basePath = "src/services/";
+      basePath = "src/services/SessionServices/";
     }
 
     return basePath + endpoint;

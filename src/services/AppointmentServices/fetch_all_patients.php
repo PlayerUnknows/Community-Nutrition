@@ -12,12 +12,15 @@ class FetchAllPatientsService extends BaseService {
         $appointments = array();
 
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            // Format time to remove seconds (HH:MM:SS -> HH:MM)
+            $formattedTime = preg_replace('/:[0-5][0-9]$/', '', $row['time']);
+            
             $appointments[] = array(
                 'appointment_prikey' => $row['appointment_prikey'],
                 'user_id' => $row['user_id'],
                 'patient_name' => $row['full_name'],
                 'date' => $row['date'],
-                'time' => $row['time'],
+                'time' => $formattedTime,
                 'description' => $row['description'],
                 'status' => $row['status'],
                 'guardian' => $row['guardian']

@@ -243,7 +243,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update BMI Category Distribution table
         updateBMICategoryTable(data);
       } else {
-        console.log("No data found for date range");
         // Show empty states
         initializeEmptyCharts();
         if (bmiTable) {
@@ -322,8 +321,8 @@ document.addEventListener("DOMContentLoaded", function () {
       previewReport(previewType);
     });
 
-    // Add click event listeners to export buttons
-    $(document).on("click", "[data-export]", function (e) {
+    // Add click event listeners to BMI-specific export buttons only
+    $(document).on("click", "[data-export].bmi-export", function (e) {
       e.preventDefault();
       const exportType = $(this).data("export");
       const contentType = $(this).data("type");
@@ -616,8 +615,6 @@ document.addEventListener("DOMContentLoaded", function () {
           },
         });
       }
-
-      console.log("Charts created successfully");
     } catch (error) {
       console.error("Error initializing gender charts:", error);
     }

@@ -27,8 +27,8 @@
         <div class="brand-section">
             <img src="../../assets/img/SanAndres.svg" alt="Logo" class="brand-logo">
             <div class="brand-info">
-                <h1 class="brand-title">Community Nutrition</h1>
-                <p class="brand-subtitle">Health Management System</p>
+                <h1 class="brand-title">Community Nutrition Information System</h1>
+                <p class="brand-subtitle">Administrator Portal</p>
             </div>
         </div>
 

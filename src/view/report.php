@@ -49,87 +49,7 @@ foreach ($records as $record) {
     <link href="../../node_modules/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../../node_modules/daterangepicker/daterangepicker.css" />
     <!-- Custom CSS -->
-    <style>
-        .chart-container {
-            position: relative;
-            height: 400px;
-            margin-bottom: 20px;
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9em;
-        }
-
-        .status-normal {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .status-warning {
-            background-color: #ffc107;
-            color: black;
-        }
-
-        .status-alert {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .bg-pink {
-            background-color: #FF69B4 !important;
-            color: white;
-        }
-
-        .badge {
-            font-size: 0.875rem;
-            padding: 0.4em 0.8em;
-        }
-
-        .search-container {
-            max-width: 200px;
-            position: relative;
-        }
-
-        #heightTableSearch {
-            padding-right: 30px;
-        }
-
-        .search-container .fas.fa-search {
-            font-size: 0.875rem;
-        }
-
-        .input-group-text {
-            background-color: #fff;
-            border-left: none;
-        }
-
-        #heightTableSearch {
-            border-right: none;
-        }
-
-        #heightTableSearch:focus+.input-group-text {
-            border-color: #86b7fe;
-        }
-
-        .fa-search {
-            color: #6c757d;
-        }
-
-        #heightTableSearch {
-            border-radius: 4px;
-        }
-
-        #clearSearch {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-        }
-
-        #clearSearch:hover {
-            background-color: #e9ecef;
-        }
-    </style>
+    <link rel="stylesheet" href="../../assets/css/report.css">
 </head>
 
 <body>
@@ -169,16 +89,16 @@ foreach ($records as $record) {
                     </button>
                     <ul class="dropdown-menu">
                         <li><h6 class="dropdown-header">Growth Status</h6></li>
-                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="growth-summary">Growth Status Summary</a></li>
-                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="growth-statistics">Growth Statistics by Age & Gender</a></li>
+                        <li><a class="dropdown-item growth-export-link" href="#" data-export="excel" data-type="growth-summary">Growth Status Summary</a></li>
+                        <li><a class="dropdown-item growth-export-link" href="#" data-export="excel" data-type="growth-statistics">Growth Statistics by Age & Gender</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Gender Analysis</h6></li>
-                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="gender-distribution">Gender Distribution</a></li>
+                        <li><a class="dropdown-item growth-export-link" href="#" data-export="excel" data-type="gender-distribution">Gender Distribution</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Raw Data</h6></li>
-                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="height-measurements">Height Measurements History</a></li>
+                        <li><a class="dropdown-item growth-export-link" href="#" data-export="excel" data-type="height-measurements">Height Measurements History</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="all">Complete Report</a></li>
+                        <li><a class="dropdown-item growth-export-link" href="#" data-export="excel" data-type="all">Complete Report</a></li>
                     </ul>
                 </div>
             </div>

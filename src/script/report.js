@@ -1258,11 +1258,11 @@ class ReportManager {
   }
 
   initializeExportHandlers() {
-    // Remove any existing event handlers first
-    $(document).off("click", "[data-export]");
+    // Remove any existing event handlers first for report-specific elements
+    $(document).off("click", ".growth-export-link");
 
-    // Handle export dropdown clicks
-    $(document).on("click", "[data-export]", (e) => {
+    // Handle report-specific export dropdown clicks
+    $(document).on("click", ".growth-export-link", (e) => {
       e.preventDefault();
       e.stopPropagation(); // Prevent event bubbling
 

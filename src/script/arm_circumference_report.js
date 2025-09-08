@@ -23,6 +23,7 @@ class ArmCircumferenceReportManager {
     // Initialize date pickers
     this.initializeDateRangePickers();
     this.initializeEventListeners();
+    this.initializeExportHandlers();
     this.initializeTable();
 
     // Load initial data
@@ -142,10 +143,7 @@ class ArmCircumferenceReportManager {
     });
 
     // Export button handler - specific for Arm Circumference History table
-    $("#exportTableBtn").on("click", (e) => {
-      e.preventDefault();
-      this.handleExport("table", e);
-    });
+    // Note: This is now handled by the general [data-export] handler below
     
     // Auto-apply dates when initialized
     setTimeout(() => {
@@ -981,22 +979,24 @@ class ArmCircumferenceReportManager {
   }
 
   initializeExportHandlers() {
-    // Remove any existing event handlers first
-    $(document).off("click", "[data-export]");
+    // Remove any existing event handlers first for arm circumference specific elements
+    $(document).off("click", "#exportTableBtn");
+    $(document).off("click", ".arm-export-link");
 
-    // Handle export dropdown clicks
-    $(document).on("click", "[data-export]", (e) => {
+    // Handle arm circumference specific export button
+    $(document).on("click", "#exportTableBtn", (e) => {
       e.preventDefault();
-      e.stopPropagation(); // Prevent event bubbling
+      e.stopPropagation();
+      this.handleExport("table", e);
+    });
 
+    // Handle arm circumference specific export links
+    $(document).on("click", ".arm-export-link", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const contentType = $(e.currentTarget).data("type");
-
-      // Skip validation for table data export
-      if (contentType === "arm-table") {
-        this.handleExport(contentType, e);
-        return;
-      }
-
+      
       // Ensure we have the required chart before proceeding
       if (!this.validateChartForExport(contentType)) {
         this.showToast(
@@ -1053,8 +1053,6 @@ $(document).ready(() => {
 
   if (!armCircumferenceReportManager) {
     try {
-      // Remove any existing event handlers
-      $(document).off("click", "[data-export]");
       armCircumferenceReportManager = new ArmCircumferenceReportManager();
     } catch (error) {
     

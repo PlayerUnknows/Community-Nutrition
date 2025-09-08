@@ -98,8 +98,15 @@
                   // Show modal using the global variable
                   if (typeof credentialsModal !== 'undefined') {
                     try {
-                      // Hide any existing modals first
-                      $('.modal').modal('hide');
+                      // Hide any existing modals first using Bootstrap 5 method
+                      const existingModals = document.querySelectorAll('.modal.show');
+                      existingModals.forEach(modalEl => {
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) {
+                          modalInstance.hide();
+                        }
+                      });
+                      
                       // Show credentials modal
                       setTimeout(() => {
                         credentialsModal.show();

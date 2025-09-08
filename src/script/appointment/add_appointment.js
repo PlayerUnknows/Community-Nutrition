@@ -278,7 +278,13 @@ $(document).ready(function() {
       e.preventDefault();
       
       // Ensure any existing Bootstrap modals are properly closed
-      $('.modal').modal('hide');
+      const existingModals = document.querySelectorAll('.modal.show');
+      existingModals.forEach(modalEl => {
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      });
       
       // Wait a bit for Bootstrap modals to close, then show our modal
       setTimeout(() => {

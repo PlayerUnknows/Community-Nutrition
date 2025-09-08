@@ -9,9 +9,7 @@ require_once __DIR__ . '/../../vendor/tecnickcom/tcpdf/tcpdf.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
+
 
 // Function to handle all JSON responses
 function sendJsonResponse($data, $status = 200)

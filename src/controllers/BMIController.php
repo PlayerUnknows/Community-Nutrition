@@ -38,9 +38,6 @@ require_once __DIR__ . '/../../vendor/tecnickcom/tcpdf/tcpdf.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class BMIController
 {
@@ -155,9 +152,10 @@ class BMIController
             
             // Get data for export based on content type
             $exportData = [];
-            
-            // Use getBMIData for more structured data format for exports
-            $exportData['data'] = $this->bmiModel->getBMIData($startDate, $endDate);
+
+            // Use the same source as the UI table to keep field names consistent
+            // This returns: checkup_date, patient_id, patient_name, age, sex, finding_bmi
+            $exportData['data'] = $this->bmiModel->getBMIDetails($startDate, $endDate);
             $exportData['date_range'] = $startDate && $endDate ? "$startDate to $endDate" : "All Time";
             
             error_log("Retrieved " . count($exportData['data']) . " records for export");
@@ -586,8 +584,8 @@ class BMIController
                 
                 // Add data rows with color coding for BMI status
                 foreach ($data['data'] as $record) {
-                    // Check for either created_at or checkup_date field
-                    $dateField = isset($record['created_at']) ? $record['created_at'] : null;
+                    // Use checkup_date (already formatted by query) or fallback to created_at if present
+                    $dateField = $record['checkup_date'] ?? ($record['created_at'] ?? null);
                     $sheet->setCellValue('A' . $currentRow, $dateField ? date('M d, Y', strtotime($dateField)) : 'N/A');
                     $sheet->setCellValue('B' . $currentRow, $record['patient_id'] ?? 'N/A');
                     $sheet->setCellValue('C' . $currentRow, $record['patient_name'] ?? 'N/A');

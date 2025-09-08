@@ -59,7 +59,13 @@
         }
 
         // Ensure any open modals are properly hidden before switching tabs
-        $(".modal").modal("hide");
+        const existingModals = document.querySelectorAll('.modal.show');
+        existingModals.forEach(modalEl => {
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        });
       });
 
     // Ensure modals are properly disposed when hidden
@@ -75,7 +81,13 @@
         const target = $(this).data("target");
 
         // Hide any open modals before showing new content
-        $(".modal").modal("hide");
+        const existingModals = document.querySelectorAll('.modal.show');
+        existingModals.forEach(modalEl => {
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        });
 
         // First, switch to the Nutrition Monitoring tab if not already active
         const scheduleTab = $("#schedule-tab");
@@ -122,7 +134,13 @@
       .off("click shown.bs.tab")
       .on("click shown.bs.tab", function () {
         // Hide any open modals
-        $(".modal").modal("hide");
+        const existingModals = document.querySelectorAll('.modal.show');
+        existingModals.forEach(modalEl => {
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        });
         $("#schedule .sub-content").hide();
         $("#monitoring-records").show();
       });
@@ -132,7 +150,13 @@
       .off("click shown.bs.tab")
       .on("click shown.bs.tab", function () {
         // Hide any open modals
-        $(".modal").modal("hide");
+        const existingModals = document.querySelectorAll('.modal.show');
+        existingModals.forEach(modalEl => {
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        });
         $(".sub-content").hide();
         $("#signupFormContainer").show();
       });
@@ -163,7 +187,13 @@
         const target = $(this).data("target");
 
         // Hide any open modals
-        $(".modal").modal("hide");
+        const existingModals = document.querySelectorAll('.modal.show');
+        existingModals.forEach(modalEl => {
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        });
 
         // First, switch to the Create Account tab if not already active
         const accountTab = $("#acc-reg");

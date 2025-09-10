@@ -3,7 +3,6 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
 require_once __DIR__ . '/../../core/BaseService.php';
 require_once __DIR__ . '/../../core/Logger.php';
 require_once __DIR__ . '/../../models/EventModel.php';

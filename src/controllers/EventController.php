@@ -1,16 +1,15 @@
 <?php
 require_once __DIR__ . '/../core/BaseController.php';
-require_once __DIR__ . '/../models/EventModel.php';
 require_once __DIR__ . '/../core/Logger.php';
 
 class EventController extends BaseController {
 
-    private $model;
+    // protected;
 
     public function __construct(){
         try {
             parent::__construct();
-            $this->model = new EventModel();
+            $this->event = new EventModel();
         } catch (Exception $e) {
             $this->respondError('Database connection failed: ' . $e->getMessage(), 500);
         }

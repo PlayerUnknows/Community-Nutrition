@@ -1,18 +1,17 @@
 <?php
 require_once __DIR__ . '/../core/BaseController.php';
-require_once __DIR__ . '/../models/Appointment.php';
 require_once __DIR__ . '/../core/Logger.php';
 
 
 class AppointmentController extends BaseController {
 
     
-    private $model;
+    protected $appointment;
 
     public function __construct() {
         try {
             parent::__construct();
-            $this->model = new Appointment();
+            $this->appointment = new Appointment();
 
         } catch (Exception $e) {
             $this->respondError('Database connection failed: ' . $e->getMessage(), 500);
@@ -170,7 +169,7 @@ class AppointmentController extends BaseController {
 
         try {
             $id = $_POST['id'];
-            $result = $this->model->deleteAppointment($id);
+            $result = $this->appointment->deleteAppointment($id);
             
             if ($result) {
                 $this->respondSuccess([], 'Appointment deleted successfully');

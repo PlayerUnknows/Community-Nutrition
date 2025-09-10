@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../config/dbcon.php';
 class Appointment {
     private $dbcon;

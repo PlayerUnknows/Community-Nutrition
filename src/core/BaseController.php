@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/MonitoringModel.php';
+require_once __DIR__ . '/../models/Appointment.php';
+require_once __DIR__ . '/../models/EventModel.php';
 require_once __DIR__ . '/../config/dbcon.php';
 require_once __DIR__ . '/../models/AuditTrail.php'; 
 require_once __DIR__ . '/ServiceManager.php';
@@ -10,7 +12,8 @@ class BaseController{
 
     protected $dbcon;
     protected $user;
-
+    protected $appointment;
+    protected $event;
     protected $monitoringModel;
     protected $auditTrail;
 
@@ -20,6 +23,8 @@ class BaseController{
         $this->user = new User($this->dbcon);
         $this->monitoringModel = new MonitoringModel();
         $this->auditTrail = new AuditTrail($this->dbcon); 
+        $this->appointment = new Appointment();
+        $this->event = new EventModel();
     }
 
     protected function respond($data, $status = 200){

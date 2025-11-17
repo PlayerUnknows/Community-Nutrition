@@ -31,17 +31,93 @@
     
     /* Print styles */
     @media print {
+        @page {
+            size: A3 landscape;
+            margin: 0.15in;
+        }
+        
         body * {
             visibility: hidden;
         }
-        #overall-report, #overall-report * {
+        
+        #overall-report,
+        #overall-report * {
             visibility: visible;
         }
+        
         #overall-report {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
+        }
+        
+        /* Hide buttons and controls */
+        #overall-report .btn,
+        #overall-report button,
+        #overall-report .card-header {
+            display: none !important;
+        }
+        
+        #overall-report .card {
+            box-shadow: none;
+            border: none;
+            page-break-inside: avoid;
+        }
+        
+        #overall-report .card.shadow.mb-4 {
+            page-break-before: always;
+        }
+        
+        #overall-report .table {
+            font-size: 5.75pt !important;
+            width: 100% !important;
+            border-collapse: collapse;
+            table-layout: auto;
+            page-break-inside: avoid;
+        }
+        
+        #overall-report .table th,
+        #overall-report .table td {
+            padding: 2px 2.5px !important;
+            border: 0.5px solid #000 !important;
+            font-size: 5.75pt !important;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.45;
+            height: 15px;
+        }
+        
+        #overall-report .table th:first-child,
+        #overall-report .table td:first-child {
+            width: 90px;
+            white-space: normal;
+            text-align: left;
+            font-size: 6.75pt !important;
+            font-weight: bold;
+        }
+        
+        #overall-report .table thead th {
+            font-weight: bold;
+            background-color: #f0f0f0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        #overall-report .table-responsive {
+            overflow: visible !important;
+        }
+        
+        #overall-report h5 {
+            font-size: 9pt;
+            margin: 0.2rem 0;
+            font-weight: bold;
+        }
+        
+        /* Hide DataTables info */
+        .dataTables_info,
+        .dataTables_paginate {
+            display: none !important;
         }
     }
 </style>

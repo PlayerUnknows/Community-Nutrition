@@ -23,17 +23,13 @@ const OverallReportModule = (function() {
     
     // Generate default report
     generateReport();
-    
-    // No barangay list to load
-    // loadBarangays();
-    
-    console.log("OverallReportModule initialized successfully");
+
   }
   
   // Initialize date range picker
   function initializeDateRangePicker() {
     if (!$dateRangeFilter.length) {
-      console.warn("Date range filter element not found");
+
       return;
     }
     
@@ -69,7 +65,7 @@ const OverallReportModule = (function() {
         generateReport(); // Generate report with no date filter
       });
     } catch (error) {
-      console.error("Error initializing date range picker:", error);
+
     }
   }
   
@@ -112,7 +108,7 @@ const OverallReportModule = (function() {
           }
         }
       } else {
-        console.warn('Date range filter not initialized yet');
+
       }
       
       // Fetch both data and statistics
@@ -130,10 +126,10 @@ const OverallReportModule = (function() {
       }
       
       const data = result.data;
-      console.log('OPT Unified Overall Report Data:', data);
+
       $reportContainer.html(generateUnifiedOverallTableHTML(data, true));
     } catch (error) {
-      console.error('Error in fetchBMIStatsAndRender:', error);
+ 
       $reportContainer.html(`<div class="alert alert-danger">Error generating report: ${error.message}</div>`);
     }
   }
@@ -178,7 +174,6 @@ const OverallReportModule = (function() {
 
     }
     
-    console.log('Location statistics update complete');
   }
   
   function generateUnifiedOverallTableHTML(data, showSummaryBar = true) {
@@ -407,13 +402,30 @@ const OverallReportModule = (function() {
   
   // Export report
   function exportReport() {
-    const title = `OPT_Plus_Report_${new Date().toISOString().slice(0, 10)}`;
-    const dateRange = $dateRangeFilter.val() ? $dateRangeFilter.val().replace(/\s/g, '') : 'All_Time';
-    const filename = `${title}_${dateRange}.xlsx`;
-    
-    // Alert for now, would be implemented with actual export library
-    alert(`Export functionality will be implemented here. File will be saved as: ${filename}`);
-
+    try {
+      let url = '/src/controllers/OverallReportController.php?action=exportOverallReport';
+      
+      if ($dateRangeFilter && $dateRangeFilter.length > 0) {
+        const dateRangeValue = $dateRangeFilter.val();
+        if (dateRangeValue) {
+          const dates = dateRangeValue.split(' - ');
+          if (dates.length === 2) {
+            url += `&start_date=${encodeURIComponent(dates[0])}&end_date=${encodeURIComponent(dates[1])}`;
+          }
+        }
+      }
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `OPT_Plus_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      alert('Error exporting report: ' + error.message);
+    }
   }
   
   // Print report
@@ -498,6 +510,3 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
-// Confirm script is loaded
-console.log('overall_report.js loaded'); 

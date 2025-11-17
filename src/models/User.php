@@ -22,7 +22,7 @@ class User
         try {
             // Generate a unique role-specific ID
             $userId = $this->generateRoleSpecificId($role);
-            
+
             // Generate a temporary password
             $tempPassword = $this->generateTemporaryPassword();
 
@@ -43,7 +43,7 @@ class User
                 // Log the account creation in audit trail
                 require_once __DIR__ . '/../backend/audit_trail.php';
                 logUserAuth($userId, $email, AUDIT_REGISTER);
-                
+
                 // Return both the user ID and temporary password
                 return [
                     'success' => true,
@@ -51,7 +51,7 @@ class User
                     'tempPassword' => $tempPassword
                 ];
             }
-            
+
             return [
                 'success' => false,
                 'message' => 'Failed to create account'
@@ -88,11 +88,11 @@ class User
         $length = 12;
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
         $password = '';
-        
+
         for ($i = 0; $i < $length; $i++) {
             $password .= $chars[random_int(0, strlen($chars) - 1)];
         }
-        
+
         return $password;
     }
 
@@ -116,10 +116,22 @@ class User
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($password, $user['password'])) {
-            session_start();
+            // Only start session if not already started
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
+            // Clear any existing redirect counts to prevent issues
+            if (isset($_SESSION['redirect_count'])) {
+                unset($_SESSION['redirect_count']);
+                unset($_SESSION['last_redirect_time']);
+            }
+
+            // Set session data
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['role'] = $user['role'];
+            $_SESSION['login_time'] = time();
 
             require_once __DIR__ . '/../backend/audit_trail.php';
             logUserAuth($user['user_id'], $user['email'], AUDIT_LOGIN);
@@ -142,8 +154,12 @@ class User
             require_once __DIR__ . '/../backend/audit_trail.php';
             logUserAuth($_SESSION['user_id'], $_SESSION['email'], AUDIT_LOGOUT);
 
+            // Clear all session data
             session_unset();
             session_destroy();
+
+            // Start a new session to prevent errors
+            session_start();
             return true;
         }
         return false;
@@ -153,14 +169,11 @@ class User
     private function getRedirectPage($role)
     {
         switch ($role) {
-            case 1:
-                return '../src/view/parent.php';
-            case 2:
-                return '../src/view/health_worker_dashboard.php';
             case 3:
                 return '../src/view/admin.php';
             default:
-                return '../src/view/general_dashboard.php';
+                // Redirect unauthorized users to login page
+                return '../index.php?error=' . urlencode("Unauthorized access. Admin privileges required.");
         }
     }
 
@@ -173,22 +186,23 @@ class User
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateProfile($userId, $updates) {
+    public function updateProfile($userId, $updates)
+    {
         try {
             $setClauses = [];
             $params = [];
-            
+
             foreach ($updates as $field => $value) {
                 $setClauses[] = "$field = ?";
                 $params[] = $value;
             }
-            
+
             // Add userId to params
             $params[] = $userId;
-            
+
             $sql = "UPDATE account_info SET " . implode(', ', $setClauses) . " WHERE user_id = ?";
             $stmt = $this->conn->prepare($sql);
-            
+
             return $stmt->execute($params);
         } catch (PDOException $e) {
             error_log("Error updating profile: " . $e->getMessage());
@@ -196,7 +210,8 @@ class User
         }
     }
 
-    public function emailExists($email) {
+    public function emailExists($email)
+    {
         try {
             $sql = "SELECT COUNT(*) FROM account_info WHERE email = ?";
             $stmt = $this->conn->prepare($sql);

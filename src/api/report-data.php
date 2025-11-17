@@ -29,7 +29,6 @@ try {
         'weights' => [],
         'heights' => [],
         'bmis' => [],
-        'armCircumferences' => [],
         'nutritionalStatus' => $reportData['nutritionalStatus'],
         'ageGroupAnalysis' => $reportData['ageGroupAnalysis'],
         'growthStatsByGender' => $reportData['growthStatsByGender']
@@ -44,8 +43,6 @@ try {
         // Calculate BMI
         $heightInMeters = $record['height'] / 100;
         $processedData['bmis'][] = round($record['weight'] / ($heightInMeters * $heightInMeters), 2);
-        
-        $processedData['armCircumferences'][] = floatval($record['arm_circumference']);
     }
 
     // Send JSON response

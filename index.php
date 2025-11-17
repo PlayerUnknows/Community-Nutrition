@@ -1,12 +1,61 @@
 <?php
-session_start();
+// Debug flag - set to false in production
+$debug = false;
+
+// Include the session helper functions
+require_once __DIR__ . '/src/backend/session_helper.php';
+
+// Ensure session is started
+ensureSessionStarted();
+
+// Check for session error and redirect with error parameter if needed
+if (isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
+    header("Location: index.php?error=" . urlencode($error));
+    exit();
+}
 
 // Prevent caching to stop back button from showing the page
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
-require_once __DIR__ . '/src/backend/session_redirect.php';
+// Only check for redirects on direct page loads (not AJAX or assets)
+$isDirectPageLoad = true;
+
+// Check if it's an AJAX request
+if (
+    isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+    strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+) {
+    $isDirectPageLoad = false;
+}
+
+// Check if it's a request for assets/resources
+if (
+    isset($_SERVER['HTTP_ACCEPT']) &&
+    strpos($_SERVER['HTTP_ACCEPT'], 'text/html') === false
+) {
+    $isDirectPageLoad = false;
+}
+
+// Only perform session redirect check on direct page loads
+if ($isDirectPageLoad && shouldPerformSessionCheck(15, 'index_page')) {
+    // Include the session redirect logic
+    require_once __DIR__ . '/src/backend/session_redirect.php';
+}
+
+// Output debug information if debug mode is enabled
+if ($debug) {
+    echo "<!-- Session Debug Info: ";
+    echo "Direct Page Load: " . ($isDirectPageLoad ? "Yes" : "No") . ", ";
+    echo "Session ID: " . session_id() . ", ";
+    echo "User ID: " . ($_SESSION['user_id'] ?? "Not set") . ", ";
+    echo "Redirect Count: " . ($_SESSION['redirect_count'] ?? "Not set") . ", ";
+    echo "Last Redirect Time: " . ($_SESSION['last_redirect_time'] ?? "Not set");
+    echo " -->";
+}
 ?>
 <!-- /app/views/user/login.php -->
 <!DOCTYPE html>

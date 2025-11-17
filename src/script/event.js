@@ -204,140 +204,134 @@ $(document).ready(function() {
     // Add Event Form Submit
     $('#addEventForm').on('submit', function(e) {
         e.preventDefault();
+        const submitButton = $(this).find('button[type="submit"]');
+        const originalHtml = submitButton.html();
         
+        // Show only spinner in button
+        submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+        submitButton.prop('disabled', true);
+
         const formData = new FormData(this);
         formData.append('action', 'add');
 
-        $.ajax({
-            url: '../backend/event_handler.php',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                hideModal('#addEventModal');
-                $('#addEventForm')[0].reset();
-
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: response.message
-                    }).then(() => {
+        setTimeout(() => {
+            $.ajax({
+                url: '../backend/event_handler.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        hideModal('#addEventModal');
+                        $('#addEventForm')[0].reset();
+                        
+                        // Reload table immediately
                         eventTable.ajax.reload();
-                    });
-                } else {
-                    Swal.fire({
+                        
+                        // Show toast notification independently
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Successfully added!'
+                        });
+                    } else {
+                        Toast.fire({
+                            icon: 'error',
+                            title: response.message || 'Failed to add event'
+                        });
+                    }
+                },
+                error: function() {
+                    Toast.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: response.message || 'An error occurred'
+                        title: 'Failed to connect to the server'
                     });
+                },
+                complete: function() {
+                    // Restore button state
+                    submitButton.html(originalHtml);
+                    submitButton.prop('disabled', false);
                 }
-            },
-            error: function(xhr, status, error) {
-                hideModal('#addEventModal');
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while processing your request'
-                });
-            }
-        });
+            });
+        }, 1000);
     });
 
     // Edit Event Form Submit
     $('#editEventForm').on('submit', function(e) {
         e.preventDefault();
+        const submitButton = $(this).find('button[type="submit"]');
+        const originalHtml = submitButton.html();
         
-        // Create FormData object
+        // Show only spinner in button
+        submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+        submitButton.prop('disabled', true);
+
         const formData = new FormData(this);
         formData.append('action', 'update');
 
-        // Debug: Log all form data
-        console.log('Form Data being sent:');
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
-
-        // Validate required fields
-        const requiredFields = ['event_prikey', 'event_type', 'event_name', 'event_time', 
-                               'event_place', 'event_date', 'min_age', 'max_age'];
-        let missingFields = [];
-        
-        requiredFields.forEach(field => {
-            if (!formData.get(field)) {
-                missingFields.push(field);
-            }
-        });
-
-        if (missingFields.length > 0) {
-            console.error('Missing required fields:', missingFields);
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Please fill in all required fields: ' + missingFields.join(', ')
-            });
-            return;
-        }
-
-        $.ajax({
-            url: '../backend/event_handler.php',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                console.log('Success Response:', response);
-                if (response.success) {
-                    hideModal('#editEventModal');
-                    $('#editEventForm')[0].reset();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: response.message
-                    }).then(() => {
+        setTimeout(() => {
+            $.ajax({
+                url: '../backend/event_handler.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        hideModal('#editEventModal');
+                        $('#editEventForm')[0].reset();
+                        
+                        // Reload table immediately
                         eventTable.ajax.reload(null, false);
-                    });
-                } else {
-                    console.error('Error in response:', response);
-                    Swal.fire({
+                        
+                        // Show toast notification independently
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Successfully updated!'
+                        });
+                    } else {
+                        Toast.fire({
+                            icon: 'error',
+                            title: response.message || 'Failed to update event'
+                        });
+                    }
+                },
+                error: function() {
+                    Toast.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: response.message || 'An error occurred'
+                        title: 'Failed to connect to the server'
                     });
+                },
+                complete: function() {
+                    // Restore button state
+                    submitButton.html(originalHtml);
+                    submitButton.prop('disabled', false);
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX Error:', {
-                    status: status,
-                    error: error,
-                    responseText: xhr.responseText,
-                    responseJSON: xhr.responseJSON,
-                    statusText: xhr.statusText
-                });
-                
-                let errorMessage = 'An error occurred while processing your request';
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    errorMessage = response.error || errorMessage;
-                } catch (e) {
-                    console.error('Error parsing response:', e);
-                }
-                
-                hideModal('#editEventModal');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorMessage
-                });
-            }
-        });
+            });
+        }, 1000);
     });
 
     // Delete Event Button Click
     $('#eventTable').on('click', '.delete-event', function() {
         const eventId = $(this).data('id');
+        const deleteButton = $(this);
+        const originalHtml = deleteButton.html();
         
         Swal.fire({
             title: 'Are you sure?',
@@ -346,41 +340,60 @@ $(document).ready(function() {
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: '<i class="fas fa-trash me-1"></i>Yes, delete it!',
+            cancelButtonText: '<i class="fas fa-times me-1"></i>Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    url: '../backend/event_handler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'delete',
-                        event_prikey: eventId
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: response.message
-                            }).then(() => {
+                // Show only spinner in button
+                deleteButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+                deleteButton.prop('disabled', true);
+
+                setTimeout(() => {
+                    $.ajax({
+                        url: '../backend/event_handler.php',
+                        type: 'POST',
+                        data: {
+                            action: 'delete',
+                            event_prikey: eventId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Reload table immediately
                                 eventTable.ajax.reload();
-                            });
-                        } else {
-                            Swal.fire({
+                                
+                                // Show toast notification independently
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true
+                                });
+
+                                Toast.fire({
+                                    icon: 'success',
+                                    title: 'Successfully deleted!'
+                                });
+                            } else {
+                                Toast.fire({
+                                    icon: 'error',
+                                    title: response.message || 'Failed to delete event'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Toast.fire({
                                 icon: 'error',
-                                title: 'Error',
-                                text: response.message || 'An error occurred'
+                                title: 'Failed to connect to the server'
                             });
+                        },
+                        complete: function() {
+                            // Restore button state
+                            deleteButton.html(originalHtml);
+                            deleteButton.prop('disabled', false);
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'An error occurred while processing your request'
-                        });
-                    }
-                });
+                    });
+                }, 1000);
             }
         });
     });

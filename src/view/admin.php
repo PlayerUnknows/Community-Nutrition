@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once __DIR__ . '/../includes/header.php';
 ?>
 <!DOCTYPE html>
@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/header.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboad</title>
+    <title>Admin Dashboad sub</title>
     <link rel="icon" href="../../assets/img/healthy-food.png">
 
     <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
@@ -21,7 +21,7 @@ require_once __DIR__ . '/../includes/header.php';
             background: linear-gradient(135deg, #007bff, #ffffff) no-repeat center center fixed;
             min-height: 100vh;
             background-attachment: fixed; /* This prevents gradient from repeating on scroll */
-        
+
         :root {
             --primary-blue: #007bff;
             --light-blue: #63a4ff;
@@ -235,7 +235,7 @@ require_once __DIR__ . '/../includes/header.php';
             align-items: center;
             z-index: 9999;
             transition: opacity 1.9s ease;
-           
+
         }
 
         .loading-logo {
@@ -243,13 +243,21 @@ require_once __DIR__ . '/../includes/header.php';
             height: 100px;
             margin-bottom: 20px;
             animation: pulse 3s ease-in-out infinite;
-            
+
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .loading-spinner {
@@ -262,9 +270,14 @@ require_once __DIR__ . '/../includes/header.php';
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-            
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+
         }
 
         .header-clock {
@@ -311,19 +324,19 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Add this before </head> -->
     <script>
-    function updateClock() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString();
-        const dateString = now.toLocaleDateString();
-        document.getElementById('current-time').textContent = timeString;
-        document.getElementById('current-date').textContent = dateString;
-    }
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const dateString = now.toLocaleDateString();
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('current-date').textContent = dateString;
+        }
 
-    // Update immediately and then every second
-    document.addEventListener('DOMContentLoaded', function() {
-        updateClock();
-        setInterval(updateClock, 1000);
-    });
+        // Update immediately and then every second
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
     </script>
 </head>
 
@@ -342,11 +355,6 @@ require_once __DIR__ . '/../includes/header.php';
                 <img src="../../assets/img/SanAndres.svg" alt="San Andres Logo" class="responsive-logo" style="width: 65px; height: 65px;">
             </div>
 
-            <!-- Add this in your header where you want the clock -->
-            <div class="header-clock">
-                <span id="current-date"></span>
-                <span id="current-time"></span>
-            </div>
 
             <div class="text-center">
                 <p class="mb-0">Welcome, <strong id="username">
@@ -369,26 +377,35 @@ require_once __DIR__ . '/../includes/header.php';
                         ?>
 
                     </strong></p>
-                <p class="mb-0" id="dateTimeDisplay"></p>
+
+                <!-- Add this in your header where you want the clock -->
+                <div class="header-clock">
+                    <span id="current-date"></span>
+                    <span id="current-time"></span>
+                </div>
+
+
             </div>
             <!-- Profile Dropdown -->
-            <li class="nav-item dropdown">
+            <div class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-user"></i> Profile
                 </a>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="#" id="profileSettingsBtn">
-                        <i class="fas fa-user-cog"></i> Profile Settings
-                    </a></li>
+                            <i class="fas fa-user-cog"></i> Profile Settings
+                        </a></li>
                     <li><a class="dropdown-item" href="#" id="displaySettingsBtn">
-                        <i class="fas fa-cog"></i> Display Settings
-                    </a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" id="logoutButton">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a></li>
+                            <i class="fas fa-cog"></i> Display Settings
+                        </a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item logout-button" href="#" id="logoutButton">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a></li>
                 </ul>
-            </li>
+            </div>
         </div>
     </div>
 
@@ -405,8 +422,10 @@ require_once __DIR__ . '/../includes/header.php';
                 <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false" tabindex="-1">Nutrition Monitoring</button>
                 <div class="sub-nav">
                     <button class="sub-nav-button" data-target="monitoring-records">Monitoring Records</button>
-                    <button class="sub-nav-button" data-target="nutrition-report">Nutrition Report</button>
+                    <button class="sub-nav-button" data-target="nutrition-report">Growth Trends</button>
+                    <button class="sub-nav-button" data-target="arm-circumference">Arm Circumference</button>
                     <button class="sub-nav-button" data-target="bmi-statistics">BMI Statistics</button>
+                    <button class="sub-nav-button" data-target="overall-report">OverAllReport</button>
                 </div>
             </li>
             <li class="nav-item" role="presentation">
@@ -447,9 +466,17 @@ require_once __DIR__ . '/../includes/header.php';
                     <div id="nutrition-report" class="sub-content" style="display: none;">
                         <?php include 'report.php'; ?>
                     </div>
+                    <!-- Arm Circumference Content -->
+                    <div id="arm-circumference" class="sub-content" style="display: none;">
+                        <?php include 'arm_circumference_report.php'; ?>
+                    </div>
                     <!-- BMI Statistics Content -->
                     <div id="bmi-statistics" class="sub-content" style="display: none;">
                         <?php include 'bmi_statistics.php'; ?>
+                    </div>
+                    <!-- Overall Report Content -->
+                    <div id="overall-report" class="sub-content" style="display: none;">
+                        <?php include 'overall_report.php'; ?>
                     </div>
                 </div>
             </div>
@@ -472,7 +499,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title mb-4">Audit Trail</h5>
-                        
+
                         <!-- Search and length controls -->
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -492,7 +519,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </select>
                             </div>
                         </div>
-                        
+
 
                         <!-- Audit table -->
                         <div class="table-responsive">
@@ -551,6 +578,7 @@ require_once __DIR__ . '/../includes/header.php';
     <script src="../script/audit_trail.js"></script>
     <script src="../script/appointments.js"></script>
     <script src="../script/users.js"></script>
+    <script src="../script/overall_report.js"></script>
     <script src="../script/dropdrown.js"></script>
     <script src="../script/logout.js"></script>
     <script src="../script/session.js"></script>

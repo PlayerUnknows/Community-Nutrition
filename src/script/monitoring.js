@@ -252,52 +252,56 @@ window.MonitoringModule = (function () {
         searching: true,
         responsive: true,
         autoWidth: false,
-        scrollX: false,
+        scrollX: true,
         scrollY: "50vh",
-        scrollCollapse: false,
+        scrollCollapse: true,
         scroller: false,
-        fixedHeader: false,
+        fixedHeader: true,
         columns: [
           {
-            data: "checkup_unique_id",
+            data: "patient_id",
             className: "dt-left",
-            visible: false,
+            width: "150px",
           },
           {
             data: "patient_name",
             className: "dt-left",
-          },
-          {
-            data: "patient_id",
-            className: "dt-left",
+            width: "150px",
           },
           {
             data: "patient_fam_id",
             className: "dt-left",
+            width: "150px",
           },
           {
             data: "age",
             className: "dt-center",
+            width: "50px",
           },
           {
             data: "sex",
             className: "dt-center",
+            width: "80px",
           },
           {
             data: "finding_bmi",
-            className: "dt-right",
+            className: "dt-center",
+            width: "150px",
           },
           {
             data: "finding_growth",
             className: "dt-center",
+            width: "150px",
           },
           {
             data: "arm_circumference_status",
             className: "dt-center",
+            width: "150px",
           },
           {
             data: null,
             className: "dt-center",
+            width: "100px",
             render: function (data, type, row) {
               return (
                 '<button class="btn btn-primary btn-sm btn-view" data-patient-id="' +

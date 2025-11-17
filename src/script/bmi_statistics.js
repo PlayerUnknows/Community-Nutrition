@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let bmiChart = null;
   let femaleBmiChart = null;
   let maleBmiChart = null;
+  let toastContainer = null;
 
   // Register the plugin globally
   Chart.register(ChartDataLabels);
@@ -25,18 +26,45 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Function to fetch BMI data with date range
   const fetchBMIData = (startDate, endDate, callback) => {
+    console.log("Fetching BMI data with dates:", { startDate, endDate });
+
     $.ajax({
-      url: "../controllers/ReportController.php",
+      url: "../controllers/BMIController.php",
       type: "POST",
       data: {
         action: "getBMIDetails",
-        startDate: startDate || "",
-        endDate: endDate || "",
+        startDate: startDate,
+        endDate: endDate,
       },
       success: function (response) {
-        if (response.status === "success" && Array.isArray(response.data)) {
-          callback(response.data);
-        } else {
+        console.log("Server response:", response);
+        try {
+          const parsedResponse =
+            typeof response === "string" ? JSON.parse(response) : response;
+
+          if (
+            parsedResponse.status === "success" &&
+            Array.isArray(parsedResponse.data)
+          ) {
+            // Filter the data based on the date range
+            const filteredData = parsedResponse.data.filter((record) => {
+              const recordDate = moment(record.checkup_date);
+              return recordDate.isBetween(
+                moment(startDate),
+                moment(endDate),
+                "day",
+                "[]"
+              );
+            });
+
+            console.log("Filtered data:", filteredData);
+            callback(filteredData);
+          } else {
+            console.error("Invalid response format:", parsedResponse);
+            callback([]);
+          }
+        } catch (error) {
+          console.error("Error processing response:", error);
           callback([]);
         }
       },
@@ -47,6 +75,55 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   };
 
+  // Initialize toast container for notifications
+  const initializeToastContainer = () => {
+    if (document.getElementById("toastContainer")) {
+      return;
+    }
+
+    toastContainer = document.createElement("div");
+    toastContainer.id = "toastContainer";
+    toastContainer.className =
+      "toast-container position-fixed bottom-0 end-0 p-3";
+    toastContainer.style.zIndex = "5000";
+    document.body.appendChild(toastContainer);
+  };
+
+  // Show toast notification
+  const showToast = (message) => {
+    if (!toastContainer) {
+      initializeToastContainer();
+    }
+
+    const toastId = "toast-" + Date.now();
+    const toastHtml = `
+      <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto">BMI Statistics</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          ${message}
+        </div>
+      </div>
+    `;
+
+    toastContainer.insertAdjacentHTML("beforeend", toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+
+    toastElement.addEventListener("hidden.bs.toast", () => {
+      toastElement.remove();
+    });
+
+    toast.show();
+  };
+
+  // Function to check if Chart.js is loaded
+  const isChartJsLoaded = () => {
+    return typeof Chart !== "undefined" && Chart.register;
+  };
+
   // Initialize date range pickers
   const initDateRangePickers = () => {
     // Set default dates to yesterday
@@ -55,158 +132,307 @@ document.addEventListener("DOMContentLoaded", function () {
     const defaultEndDate = yesterday.clone().endOf("day");
 
     const dateRangeConfig = {
-      autoUpdateInput: true, // Changed to true for default value
+      autoUpdateInput: true,
       startDate: defaultStartDate,
       endDate: defaultEndDate,
       locale: {
         cancelLabel: "Clear",
         format: "MM/DD/YYYY",
       },
+      ranges: {
+        Today: [moment(), moment()],
+        Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")],
+        "Last 7 Days": [moment().subtract(6, "days"), moment()],
+        "Last 30 Days": [moment().subtract(29, "days"), moment()],
+        "This Month": [moment().startOf("month"), moment().endOf("month")],
+        "Last Month": [
+          moment().subtract(1, "month").startOf("month"),
+          moment().subtract(1, "month").endOf("month"),
+        ],
+      },
     };
 
-    // Initialize all date range pickers
-    [
-      "#overallDateRange",
-      "#femaleDateRange",
-      "#maleDateRange",
-      "#dateRangePicker",
-    ].forEach((selector) => {
-      $(selector).daterangepicker(dateRangeConfig);
+    // Initialize only the main date picker
+    $("#bmiDateRange").daterangepicker(dateRangeConfig);
 
-      // Set default values
-      $(selector).val(
-        defaultStartDate.format("MM/DD/YYYY") +
+    // Set default values
+    $("#bmiDateRange").val(
+      defaultStartDate.format("MM/DD/YYYY") +
+        " - " +
+        defaultEndDate.format("MM/DD/YYYY")
+    );
+    $("#bmiDateRange").data("startDate", defaultStartDate.format("YYYY-MM-DD"));
+    $("#bmiDateRange").data("endDate", defaultEndDate.format("YYYY-MM-DD"));
+
+    // Handle date selection
+    $("#bmiDateRange").on("apply.daterangepicker", function (ev, picker) {
+      const startDate = picker.startDate.format("YYYY-MM-DD");
+      const endDate = picker.endDate.format("YYYY-MM-DD");
+
+      $(this).val(
+        picker.startDate.format("MM/DD/YYYY") +
           " - " +
-          defaultEndDate.format("MM/DD/YYYY")
+          picker.endDate.format("MM/DD/YYYY")
       );
-      $(selector).data("startDate", defaultStartDate.format("YYYY-MM-DD"));
-      $(selector).data("endDate", defaultEndDate.format("YYYY-MM-DD"));
+      $(this).data("startDate", startDate);
+      $(this).data("endDate", endDate);
 
-      $(selector).on("apply.daterangepicker", function (ev, picker) {
-        $(this).val(
-          picker.startDate.format("MM/DD/YYYY") +
-            " - " +
-            picker.endDate.format("MM/DD/YYYY")
-        );
-        $(this).data("startDate", picker.startDate.format("YYYY-MM-DD"));
-        $(this).data("endDate", picker.endDate.format("YYYY-MM-DD"));
-      });
+      // Fetch and update data
+      updateAllData(startDate, endDate);
+    });
 
-      $(selector).on("cancel.daterangepicker", function (ev, picker) {
-        $(this).val("");
-        $(this).data("startDate", "");
-        $(this).data("endDate", "");
-      });
+    // Handle clear
+    $("#bmiDateRange").on("cancel.daterangepicker", function (ev, picker) {
+      $(this).val("");
+      $(this).data("startDate", "");
+      $(this).data("endDate", "");
+
+      // Clear all visualizations
+      clearAllVisualizations();
     });
   };
 
-  // Function to check if Chart.js and plugins are loaded
-  const isChartJsLoaded = () => {
-    return (
-      typeof Chart !== "undefined" && typeof ChartDataLabels !== "undefined"
-    );
+  // Function to clear all visualizations
+  const clearAllVisualizations = () => {
+    // Destroy existing charts
+    if (bmiChart) {
+      bmiChart.destroy();
+      bmiChart = null;
+    }
+    if (femaleBmiChart) {
+      femaleBmiChart.destroy();
+      femaleBmiChart = null;
+    }
+    if (maleBmiChart) {
+      maleBmiChart.destroy();
+      maleBmiChart = null;
+    }
+
+    // Initialize empty charts
+    initializeEmptyCharts();
+
+    // Clear table
+    if (bmiTable) {
+      bmiTable.clear().draw();
+    }
   };
 
-  // Function to initialize charts with retry mechanism
-  const initializeChartsWithRetry = (data, maxRetries = 5) => {
-    let retryCount = 0;
+  // Function to update all data
+  const updateAllData = (startDate, endDate) => {
+    if (!startDate || !endDate) {
+      showToast("Please select a valid date range");
+      return;
+    }
 
-    const tryInitialize = () => {
-      if (!isChartJsLoaded()) {
-        console.log("Chart.js not loaded yet, retrying...", retryCount);
-        if (retryCount < maxRetries) {
-          retryCount++;
-          setTimeout(tryInitialize, 1000);
-          return;
-        } else {
-          console.error(
-            "Failed to load Chart.js after",
-            maxRetries,
-            "attempts"
-          );
-          return;
-        }
+    // Convert dates to proper format if needed
+    const formattedStartDate = moment(startDate).format("YYYY-MM-DD");
+    const formattedEndDate = moment(endDate).format("YYYY-MM-DD");
+
+    console.log("Updating data with date range:", {
+      formattedStartDate,
+      formattedEndDate,
+    });
+
+    fetchBMIData(formattedStartDate, formattedEndDate, function (data) {
+      // Clear existing charts first
+      if (bmiChart) {
+        bmiChart.destroy();
+        bmiChart = null;
+      }
+      if (femaleBmiChart) {
+        femaleBmiChart.destroy();
+        femaleBmiChart = null;
+      }
+      if (maleBmiChart) {
+        maleBmiChart.destroy();
+        maleBmiChart = null;
       }
 
-      console.log("Chart.js loaded, initializing charts...");
-      initGenderCharts(data);
-      initBMIChart(data);
-    };
-
-    tryInitialize();
-  };
-
-  // Add event listeners for date range buttons
-  const initDateRangeButtons = () => {
-    $("#applyOverallDateRange").on("click", function () {
-      const startDate = $("#overallDateRange").data("startDate");
-      const endDate = $("#overallDateRange").data("endDate");
-
-      // Update all charts when overall date range changes
-      fetchBMIData(startDate, endDate, function (data) {
-        // Update main BMI chart
+      if (data && data.length > 0) {
+        console.log("Received filtered data:", data);
+        // Initialize new charts with data
         initBMIChart(data);
-
-        // Update both gender charts
         initGenderCharts(data);
 
-        // Also update the date ranges for gender-specific charts
-        $("#femaleDateRange").data("startDate", startDate);
-        $("#femaleDateRange").data("endDate", endDate);
-        $("#maleDateRange").data("startDate", startDate);
-        $("#maleDateRange").data("endDate", endDate);
+        // Update table
+        if (bmiTable) {
+          bmiTable.clear().rows.add(data).draw();
+        }
 
-        // Update the display of date range pickers
-        $("#femaleDateRange, #maleDateRange").val(
-          moment(startDate).format("MM/DD/YYYY") +
-            " - " +
-            moment(endDate).format("MM/DD/YYYY")
-        );
-      });
-    });
-
-    $("#applyFemaleDateRange").on("click", function () {
-      const startDate = $("#femaleDateRange").data("startDate");
-      const endDate = $("#femaleDateRange").data("endDate");
-
-      // Only update female chart
-      fetchBMIData(startDate, endDate, function (data) {
-        initGenderCharts(data, "female");
-      });
-    });
-
-    $("#applyMaleDateRange").on("click", function () {
-      const startDate = $("#maleDateRange").data("startDate");
-      const endDate = $("#maleDateRange").data("endDate");
-
-      // Only update male chart
-      fetchBMIData(startDate, endDate, function (data) {
-        initGenderCharts(data, "male");
-      });
-    });
-
-    // Separate handler for DataTable date range
-    $("#applyDateRange").on("click", function () {
-      if (bmiTable) {
-        bmiTable.ajax.reload();
+        // Update BMI Category Distribution table
+        updateBMICategoryTable(data);
+      } else {
+        console.log("No data found for date range");
+        // Show empty states
+        initializeEmptyCharts();
+        if (bmiTable) {
+          bmiTable.clear().draw();
+        }
+        // Clear BMI Category Distribution table
+        updateBMICategoryTable([]);
+        showToast("No data available for selected date range");
       }
     });
   };
 
-  // Function to safely destroy a chart
+  // Function to update BMI Category Distribution table
+  const updateBMICategoryTable = (data) => {
+    const bmiCounts = {
+      "Severely Wasted": 0,
+      Wasted: 0,
+      Normal: 0,
+      Obese: 0,
+    };
+
+    // Count data
+    data.forEach((record) => {
+      const bmiType = record.finding_bmi;
+      if (bmiCounts.hasOwnProperty(bmiType)) {
+        bmiCounts[bmiType]++;
+      }
+    });
+
+    // Update table
+    const tableBody = document.querySelector("#bmiCategoryTable tbody");
+    if (tableBody) {
+      const total = Object.values(bmiCounts).reduce(
+        (sum, count) => sum + count,
+        0
+      );
+
+      tableBody.innerHTML = "";
+      Object.entries(bmiCounts).forEach(([category, count]) => {
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${category}</td>
+          <td>${count}</td>
+          <td>${percentage}%</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+  };
+
+  // Initialize date range buttons
+  const initDateRangeButtons = () => {
+    // Overall BMI chart date range
+    $("#applyBmiDateRange").on("click", function () {
+      const startDate = $("#bmiDateRange").data("startDate");
+      const endDate = $("#bmiDateRange").data("endDate");
+      updateAllData(startDate, endDate);
+    });
+  };
+
+  // Function to destroy a chart
   const destroyChart = (chartInstance, canvasId) => {
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+  };
+
+  // Initialize export handlers
+  const initializeExportHandlers = () => {
+    // Add click event listeners to preview buttons
+    $(document).on("click", "[data-preview]", function (e) {
+      e.preventDefault();
+      const previewType = $(this).data("preview");
+      previewReport(previewType);
+    });
+
+    // Add click event listeners to export buttons
+    $(document).on("click", "[data-export]", function (e) {
+      e.preventDefault();
+      const exportType = $(this).data("export");
+      const contentType = $(this).data("type");
+
+      // Only handle Excel exports
+      if (exportType === 'excel') {
+        handleExport(exportType, contentType);
+      }
+    });
+  };
+
+  // Function to preview report
+  const previewReport = (type) => {
+    const startDate = $("#bmiDateRange").data("startDate");
+    const endDate = $("#bmiDateRange").data("endDate");
+
+    if (!startDate || !endDate) {
+      showToast("Please select a date range first");
+      return;
+    }
+
+    // Open preview in new tab
+    const previewUrl = `../controllers/BMIController.php?action=preview&type=${type}&startDate=${startDate}&endDate=${endDate}`;
+    window.open(previewUrl, '_blank');
+  };
+
+  const handleExport = (exportType, contentType) => {
+    showToast(`Preparing ${exportType.toUpperCase()} export...`);
+
     try {
-      // First try to get the chart instance from Chart.js
-      const existingChart = Chart.getChart(canvasId);
-      if (existingChart) {
-        existingChart.destroy();
+      // Get date range
+      const startDate = $("#bmiDateRange").data("startDate");
+      const endDate = $("#bmiDateRange").data("endDate");
+
+      if (!startDate || !endDate) {
+        showToast("Please select a date range first");
+        return;
       }
-      // Also destroy the stored instance if it exists
-      if (chartInstance && typeof chartInstance.destroy === "function") {
-        chartInstance.destroy();
+
+      // Validate content type
+      if (contentType !== 'bmi-category' && contentType !== 'bmi-table') {
+        showToast("Invalid export type. Only BMI History and BMI Category Distribution can be exported.");
+        return;
       }
+
+      // Show loading notification
+      showToast(`Preparing ${contentType === 'bmi-category' ? 'BMI Category Distribution' : 'BMI History'} export...`);
+      
+      // Create form for POST submission
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '../controllers/BMIController.php'; // Use BMIController directly for BMI-specific data
+      form.target = '_blank'; // This will open in a new tab but download directly
+      
+      // Add hidden fields
+      const addHiddenField = (name, value) => {
+        const field = document.createElement('input');
+        field.type = 'hidden';
+        field.name = name;
+        field.value = value;
+        form.appendChild(field);
+      };
+      
+      // Add required fields
+      addHiddenField('action', 'exportReport'); // This must match the action in BMIController
+      addHiddenField('exportType', exportType);
+      addHiddenField('contentType', contentType);
+      addHiddenField('startDate', startDate);
+      addHiddenField('endDate', endDate);
+      
+      console.log('Sending export request directly to BMIController.php with parameters:', {
+        action: 'exportReport',
+        exportType,
+        contentType,
+        startDate,
+        endDate
+      });
+      
+      // Submit the form
+      document.body.appendChild(form);
+      form.submit();
+      
+      // Remove the form after submission
+      setTimeout(() => {
+        document.body.removeChild(form);
+        showToast("Export initiated successfully!");
+      }, 1000);
     } catch (error) {
-      console.warn(`Error destroying chart ${canvasId}:`, error);
+      console.error("Export error:", error);
+      showToast("Export failed: " + (error.message || "Unknown error"));
     }
   };
 
@@ -225,6 +451,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       // Use empty array if no data is provided
       const chartData = Array.isArray(data) ? data : [];
+      console.log("Processed chart data:", chartData);
 
       // Destroy existing charts based on gender parameter
       if (!gender || gender === "female") {
@@ -270,10 +497,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Colors for BMI categories with opacity for better visibility
       const colors = {
-        "Severely Wasted": "rgba(255, 0, 0, 0.8)",
-        Wasted: "rgba(255, 165, 0, 0.8)",
-        Normal: "rgba(0, 128, 0, 0.8)",
-        Obese: "rgba(255, 69, 0, 0.8)",
+        "Severely Wasted": "rgba(220, 53, 69, 0.8)", // Red
+        Wasted: "rgba(255, 193, 7, 0.8)", // Yellow
+        Normal: "rgba(40, 167, 69, 0.8)", // Green
+        Obese: "rgba(255, 193, 7, 0.8)", // Yellow
       };
 
       // Set minimum height for chart containers
@@ -448,10 +675,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const labels = Object.keys(bmiCounts);
       const chartData = Object.values(bmiCounts);
       const colors = [
-        "rgb(255, 0, 0)", // Red for Severely Wasted
-        "rgb(255, 165, 0)", // Orange for Wasted
-        "rgb(0, 128, 0)", // Green for Normal
-        "rgb(255, 69, 0)", // Red-Orange for Obese
+        "rgba(220, 53, 69, 0.8)", // Red
+        "rgba(255, 193, 7, 0.8)", // Yellow
+        "rgba(40, 167, 69, 0.8)", // Green
+        "rgba(255, 193, 7, 0.8)", // Yellow
       ];
 
       // Create chart
@@ -513,25 +740,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       // Update BMI Category Distribution table
-      const tableBody = document.querySelector("#bmiCategoryTable tbody");
-      if (tableBody) {
-        const total = Object.values(bmiCounts).reduce(
-          (sum, count) => sum + count,
-          0
-        );
-
-        tableBody.innerHTML = "";
-        Object.entries(bmiCounts).forEach(([category, count]) => {
-          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-          const row = document.createElement("tr");
-          row.innerHTML = `
-              <td>${category}</td>
-              <td>${count}</td>
-              <td>${percentage}%</td>
-            `;
-          tableBody.appendChild(row);
-        });
-      }
+      updateBMICategoryTable(data);
     } catch (error) {
       console.error("Error initializing BMI chart:", error);
     }
@@ -547,6 +756,10 @@ document.addEventListener("DOMContentLoaded", function () {
       processing: true,
       serverSide: false,
       responsive: true,
+      data: [], // Start with empty data
+      search: {
+        return: true,
+      },
       columnDefs: [
         {
           targets: [0], // Date column
@@ -573,51 +786,15 @@ document.addEventListener("DOMContentLoaded", function () {
           responsivePriority: 4,
         },
       ],
-      ajax: {
-        url: "../controllers/ReportController.php",
-        type: "POST",
-        data: function (d) {
-          return {
-            action: "getBMIDetails",
-            startDate: $("#dateRangePicker").data("startDate") || "",
-            endDate: $("#dateRangePicker").data("endDate") || "",
-          };
-        },
-        dataSrc: function (response) {
-          console.log("DataTable response:", response); // Debug log
-
-          if (response.status === "success") {
-            if (!Array.isArray(response.data)) {
-              console.error("Invalid data format received:", response.data);
-              return [];
-            }
-
-            return response.data.map((item) => ({
-              ...item,
-              // Ensure checkup_date is properly formatted or null
-              checkup_date: item.checkup_date || null,
-              // Ensure other fields have fallback values
-              patient_id: item.patient_id || "N/A",
-              age: item.age || null,
-              finding_bmi: item.finding_bmi || "N/A",
-            }));
-          }
-
-          console.error("Invalid response format:", response);
-          return [];
-        },
-      },
       columns: [
         {
           data: "checkup_date",
           title: "Date",
           render: function (data, type, row) {
-            // For sorting/filtering, return the original data
             if (type === "sort" || type === "filter") {
               return data;
             }
 
-            // For display, format the date
             if (!data || data === "N/A" || data === "") {
               return "No date available";
             }
@@ -656,6 +833,31 @@ document.addEventListener("DOMContentLoaded", function () {
         {
           data: "finding_bmi",
           title: "BMI Status",
+          render: function (data) {
+            let className, color;
+            switch (data) {
+              case "Severely Wasted":
+                className = "bg-danger";
+                color = "#dc3545";
+                break;
+              case "Wasted":
+                className = "bg-warning";
+                color = "#ffc107";
+                break;
+              case "Normal":
+                className = "bg-success";
+                color = "#28a745";
+                break;
+              case "Obese":
+                className = "bg-warning";
+                color = "#ffc107";
+                break;
+              default:
+                className = "bg-secondary";
+                color = "#6c757d";
+            }
+            return `<span class="status-badge ${className}" style="color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.9em; display: inline-block;">${data}</span>`;
+          },
         },
       ],
       order: [[0, "desc"]],
@@ -664,55 +866,359 @@ document.addEventListener("DOMContentLoaded", function () {
         [10, 25, 50, -1],
         [10, 25, 50, "All"],
       ],
-      dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
+      dom:
+        '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+        '<"row"<"col-sm-12"tr>>' +
+        '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
       language: {
-        search: "_INPUT_",
-        searchPlaceholder: "Search records...",
+        emptyTable: "No data available for selected date range",
+        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+        infoEmpty: "Showing 0 to 0 of 0 entries",
+        infoFiltered: "(filtered from _MAX_ total entries)",
+        lengthMenu: "Show _MENU_ entries",
+        search: "Search:",
+        zeroRecords: "No matching records found",
+      },
+      initComplete: function () {
+        $(".dataTables_filter input").addClass("form-control");
+        $(".dataTables_length select").addClass("form-control");
       },
     });
 
-    // Handle entries select
-    $("#entriesSelect").on("change", function () {
+    // BMI-specific search functionality
+    $("#bmiTableSearch").on("keyup", function () {
+      bmiTable.search(this.value).draw();
+    });
+
+    // BMI-specific entries select
+    $("#bmiTableEntriesSelect").on("change", function () {
       bmiTable.page.len($(this).val()).draw();
+    });
+
+    // BMI-specific clear search
+    const searchContainer = $("#bmiTableSearch").parent();
+    searchContainer.append(
+      '<button class="btn btn-outline-secondary bmi-clear-search" type="button"><i class="fas fa-times"></i></button>'
+    );
+
+    $(".bmi-clear-search").on("click", function () {
+      $("#bmiTableSearch").val("").trigger("keyup");
     });
   };
 
   // Function to load initial data
   const loadInitialData = () => {
-    const yesterday = moment().subtract(1, "days");
-    const startDate = yesterday.clone().startOf("day").format("YYYY-MM-DD");
-    const endDate = yesterday.clone().endOf("day").format("YYYY-MM-DD");
-
-    // Load data for overall chart
-    fetchBMIData(startDate, endDate, function (data) {
-      initBMIChart(data);
-    });
-
-    // Load data for gender charts
-    fetchBMIData(startDate, endDate, function (data) {
-      initGenderCharts(data);
-    });
-
-    // DataTable will automatically load with default dates
-    if (bmiTable) {
-      bmiTable.ajax.reload();
-    }
+    // Initialize empty charts and table
+    initializeEmptyCharts();
+    initializeEmptyTable();
   };
 
-  // Initialize everything when the page loads
-  initDateRangePickers();
-  initDateRangeButtons();
-  initDataTable();
-  loadInitialData();
+  // Add styles
+  const styles = `
+    .bmi-clear-search {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      z-index: 4;
+      border: none;
+      background: transparent;
+    }
 
-  // Make sure to handle tab switching properly
-  $('button[data-bs-toggle="tab"]').on("shown.bs.tab", function (e) {
-    if ($(e.target).attr("data-bs-target") === "#bmi-statistics") {
-      // Delay chart rendering slightly to ensure the canvas is visible
-      setTimeout(() => {
-        // Refresh your charts here
-        updateCharts();
-      }, 100);
+    .bmi-clear-search:hover {
+      color: #dc3545;
+    }
+
+    #bmiTableSearch {
+      padding-right: 40px;
+    }
+
+    .input-group {
+      position: relative;
+    }
+  `;
+
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+
+  // Initialize everything when document is ready
+  $(document).ready(function () {
+    if (isChartJsLoaded()) {
+      initDateRangePickers();
+      initDateRangeButtons();
+      initDataTable();
+      loadInitialData();
+      initializeToastContainer();
+      initializeExportHandlers();
+
+      // Make sure to handle tab switching properly
+      $('button[data-bs-toggle="tab"]').on("shown.bs.tab", function (e) {
+        if ($(e.target).attr("data-bs-target") === "#bmi-statistics") {
+          setTimeout(() => {
+            if (bmiChart) destroyChart(bmiChart, "bmiDistributionChart");
+            if (femaleBmiChart) destroyChart(femaleBmiChart, "femaleBmiChart");
+            if (maleBmiChart) destroyChart(maleBmiChart, "maleBmiChart");
+            loadInitialData();
+          }, 100);
+        }
+      });
+    } else {
+      console.error("Chart.js is not loaded");
     }
   });
+
+  function initializeEmptyCharts() {
+    // Initialize empty bar chart
+    const barCtx = document.getElementById("bmiDistributionChart");
+    if (barCtx && !bmiChart) {
+      bmiChart = new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels: ["Severely Wasted", "Wasted", "Normal", "Obese"],
+          datasets: [
+            {
+              data: [0, 0, 0, 0],
+              backgroundColor: [
+                "rgba(220, 53, 69, 0.8)",
+                "rgba(255, 193, 7, 0.8)",
+                "rgba(40, 167, 69, 0.8)",
+                "rgba(255, 193, 7, 0.8)",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: "No data available for selected date range",
+            },
+          },
+          scales: {
+            y: { beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    // Initialize empty gender charts
+    const femaleCtx = document.getElementById("femaleBmiChart");
+    const maleCtx = document.getElementById("maleBmiChart");
+
+    if (femaleCtx && !femaleBmiChart) {
+      femaleBmiChart = new Chart(femaleCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Severely Wasted", "Wasted", "Normal", "Obese"],
+          datasets: [
+            {
+              data: [0, 0, 0, 0],
+              backgroundColor: [
+                "rgba(220, 53, 69, 0.8)",
+                "rgba(255, 193, 7, 0.8)",
+                "rgba(40, 167, 69, 0.8)",
+                "rgba(255, 193, 7, 0.8)",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "right" },
+            title: {
+              display: true,
+              text: "No data available for selected date range",
+            },
+          },
+        },
+      });
+    }
+
+    if (maleCtx && !maleBmiChart) {
+      maleBmiChart = new Chart(maleCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Severely Wasted", "Wasted", "Normal", "Obese"],
+          datasets: [
+            {
+              data: [0, 0, 0, 0],
+              backgroundColor: [
+                "rgba(220, 53, 69, 0.8)",
+                "rgba(255, 193, 7, 0.8)",
+                "rgba(40, 167, 69, 0.8)",
+                "rgba(255, 193, 7, 0.8)",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "right" },
+            title: {
+              display: true,
+              text: "No data available for selected date range",
+            },
+          },
+        },
+      });
+    }
+  }
+
+  function initializeEmptyTable() {
+    if ($.fn.DataTable.isDataTable("#bmiTable")) {
+      $("#bmiTable").DataTable().destroy();
+    }
+
+    bmiTable = $("#bmiTable").DataTable({
+      processing: true,
+      serverSide: false,
+      responsive: true,
+      data: [],
+      columns: [
+        {
+          title: "Date",
+          data: "checkup_date",
+          render: function (data) {
+            return data ? moment(data).format("MMM DD, YYYY") : "N/A";
+          },
+        },
+        {
+          title: "Patient ID",
+          data: "patient_id",
+        },
+        {
+          title: "Patient Name",
+          data: "patient_name",
+        },
+        {
+          title: "Age",
+          data: "age",
+          render: function (data) {
+            return data ? data + " years" : "N/A";
+          },
+        },
+        {
+          title: "Sex",
+          data: "sex",
+          render: function (data) {
+            return data ? data.toUpperCase() : "N/A";
+          },
+        },
+        {
+          title: "BMI Status",
+          data: "finding_bmi",
+          render: function (data) {
+            let className = "";
+            switch (data) {
+              case "Severely Wasted":
+                className = "bg-danger";
+                break;
+              case "Wasted":
+                className = "bg-warning";
+                break;
+              case "Normal":
+                className = "bg-success";
+                break;
+              case "Obese":
+                className = "bg-warning";
+                break;
+              default:
+                className = "bg-secondary";
+            }
+            return `<span class="badge ${className}">${data || "N/A"}</span>`;
+          },
+        },
+      ],
+      order: [[0, "desc"]],
+      pageLength: 10,
+      lengthMenu: [
+        [10, 25, 50, -1],
+        [10, 25, 50, "All"],
+      ],
+      language: {
+        emptyTable: "No data available for selected date range",
+        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+        infoEmpty: "Showing 0 to 0 of 0 entries",
+        infoFiltered: "(filtered from _MAX_ total entries)",
+        lengthMenu: "Show _MENU_ entries",
+        search: "Search:",
+        zeroRecords: "No matching records found",
+      },
+      dom:
+        '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+        '<"row"<"col-sm-12"tr>>' +
+        '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+      initComplete: function () {
+        // Add custom search input
+        $(".dataTables_filter input").addClass("form-control");
+        $(".dataTables_length select").addClass("form-control");
+      },
+    });
+  }
+
+  function loadBMIStats(startDate, endDate, chartType = "all") {
+    if (!startDate || !endDate) {
+      console.log("No date range selected for charts");
+      return;
+    }
+
+    console.log("Loading BMI stats:", {
+      startDate,
+      endDate,
+      chartType,
+    });
+
+    $.ajax({
+      url: "/src/controllers/BMIController.php",
+      method: "GET",
+      data: {
+        action: "getBMIDetails",
+        startDate: startDate,
+        endDate: endDate,
+      },
+      success: (response) => {
+        if (
+          response.status === "success" &&
+          response.data &&
+          response.data.length > 0
+        ) {
+          // Update only charts
+          switch (chartType) {
+            case "all":
+              updateAllCharts(response.data);
+              break;
+            case "female":
+              updateFemaleChart(response.data);
+              break;
+            case "male":
+              updateMaleChart(response.data);
+              break;
+          }
+          // Refresh table data
+          if (bmiTable) {
+            bmiTable.clear().rows.add(response.data).draw();
+          }
+        } else {
+          // If no data, show empty state
+          initializeEmptyCharts();
+          if (bmiTable) {
+            bmiTable.clear().draw();
+          }
+          showToast("No data available for selected date range");
+        }
+      },
+      error: (xhr, status, error) => {
+        console.error("Ajax request failed:", error);
+        showToast("Failed to load BMI statistics");
+      },
+    });
+  }
 });

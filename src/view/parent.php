@@ -7,6 +7,7 @@ checkUserRole([1]);
 <!-- /app/views/user/home.php -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@ checkUserRole([1]);
     <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="../../assets/css/parent.css"> <!-- Custom Styles -->
 </head>
+
 <body>
     <div class="container">
         <h1>Welcome to the Community Nutrition Information System!</h1>
@@ -24,8 +26,8 @@ checkUserRole([1]);
         <button id="logoutButton" class="btn btn-danger logout-button">Logout</button>
     </div>
 
-      <!-- Include jQuery library -->
-      <script src="../../node_modules/jquery/dist/jquery.js"></script>
+    <!-- Include jQuery library -->
+    <script src="../../node_modules/jquery/dist/jquery.js"></script>
     <!-- Include Popper.js for Bootstrap tooltips-->
     <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
     <!-- Include Bootstrap JavaScript -->
@@ -33,7 +35,12 @@ checkUserRole([1]);
     <!-- Include SweetAlert2 JavaScript -->
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
 
-    <!-- Link to your separate JS file -->
+    <!-- Include Session Manager -->
+    <script src="../../src/script/session.js"></script>
+    <!-- Main application script -->
+    <script src="../../src/script/app.js"></script>
+    <!-- Logout functionality -->
     <script src="../../src/script/logout.js"></script>
 </body>
+
 </html>

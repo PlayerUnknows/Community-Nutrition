@@ -23,7 +23,7 @@ $(document).ready(function () {
     ajax: {
       url: "../controllers/patient_controller.php?action=getAllPatients",
       dataSrc: function (json) {
-        console.log("Server response:", json);
+  
         if (json.status === "success") {
           return json.data;
         } else {

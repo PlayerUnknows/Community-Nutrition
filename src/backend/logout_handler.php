@@ -15,6 +15,10 @@ if (file_exists(__DIR__ . '/../config/dbcon.php')) {
     require_once __DIR__ . '/../config/dbcon.php';
 }
 
+if (file_exists(__DIR__ . '/audit_trail.php')) {
+    require_once __DIR__ . '/audit_trail.php';
+}
+
 if (file_exists(__DIR__ . '/../models/AuditTrail.php')) {
     require_once __DIR__ . '/../models/AuditTrail.php';
 }
@@ -23,12 +27,13 @@ try {
     // Log the logout action if user was logged in
     if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
         // Try to log to audit trail if the function exists
-        if (function_exists('logUserAuth')) {
+        if (function_exists('logAuditTrail')) {
             try {
                 if (!defined('AUDIT_LOGOUT')) {
                     define('AUDIT_LOGOUT', 'LOGOUT');
                 }
-                logUserAuth($_SESSION['user_id'], $_SESSION['email'], AUDIT_LOGOUT);
+                $details = "User " . $_SESSION['email'] . " logged out";
+                logAuditTrail($_SESSION['user_id'], $_SESSION['email'], AUDIT_LOGOUT, $details);
             } catch (Exception $e) {
                 error_log('Failed to log audit trail: ' . $e->getMessage());
             }

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/dbcon.php';
+require_once __DIR__ . '/audit_trail.php';
 require_once __DIR__ . '/../models/AuditTrail.php';
 
 header('Content-Type: application/json');
@@ -29,8 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['email'] = $row['email'];
                     $_SESSION['role'] = $row['role'];
                     
-                    // Log successful login
-                    logUserAuth($row['user_id'], $row['email'], AUDIT_LOGIN);
+                    // Log successful login with details
+                    $details = "User logged in with login identifier " . $loginIdentifier;
+                    logAuditTrail($row['user_id'], $row['email'], AUDIT_LOGIN, $details);
                     
                     echo json_encode([
                         'success' => true,

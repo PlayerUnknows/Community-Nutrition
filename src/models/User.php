@@ -133,9 +133,7 @@ class User
             $_SESSION['role'] = $user['role'];
             $_SESSION['login_time'] = time();
 
-            require_once __DIR__ . '/../backend/audit_trail.php';
-            logUserAuth($user['user_id'], $user['email'], AUDIT_LOGIN);
-
+            // Note: Audit logging is handled by the controller layer
             $redirectPage = $this->getRedirectPage($user['role']);
             return [
                 'user_id' => $user['user_id'],
@@ -151,9 +149,8 @@ class User
     public function logout()
     {
         if (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
-            require_once __DIR__ . '/../backend/audit_trail.php';
-            logUserAuth($_SESSION['user_id'], $_SESSION['email'], AUDIT_LOGOUT);
-
+            // Note: Audit logging is handled by the controller layer
+            
             // Clear all session data
             session_unset();
             session_destroy();

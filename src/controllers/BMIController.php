@@ -142,12 +142,21 @@ class BMIController
             $startDate = $_REQUEST['startDate'] ?? null;
             $endDate = $_REQUEST['endDate'] ?? null;
             
+            error_log("=== BMI Export Request ===");
+            error_log("Export Type: " . ($exportType ?? 'NULL'));
+            error_log("Content Type: " . ($contentType ?? 'NULL'));
+            error_log("Start Date: " . ($startDate ?? 'NULL'));
+            error_log("End Date: " . ($endDate ?? 'NULL'));
+            error_log("REQUEST data: " . print_r($_REQUEST, true));
+            
             if (!$exportType || !$contentType) {
+                error_log("ERROR: Missing required parameters");
                 throw new Exception('Missing required export parameters');
             }
             
             // Validate content type - only allow BMI Category Distribution and BMI History
             if (!in_array($contentType, ['bmi-category', 'bmi-table'])) {
+                error_log("ERROR: Invalid content type: " . $contentType);
                 throw new Exception('Invalid content type. Only BMI History and BMI Category Distribution can be exported.');
             }
             
@@ -156,8 +165,9 @@ class BMIController
             // Get data for export based on content type
             $exportData = [];
             
-            // Use getBMIData for more structured data format for exports
-            $exportData['data'] = $this->bmiModel->getBMIData($startDate, $endDate);
+            // Use getBMIDetails for data retrieval
+            error_log("Calling getBMIDetails with dates: $startDate to $endDate");
+            $exportData['data'] = $this->bmiModel->getBMIDetails($startDate, $endDate);
             $exportData['date_range'] = $startDate && $endDate ? "$startDate to $endDate" : "All Time";
             
             error_log("Retrieved " . count($exportData['data']) . " records for export");

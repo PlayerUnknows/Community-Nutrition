@@ -158,8 +158,6 @@ foreach ($records as $record) {
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Raw Data</h6></li>
                         <li><a class="dropdown-item growth-preview-link" href="#" data-type="height-measurements">Height Measurements History</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item growth-preview-link" href="#" data-type="all">Complete Report</a></li>
                     </ul>
                 </div>
 
@@ -177,8 +175,6 @@ foreach ($records as $record) {
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Raw Data</h6></li>
                         <li><a class="dropdown-item" href="#" data-export="excel" data-type="height-measurements">Height Measurements History</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" data-export="excel" data-type="all">Complete Report</a></li>
                     </ul>
                 </div>
             </div>

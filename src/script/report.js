@@ -1258,11 +1258,11 @@ class ReportManager {
   }
 
   initializeExportHandlers() {
-    // Remove any existing event handlers first
-    $(document).off("click", "[data-export]");
+    // Remove any existing event handlers first - scoped to nutrition report only
+    $(document).off("click", "#nutrition-report [data-export]");
 
-    // Handle export dropdown clicks
-    $(document).on("click", "[data-export]", (e) => {
+    // Handle export dropdown clicks - scoped to nutrition report only
+    $(document).on("click", "#nutrition-report [data-export]", (e) => {
       e.preventDefault();
       e.stopPropagation(); // Prevent event bubbling
 

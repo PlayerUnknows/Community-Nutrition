@@ -128,6 +128,14 @@
             console.error("Error initializing overall report:", error);
           }
         }
+        
+        // If it's BMI statistics, trigger a custom event to reinitialize handlers
+        if (target === "bmi-statistics") {
+          setTimeout(() => {
+            console.log("BMI statistics shown, triggering reinitialization");
+            $(document).trigger('bmi-statistics-shown');
+          }, 100);
+        }
       });
 
     // Direct access to Overall Report via URL hash

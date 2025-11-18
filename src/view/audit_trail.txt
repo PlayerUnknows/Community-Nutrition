@@ -74,7 +74,7 @@ if (!empty($auditTrails)) {
     <title>Audit Trail - Community Nutrition System</title>
     <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
-    <style>
+    <!-- <style>
         .audit-details {
             font-size: 0.875rem;
             line-height: 1.4;
@@ -406,7 +406,7 @@ if (!empty($auditTrails)) {
         .modal-backdrop + .modal-backdrop {
             display: none;
         }
-    </style>
+    </style> -->
 </head>
 
 <body>

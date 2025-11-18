@@ -26,8 +26,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Function to fetch BMI data with date range
   const fetchBMIData = (startDate, endDate, callback) => {
-    console.log("Fetching BMI data with dates:", { startDate, endDate });
-
     $.ajax({
       url: "../controllers/BMIController.php",
       type: "POST",
@@ -37,7 +35,6 @@ document.addEventListener("DOMContentLoaded", function () {
         endDate: endDate,
       },
       success: function (response) {
-        console.log("Server response:", response);
         try {
           const parsedResponse =
             typeof response === "string" ? JSON.parse(response) : response;
@@ -56,20 +53,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 "[]"
               );
             });
-
-            console.log("Filtered data:", filteredData);
             callback(filteredData);
           } else {
-            console.error("Invalid response format:", parsedResponse);
             callback([]);
           }
         } catch (error) {
-          console.error("Error processing response:", error);
           callback([]);
         }
       },
       error: function (xhr, error, thrown) {
-        console.error("AJAX error:", { xhr, error, thrown });
         callback([]);
       },
     });
@@ -228,11 +220,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const formattedStartDate = moment(startDate).format("YYYY-MM-DD");
     const formattedEndDate = moment(endDate).format("YYYY-MM-DD");
 
-    console.log("Updating data with date range:", {
-      formattedStartDate,
-      formattedEndDate,
-    });
-
     fetchBMIData(formattedStartDate, formattedEndDate, function (data) {
       // Clear existing charts first
       if (bmiChart) {
@@ -249,7 +236,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (data && data.length > 0) {
-        console.log("Received filtered data:", data);
         // Initialize new charts with data
         initBMIChart(data);
         initGenderCharts(data);
@@ -262,7 +248,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update BMI Category Distribution table
         updateBMICategoryTable(data);
       } else {
-        console.log("No data found for date range");
         // Show empty states
         initializeEmptyCharts();
         if (bmiTable) {
@@ -334,24 +319,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize export handlers
   const initializeExportHandlers = () => {
-    // Add click event listeners to preview buttons
-    $(document).on("click", "[data-preview]", function (e) {
+    console.log('Initializing BMI export handlers...');
+    
+    // Remove any existing BMI-specific handlers first to prevent duplicates
+    $(document).off("click", "#bmi-statistics [data-preview]");
+    $(document).off("click", "#bmi-statistics [data-export]");
+    
+    // Add click event listeners to preview buttons - scoped to BMI statistics only
+    $(document).on("click", "#bmi-statistics [data-preview]", function (e) {
       e.preventDefault();
+      console.log('BMI Preview button clicked');
       const previewType = $(this).data("preview");
       previewReport(previewType);
     });
 
-    // Add click event listeners to export buttons
-    $(document).on("click", "[data-export]", function (e) {
+    // Add click event listeners to export buttons - scoped to BMI statistics only
+    $(document).on("click", "#bmi-statistics [data-export]", function (e) {
       e.preventDefault();
+      console.log('BMI Export button clicked');
       const exportType = $(this).data("export");
       const contentType = $(this).data("type");
+      console.log('BMI Export data attributes:', { exportType, contentType });
 
       // Only handle Excel exports
       if (exportType === 'excel') {
         handleExport(exportType, contentType);
+      } else {
+        console.log('Not an excel export, skipping');
       }
     });
+    
+    console.log('BMI Export handlers initialized');
   };
 
   // Function to preview report
@@ -370,12 +368,14 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   const handleExport = (exportType, contentType) => {
-    showToast(`Preparing ${exportType.toUpperCase()} export...`);
-
+    console.log('Export clicked:', { exportType, contentType });
+    
     try {
       // Get date range
       const startDate = $("#bmiDateRange").data("startDate");
       const endDate = $("#bmiDateRange").data("endDate");
+
+      console.log('Date range:', { startDate, endDate });
 
       if (!startDate || !endDate) {
         showToast("Please select a date range first");
@@ -383,10 +383,19 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       // Validate content type
+      if (!contentType) {
+        console.error('Content type is missing!');
+        showToast("Export type is missing. Please try again.");
+        return;
+      }
+      
       if (contentType !== 'bmi-category' && contentType !== 'bmi-table') {
+        console.error('Invalid content type:', contentType);
         showToast("Invalid export type. Only BMI History and BMI Category Distribution can be exported.");
         return;
       }
+      
+      showToast(`Preparing ${exportType.toUpperCase()} export...`);
 
       // Show loading notification
       showToast(`Preparing ${contentType === 'bmi-category' ? 'BMI Category Distribution' : 'BMI History'} export...`);
@@ -437,8 +446,6 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   const initGenderCharts = (data, gender = null) => {
-    console.log("Initializing gender charts with data:", data);
-
     // Get canvas elements
     const femaleCtx = document.getElementById("femaleBmiChart");
     const maleCtx = document.getElementById("maleBmiChart");
@@ -451,7 +458,6 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       // Use empty array if no data is provided
       const chartData = Array.isArray(data) ? data : [];
-      console.log("Processed chart data:", chartData);
 
       // Destroy existing charts based on gender parameter
       if (!gender || gender === "female") {
@@ -479,7 +485,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Count data
       chartData.forEach((record) => {
-        console.log("Processing record:", record);
+
         const bmiType = record.finding_bmi;
         const sex = record.sex?.toUpperCase();
 
@@ -490,10 +496,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-      console.log("Final counts:", {
-        female: femaleCounts,
-        male: maleCounts,
-      });
 
       // Colors for BMI categories with opacity for better visibility
       const colors = {
@@ -639,8 +641,6 @@ document.addEventListener("DOMContentLoaded", function () {
           },
         });
       }
-
-      console.log("Charts created successfully");
     } catch (error) {
       console.error("Error initializing gender charts:", error);
     }
@@ -952,6 +952,13 @@ document.addEventListener("DOMContentLoaded", function () {
       initializeToastContainer();
       initializeExportHandlers();
 
+      // Listen for BMI statistics shown event from admin.js
+      $(document).on('bmi-statistics-shown', function() {
+        console.log('BMI statistics shown event received, reinitializing...');
+        // Reinitialize export handlers to ensure they work after content is shown
+        initializeExportHandlers();
+      });
+
       // Make sure to handle tab switching properly
       $('button[data-bs-toggle="tab"]').on("shown.bs.tab", function (e) {
         if ($(e.target).attr("data-bs-target") === "#bmi-statistics") {
@@ -1166,15 +1173,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function loadBMIStats(startDate, endDate, chartType = "all") {
     if (!startDate || !endDate) {
-      console.log("No date range selected for charts");
+
       return;
     }
 
-    console.log("Loading BMI stats:", {
-      startDate,
-      endDate,
-      chartType,
-    });
 
     $.ajax({
       url: "/src/controllers/BMIController.php",

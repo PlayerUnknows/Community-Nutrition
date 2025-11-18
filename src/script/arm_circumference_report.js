@@ -981,11 +981,11 @@ class ArmCircumferenceReportManager {
   }
 
   initializeExportHandlers() {
-    // Remove any existing event handlers first
-    $(document).off("click", "[data-export]");
+    // Remove any existing event handlers first - scoped to arm circumference only
+    $(document).off("click", "#arm-circumference [data-export]");
 
-    // Handle export dropdown clicks
-    $(document).on("click", "[data-export]", (e) => {
+    // Handle export dropdown clicks - scoped to arm circumference only
+    $(document).on("click", "#arm-circumference [data-export]", (e) => {
       e.preventDefault();
       e.stopPropagation(); // Prevent event bubbling
 

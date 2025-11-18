@@ -48,6 +48,24 @@
             /* Enable smooth scrolling on iOS */
             -webkit-overflow-scrolling: touch;
         }
+        
+        .card {
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        
+        .card-body {
+            padding: 0 !important;
+        }
+        
+        .table-responsive {
+            width: 100% !important;
+            margin: 0 !important;
+        }
+        
+        #eventTable {
+            width: 100% !important;
+        }
 
         /* Style for draggable columns */
         .dragging {
@@ -95,7 +113,7 @@
 </head>
 <body>
     <main id="mainContent">
-        <div class="container-fluid mt-4">
+        <div class="w-100 mt-4" style="padding: 0; margin: 0;">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
@@ -105,7 +123,7 @@
                         <i class="fas fa-plus me-2"></i>Add Event
                     </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <!-- Custom controls -->
                     <div class="row mb-3">
                         <div class="col-md-6 d-flex align-items-center">

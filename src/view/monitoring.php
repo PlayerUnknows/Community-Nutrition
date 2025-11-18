@@ -7,14 +7,24 @@ require_once '../includes/header.php';
 <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="../../node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css">
 <style>
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
     .container-fluid {
         overflow: hidden;
+        max-width: 100vw;
+        width: 100vw;
+        padding: 0;
+        margin: 0;
     }
 
     .table-responsive {
         margin: 0;
         padding: 0;
         width: 100%;
+        overflow-x: auto;
     }
 
     /* Table container styles */
@@ -39,15 +49,13 @@ require_once '../includes/header.php';
     #monitoringTable {
         width: 100% !important;
         margin: 0 !important;
-        table-layout: fixed;
+        table-layout: auto;
     }
 
     #monitoringTable th,
     #monitoringTable td {
-        padding: 8px;
+        padding: 10px 12px;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     /* Column specific widths */
@@ -124,12 +132,17 @@ require_once '../includes/header.php';
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        margin: 0 !important;
     }
 
     .card-body {
-        padding: 0;
+        padding: 0 !important;
         flex: 1;
         overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1rem;
     }
 
     /* Custom scrollbar styles */
@@ -168,8 +181,8 @@ require_once '../includes/header.php';
 </style>
 
 <!-- Main Content -->
-<div class="container-fluid px-4">
-    <div class="card mb-4">
+<div style="width: 100%; margin: 0; padding: 0;">
+    <div class="card mb-4 shadow-sm" style="width: 100%; margin: 0;">
         <div class="card-header">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3">
                 <!-- Show entries dropdown -->
@@ -219,10 +232,9 @@ require_once '../includes/header.php';
                 </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="container-fluid">
-                <!-- Table container -->
-                <div class="table-responsive">
+        <div class="card-body p-0">
+            <!-- Table container -->
+            <div class="table-responsive">
                     <table id="monitoringTable" class="table table-striped table-bordered">
                         <thead>
                             <tr>
@@ -243,7 +255,6 @@ require_once '../includes/header.php';
                         </tbody>
                     </table>
                 </div>
-            </div>
         </div>
     </div>
 </div>

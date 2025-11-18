@@ -449,7 +449,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="tab-content" id="adminTabContent">
             <!-- Patient Profile Section -->
             <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
-                <div id="patientProfileContainer" class="container mt-4">
+                <div id="patientProfileContainer" class="w-60 mt-4">
                     <!-- Patient profile content will be loaded here -->
                     <?php include 'patient_profile.php'; ?>
                 </div>
@@ -457,7 +457,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Schedule Section -->
             <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
-                <div class="container mt-4">
+                <div class="w-100 mt-4" style="padding: 0; margin: 0;">
                     <!-- Monitoring Records Content -->
                     <div id="monitoring-records" class="sub-content">
                         <?php include 'monitoring.php'; ?>
@@ -488,7 +488,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Event information Section -->
             <div class="tab-pane fade" id="event" role="tabpanel" aria-labelledby="event-tab">
-                <div id="eventFormContainer" class="container mt-4">
+                <div id="eventFormContainer" class="w-100 mt-4">
                     <!-- Event form will be loaded here -->
                     <?php include 'event.php'; ?>
                 </div>
@@ -496,7 +496,8 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Audit Trail Section -->
             <div class="tab-pane fade" id="audit" role="tabpanel" aria-labelledby="audit-tab">
-                <div class="card">
+                <div class="w-100" style="padding: 0; margin: 0;">
+                <div class="card"></div>
                     <div class="card-body">
                         <h5 class="card-title mb-4">Audit Trail</h5>
 
@@ -530,7 +531,6 @@ require_once __DIR__ . '/../includes/header.php';
                                         <th>Action</th>
                                         <th>Details</th>
                                         <th>Timestamp</th>
-                                        <th>Count</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -575,7 +575,7 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Custom Scripts - Load in specific order -->
     <script src="../script/monitoring.js"></script>
     <script src="../script/bmi_statistics.js"></script>
-    <script src="../script/audit_trail.js"></script>
+    <script src="../script/audit_trail_simple.js"></script>
     <script src="../script/appointments.js"></script>
     <script src="../script/users.js"></script>
     <script src="../script/overall_report.js"></script>

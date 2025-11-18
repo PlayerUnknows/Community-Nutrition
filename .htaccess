@@ -1,0 +1,2 @@
+#npm run check:php
+#php -l src/view/admin.php

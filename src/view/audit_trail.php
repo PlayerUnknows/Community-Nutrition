@@ -469,7 +469,6 @@ if (!empty($auditTrails)) {
                                 <th>Action</th>
                                 <th>Details</th>
                                 <th>Timestamp</th>
-                                <th>Count</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -501,7 +500,6 @@ if (!empty($auditTrails)) {
                                         ?>
                                     </td>
                                     <td><?php echo htmlspecialchars($audit['action_timestamp']); ?></td>
-                                    <td><?php echo htmlspecialchars($audit['count'] ?? 1); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

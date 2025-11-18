@@ -331,12 +331,14 @@ class SessionManager {
       console.log("Logout response:", data);
 
       await Swal.fire({
-        title: "Logged Out",
-        text: "You have been logged out successfully",
-        icon: "success",
-        allowOutsideClick: false,
+        html: `
+          <div id="lottie-success" style="width: 200px; height: 200px; margin: 0 auto;"></div>
+          <p style="margin-top: 1rem; font-size: 1.1rem; color: #666;">You have been logged out successfully</p>
+        `,
+        showConfirmButton: true,
         confirmButtonText: "OK",
-        width: "400px",
+        allowOutsideClick: false,
+        width: "450px",
         customClass: {
           container: "small-modal",
           popup: "small-modal",
@@ -344,6 +346,16 @@ class SessionManager {
           title: "small-modal-title",
           content: "small-modal-content",
         },
+        didOpen: () => {
+          // Load Lottie animation
+          const animation = lottie.loadAnimation({
+            container: document.getElementById('lottie-success'),
+            renderer: 'svg',
+            loop: false,
+            autoplay: true,
+            path: '../../assets/animations/Success animation.json' // Local animation file
+          });
+        }
       });
 
       // Redirect to the login page

@@ -320,6 +320,132 @@ require_once __DIR__ . '/../includes/header.php';
         .profile-settings-modal .btn-group .btn {
             flex: 1;
         }
+
+        /* Fix SweetAlert2 icon distortion */
+        .swal2-icon {
+            width: 5em !important;
+            height: 5em !important;
+            margin: 1.25em auto !important;
+            border: none !important;
+            position: relative !important;
+        }
+
+        .swal2-icon .swal2-icon-content {
+            font-size: 3.75em !important;
+        }
+
+        /* Fix success icon specifically */
+        .swal2-success {
+            border-color: #a5dc86 !important;
+            width: 5em !important;
+            height: 5em !important;
+            border-width: 0.25em !important;
+            border-style: solid !important;
+            border-radius: 50% !important;
+            box-sizing: content-box !important;
+        }
+
+        .swal2-success [class^='swal2-success-line'] {
+            display: block !important;
+            position: absolute !important;
+            z-index: 2 !important;
+            height: 0.3125em !important;
+            border-radius: 0.125em !important;
+            background-color: #a5dc86 !important;
+        }
+
+        .swal2-success .swal2-success-line-tip {
+            width: 1.5625em !important;
+            left: 0.875em !important;
+            top: 2.875em !important;
+            transform: rotate(45deg) !important;
+            transform-origin: left bottom !important;
+        }
+
+        .swal2-success .swal2-success-line-long {
+            width: 2.9375em !important;
+            right: 0.5em !important;
+            top: 2.375em !important;
+            transform: rotate(-45deg) !important;
+            transform-origin: right bottom !important;
+        }
+
+        .swal2-success .swal2-success-ring {
+            position: absolute !important;
+            z-index: 2 !important;
+            top: -0.25em !important;
+            left: -0.25em !important;
+            width: 100% !important;
+            height: 100% !important;
+            border: 0.25em solid rgba(165, 220, 134, 0.3) !important;
+            border-radius: 50% !important;
+            box-sizing: content-box !important;
+        }
+
+        .swal2-success-circular-line-left,
+        .swal2-success-circular-line-right {
+            position: absolute !important;
+            width: 3.75em !important;
+            height: 7.5em !important;
+            transform: rotate(45deg) !important;
+            border-radius: 50% !important;
+            background-color: #fff !important;
+        }
+
+        .swal2-success-circular-line-left {
+            top: -0.4375em !important;
+            left: -2.0625em !important;
+            transform: rotate(-45deg) !important;
+            transform-origin: 3.75em 3.75em !important;
+            border-radius: 7.5em 0 0 7.5em !important;
+        }
+
+        .swal2-success-circular-line-right {
+            top: -0.6875em !important;
+            left: 1.875em !important;
+            transform: rotate(-45deg) !important;
+            transform-origin: 0 3.75em !important;
+            border-radius: 0 7.5em 7.5em 0 !important;
+        }
+
+        .swal2-success-fix {
+            position: absolute !important;
+            z-index: 1 !important;
+            top: 0.5em !important;
+            left: 1.625em !important;
+            width: 0.4375em !important;
+            height: 5.625em !important;
+            transform: rotate(-45deg) !important;
+            background-color: #fff !important;
+        }
+
+        /* Small modal customization */
+        .small-modal {
+            font-size: 0.9rem !important;
+        }
+
+        .small-modal .swal2-icon {
+            width: 4em !important;
+            height: 4em !important;
+            margin: 1em auto !important;
+        }
+
+        .small-modal .swal2-success {
+            width: 4em !important;
+            height: 4em !important;
+        }
+
+        .small-modal .swal2-success .swal2-success-line-tip {
+            width: 1.25em !important;
+            left: 0.7em !important;
+            top: 2.3em !important;
+        }
+
+        .small-modal .swal2-success .swal2-success-line-long {
+            width: 2.35em !important;
+            right: 0.4em !important;
+            top: 1.9em !important;
+        }
     </style>
 
     <!-- Add this before </head> -->
@@ -412,7 +538,6 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Page Content -->
     <div class="container-fluid mt-4">
-
         <!-- Bootstrap Tab Navigation -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
@@ -571,6 +696,7 @@ require_once __DIR__ . '/../includes/header.php';
     <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
     <script src="../../node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
+    <script src="../../node_modules/lottie-web/build/player/lottie.min.js"></script>
 
     <!-- Custom Scripts - Load in specific order -->
     <script src="../script/monitoring.js"></script>

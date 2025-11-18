@@ -92,14 +92,17 @@ $(document).ready(function () {
             success: function (response) {
               console.log("Logout response:", response);
               if (response.success) {
-                // Show success message
+                // Show success message with Lottie animation
                 Swal.fire({
-                  title: "Success!",
-                  text: response.message || "Logged out successfully",
-                  icon: "success",
-                  showConfirmButton: false,
-                  timer: 1500,
-                  width: "400px",
+                  title: "Logged Out",
+                  html: `
+                    <div id="lottie-success" style="width: 200px; height: 200px; margin: 0 auto;"></div>
+                    <p style="margin-top: 1rem; font-size: 1.1rem; color: #666;">${response.message || "You have been logged out successfully"}</p>
+                  `,
+                  showConfirmButton: true,
+                  confirmButtonText: "OK",
+                  allowOutsideClick: false,
+                  width: "450px",
                   customClass: {
                     container: "small-modal",
                     popup: "small-modal",
@@ -107,6 +110,18 @@ $(document).ready(function () {
                     title: "small-modal-title",
                     content: "small-modal-content",
                   },
+                  didOpen: () => {
+                    // Load Lottie animation
+                    if (typeof lottie !== 'undefined') {
+                      lottie.loadAnimation({
+                        container: document.getElementById('lottie-success'),
+                        renderer: 'svg',
+                        loop: false,
+                        autoplay: true,
+                        path: '../../assets/animations/success-checkmark.json'
+                      });
+                    }
+                  }
                 }).then(() => {
                   // Redirect to login page
                   console.log("Redirecting to login page");

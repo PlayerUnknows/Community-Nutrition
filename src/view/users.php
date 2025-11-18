@@ -58,40 +58,4 @@
         </div>
     </div>
 
-    <style>
-        /* Table styling */
-        .table-container {
-            margin-top: 1rem;
-            overflow-x: auto;
-        }
-
-        #usersTable {
-            width: 100%;
-            margin-bottom: 0;
-        }
-
-        #usersTable th,
-        #usersTable td {
-            vertical-align: middle;
-        }
-
-        .users-page-numbers {
-            display: flex;
-            margin: 0;
-        }
-
-        .users-page-numbers .page-link {
-            margin: 0 2px;
-        }
-
-        .users-page-numbers .page-link.active {
-            background-color: #0d6efd;
-            color: white;
-            border-color: #0d6efd;
-        }
-
-        .users-page-numbers span.page-link {
-            background: none;
-            border: none;
-        }
-    </style>
+   <link rel="stylesheet" href="../../assets/css/user.css">

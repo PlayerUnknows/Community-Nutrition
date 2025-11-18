@@ -53,9 +53,35 @@ $(document).ready(function () {
         }
         allUsers = response.data;
         updateTable();
-        Toast.fire({
-          icon: 'success',
-          title: 'Users loaded successfully'
+        
+        // Show toast with Lottie animation
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          html: `
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div id="lottie-users-success" style="width: 40px; height: 40px; flex-shrink: 0;"></div>
+              <span style="font-size: 0.95rem;">Users loaded successfully</span>
+            </div>
+          `,
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          width: '350px',
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+            
+            if (typeof lottie !== 'undefined') {
+              lottie.loadAnimation({
+                container: document.getElementById('lottie-users-success'),
+                renderer: 'svg',
+                loop: false,
+                autoplay: true,
+                path: '../../assets/animations/Success animation.json'
+              });
+            }
+          }
         });
       },
       error: function (xhr, status, error) {

@@ -221,100 +221,325 @@ if (!empty($auditTrails)) {
                 padding: 0.5rem;
             }
         }
+
+        /* Update/add these responsive styles */
+        .table-responsive {
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+        #auditTable {
+            width: 100% !important;
+            margin: 0;
+        }
+
+        @media screen and (max-width: 768px) {
+            /* Adjust filter form on mobile */
+            .audit-filter-form .col-md-3 {
+                margin-bottom: 10px;
+            }
+            
+            /* Make table cells more readable on mobile */
+            #auditTable td {
+                min-width: 120px; /* Ensure minimum width for readability */
+            }
+            
+            #auditTable td:nth-child(3) { /* Details column */
+                min-width: 200px;
+            }
+            
+            .audit-details {
+                max-height: 150px; /* Increase height for mobile viewing */
+                font-size: 0.8rem;
+            }
+            
+            /* Adjust filter elements spacing */
+            .form-label {
+                margin-bottom: 0.25rem;
+            }
+            
+            /* Optimize table header */
+            #auditTable thead th {
+                white-space: nowrap;
+                padding: 0.5rem;
+            }
+        }
+
+        /* Add horizontal scroll indicator */
+        .table-responsive::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50px;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(0,0,0,0.1));
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .table-responsive.has-scroll::after {
+            opacity: 1;
+        }
+
+        /* Update the table container and positioning styles */
+        .card-body {
+            padding: 1rem;
+            position: relative;
+        }
+
+        /* Fix table container positioning */
+        .table-responsive {
+            position: relative;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            border: none;
+            overflow-x: auto;
+        }
+
+        /* DataTable wrapper adjustments */
+        .dataTables_wrapper {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fix table layout */
+        #auditTable {
+            width: 100% !important;
+            margin: 0 !important;
+            border-collapse: collapse;
+        }
+
+        /* Adjust column widths */
+        #auditTable th,
+        #auditTable td {
+            padding: 0.75rem;
+        }
+
+        #auditTable th:nth-child(1), /* Username */
+        #auditTable td:nth-child(1) {
+            width: 20%;
+        }
+
+        #auditTable th:nth-child(2), /* Action */
+        #auditTable td:nth-child(2) {
+            width: 15%;
+        }
+
+        #auditTable th:nth-child(3), /* Details */
+        #auditTable td:nth-child(3) {
+            width: 45%;
+        }
+
+        #auditTable th:nth-child(4), /* Timestamp */
+        #auditTable td:nth-child(4) {
+            width: 20%;
+        }
+
+        /* Fix DataTables controls positioning */
+        .dataTables_length,
+        .dataTables_filter {
+            margin-bottom: 1rem;
+        }
+
+        .dataTables_info,
+        .dataTables_paginate {
+            margin-top: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .card-body {
+                padding: 0.5rem;
+            }
+            
+            #auditTable th,
+            #auditTable td {
+                padding: 0.5rem;
+            }
+            
+            .dataTables_wrapper .row {
+                margin: 0;
+            }
+            
+            .dataTables_length,
+            .dataTables_filter,
+            .dataTables_info,
+            .dataTables_paginate {
+                padding: 0.5rem;
+            }
+        }
+
+        /* Update backdrop styles */
+        #loadingBackdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1050;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #loadingBackdrop.show {
+            opacity: 1;
+        }
+
+        #loadingSpinner {
+            z-index: 1051;
+            pointer-events: none;
+        }
+
+        /* Prevent body scroll when modal is open */
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 0 !important;
+        }
+
+        /* Ensure no stacking of backdrops */
+        .modal-backdrop + .modal-backdrop {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
-    <div class="audit-container">
-        <div class="page-header d-flex justify-content-between align-items-center">
-            <h1 class="text-primary mb-0">System Audit Trail</h1>
-        </div>
-
-        <!-- Filter Form -->
-        <div class="filter-card">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">System Audit Trail</h5>
+                <button id="showFilterBtn" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter"></i> Show Filters
+                </button>
+            </div>
             <div class="card-body">
-                <form method="GET" class="row g-3 audit-filter-form">
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">Action Type</label>
-                        <select name="action" class="form-select form-select-sm">
-                            <option value="">All Actions</option>
-                            <option value="LOGIN">Login</option>
-                            <option value="LOGOUT">Logout</option>
-                            <option value="REGISTER">Register</option>
-                            <option value="UPDATED_USER">Update</option>
-                            <option value="DELETED_USER">Delete</option>
-                            <option value="VIEW">View</option>
-                            <option value="SYSTEM_CHANGE">System Change</option>
-                        </select>
+                <!-- Filter Form - Initially hidden -->
+                <div id="filterSection" class="row mb-3" style="display: none;">
+                    <div class="col-md-12">
+                        <form id="auditFilterForm" class="audit-filter-form row g-3" method="GET">
+                            <div class="col-md-3">
+                                <label class="form-label">Action Type</label>
+                                <select name="action" class="form-select">
+                                    <option value="">All Actions</option>
+                                    <option value="LOGIN">Login</option>
+                                    <option value="LOGOUT">Logout</option>
+                                    <option value="REGISTER">Register</option>
+                                    <option value="UPDATED_USER">Update</option>
+                                    <option value="DELETED_USER">Delete</option>
+                                    <option value="VIEW">View</option>
+                                    <option value="SYSTEM_CHANGE">System Change</option>
+                                    <option value="FILE_DOWNLOAD">File Download</option>
+                                    <option value="FILE_EXPORT">File Export</option>
+                                    <option value="FILE_IMPORT">File Import</option>
+                                    <option value="EVENT_CREATE">Event Create</option>
+                                    <option value="EVENT_UPDATE">Event Update</option>
+                                    <option value="EVENT_DELETE">Event Delete</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date From</label>
+                                <input type="date" name="date_from" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date To</label>
+                                <input type="date" name="date_to" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary flex-grow-1">Apply Filters</button>
+                                    <button type="button" id="clearFiltersBtn" class="btn btn-secondary">Clear</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">Date From</label>
-                        <input type="date" name="date_from" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">Date To</label>
-                        <input type="date" name="date_to" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary btn-sm d-block w-100">Filter</button>
-                    </div>
-                </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="auditTable" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>Timestamp</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($auditTrails as $audit): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
+                                    <td><?php echo htmlspecialchars($audit['action']); ?></td>
+                                    <td>
+                                        <?php
+                                        $details = $audit['details'];
+                                        if ($details) {
+                                            $decodedDetails = json_decode($details, true);
+                                            if (json_last_error() === JSON_ERROR_NONE) {
+                                                echo '<div class="audit-details">';
+                                                // Display all details generically
+                                                    foreach ($decodedDetails as $key => $value) {
+                                                        if (is_array($value)) {
+                                                            $value = implode(', ', array_unique((array)$value));
+                                                        }
+                                                        $displayKey = ucwords(str_replace('_', ' ', $key));
+                                                        echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . 
+                                                             htmlspecialchars((string)$value) . "</div>";
+                                                    }
+                                                echo '</div>';
+                                            } else {
+                                                echo htmlspecialchars($details);
+                                            }
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($audit['action_timestamp']); ?></td>
+                                    <td><?php echo htmlspecialchars($audit['count'] ?? 1); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Audit Trail Table -->
-        <div class="table-wrapper">
-            <div class="table-scroll">
-                <table id="auditTable" class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>User</th>
-                            <th>Action</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($auditTrails as $audit): ?>
-                            <tr>
-                                <td>
-                                    <?php 
-                                    echo htmlspecialchars($audit['action_timestamp']);
-                                    if (isset($audit['count']) && $audit['count'] > 1) {
-                                        echo '<br><small class="text-muted">(' . $audit['count'] . ' similar actions)</small>';
-                                    }
-                                    ?>
-                                </td>
-                                <td><?php echo htmlspecialchars($audit['username'] ?? 'System'); ?></td>
-                                <td><?php echo htmlspecialchars($audit['action']); ?></td>
-                                <td>
-                                    <?php
-                                    $details = $audit['details'];
-                                    if ($details) {
-                                        $decodedDetails = json_decode($details, true);
-                                        if (json_last_error() === JSON_ERROR_NONE) {
-                                            echo '<div class="audit-details">';
-                                            // Display all details generically
-                                                foreach ($decodedDetails as $key => $value) {
-                                                    if (is_array($value)) {
-                                                        $value = implode(', ', array_unique((array)$value));
-                                                    }
-                                                    $displayKey = ucwords(str_replace('_', ' ', $key));
-                                                    echo "<div><strong>" . htmlspecialchars($displayKey) . ":</strong> " . 
-                                                         htmlspecialchars((string)$value) . "</div>";
-                                                }
-                                            echo '</div>';
-                                        } else {
-                                            echo htmlspecialchars($details);
-                                        }
-                                    }
-                                    ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+    <!-- Update the modal structure -->
+    <div class="modal fade" 
+         id="importDataModal" 
+         tabindex="-1" 
+         role="dialog"
+         aria-labelledby="importModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Import Data</h5>
+                    <button type="button" 
+                            class="btn-close" 
+                            data-bs-dismiss="modal" 
+                            aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="importDataForm">
+                        <!-- Your form content -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" 
+                            class="btn btn-secondary" 
+                            data-bs-dismiss="modal">Close</button>
+                    <button type="submit" 
+                            form="importDataForm" 
+                            class="btn btn-primary">Import</button>
+                </div>
             </div>
         </div>
     </div>
@@ -323,51 +548,7 @@ if (!empty($auditTrails)) {
     <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
     <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
-    <script>
-        // Wait for DataTables to be available
-        function waitForDataTables(callback) {
-            if (typeof $.fn.DataTable !== 'undefined') {
-                callback();
-            } else {
-                setTimeout(function() {
-                    waitForDataTables(callback);
-                }, 100);
-            }
-        }
-
-        // Initialize table only when DataTables is available
-        waitForDataTables(function() {
-            if (typeof window.initializeAuditTable === 'function') {
-                window.initializeAuditTable();
-            } else {
-                var table = $('#auditTable');
-                if (table.length) {
-                    table.DataTable({
-                        order: [[0, 'desc']],
-                        pageLength: 10,
-                        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                             "<'row'<'col-sm-12'tr>>" +
-                             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-                        language: {
-                            lengthMenu: "Show _MENU_ entries",
-                            search: "Search:",
-                            info: "Showing _START_ to _END_ of _TOTAL_ entries (Limited to last 100 records)",
-                            paginate: {
-                                first: "First",
-                                last: "Last",
-                                next: "Next",
-                                previous: "Previous"
-                            }
-                        },
-                        drawCallback: function() {
-                            $('.dataTables_paginate > .pagination').addClass('pagination-sm');
-                        }
-                    });
-                }
-            }
-        });
-    </script>
+    <script src="../../node_modules/moment/moment.js"></script>
     <script src="../script/audit_trail.js"></script>
 </body>
 

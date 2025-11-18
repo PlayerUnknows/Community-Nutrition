@@ -1,13 +1,5 @@
 <?php
-require '../../vendor/autoload.php';
-
-use Katzgrau\KLogger\Logger;
-use Psr\Log\LogLevel;
-
-$logger = new Logger(__DIR__ . '/logs', LogLevel::DEBUG);
-$logger->error('This is an error message');
-
-session_start();
+require_once __DIR__ . '/../includes/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,25 +7,21 @@ session_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboad sub</title>
+    <link rel="icon" href="../../assets/img/healthy-food.png">
 
     <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
     <link rel="stylesheet" href="../../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
-
-    <!-- Core JS - Order is important -->
-    <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="../../node_modules/moment/min/moment.min.js"></script>
-    <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
-    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script> 
-    <script src="../../node_modules/@popperjs/core/dist/umd/popper.js"></script>
-    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="../../node_modules/sweetalert2/dist/sweetalert2.js"></script>
-    <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
-    <script src="/src/script/appointments.js"></script>
-   
+    <link rel="stylesheet" href="../../node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="../../node_modules/sweetalert2/dist/sweetalert2.css">
+    <link rel="stylesheet" type="text/css" href="../../node_modules/daterangepicker/daterangepicker.css" />
 
     <style>
+        /*body {
+            background: linear-gradient(135deg, #007bff, #ffffff) no-repeat center center fixed;
+            min-height: 100vh;
+            background-attachment: fixed; /* This prevents gradient from repeating on scroll */
+
         :root {
             --primary-blue: #007bff;
             --light-blue: #63a4ff;
@@ -48,7 +36,7 @@ session_start();
         }
 
         .bg-primary {
-            background-color: var(--primary-blue) !important;
+            background-color: white !important;
         }
 
         /* Responsive Logo Styling */
@@ -145,27 +133,6 @@ session_start();
             margin: 0;
         }
 
-        /* Spinner for Loading */
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
         .error {
             border-color: #dc3545 !important;
         }
@@ -177,111 +144,208 @@ session_start();
             display: block;
         }
 
-        /*#signupFormContainer .signup-container {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-top: 6px solid var(--primary-blue);
-            padding: 40px;
-            width: 100%;
-            max-width: 450px;
+        /* Sub-navigation styling */
+        #monitoring-container,
+        #acc-reg-container {
             position: relative;
-            margin: 0 auto;
-            animation: glowAnimation 2s ease-in-out infinite alternate;
-            transition: all 0.3s ease;
         }
 
-        @keyframes glowAnimation {
-            0% {
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-
-            50% {
-                box-shadow: 0 0 20px rgba(0, 123, 255, 0.4),
-                    0 0 30px rgba(0, 123, 255, 0.2);
-            }
-
-            100% {
-                box-shadow: 0 0 25px rgba(99, 164, 255, 0.5),
-                    0 0 35px rgba(99, 164, 255, 0.3);
-            }
-        }
-
-        #signupFormContainer .signup-container:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
-        }*/
-
-        /* Sub-navigation styles */
         .sub-nav {
             display: none;
             position: absolute;
-            background: #f8f9fa;
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 4px 4px;
             z-index: 1000;
-            min-width: 200px;
+            min-width: 150px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .nav-item:hover .sub-nav {
+        #monitoring-container:hover .sub-nav,
+        #acc-reg-container:hover .sub-nav {
             display: block;
         }
 
         .sub-nav-button {
             display: block;
             width: 100%;
-            padding: 8px 15px;
-            margin: 0;
+            padding: 8px 16px;
             border: none;
-            background: white;
-            color: var(--primary-blue);
+            background: none;
             text-align: left;
-            transition: all 0.2s ease;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
 
         .sub-nav-button:hover {
-            background: #f0f0f0;
-            color: #333;
+            background-color: #f8f9fa;
         }
 
-        .sub-nav-button.active {
-            background: var(--primary-blue);
-            color: white;
+        .sub-content {
+            display: none;
         }
 
-        /* Position the account tab item relatively for absolute positioning of sub-nav */
-        #acc-reg-container {
-            position: relative;
+        /* Small SweetAlert2 Modal Styles */
+        .small-modal {
+            font-size: 0.9rem !important;
         }
 
-        /* Adjustments for smaller screens */
-        .header-section {
-            padding: 0.25rem 0;
-            /* Further reduced padding */
+        .small-modal-title {
+            font-size: 1.1rem !important;
+            padding: 0.5rem 0 !important;
         }
 
-        .header-section .responsive-logo {
+        .small-modal-content {
+            font-size: 0.9rem !important;
+            margin-top: 0.5rem !important;
+        }
+
+        .small-modal .swal2-icon {
+            width: 3em !important;
+            height: 3em !important;
+            margin: 0.5em auto !important;
+        }
+
+        .small-modal .swal2-icon .swal2-icon-content {
+            font-size: 1.75em !important;
+        }
+
+        .small-modal .swal2-actions {
+            margin: 0.5em auto 0 !important;
+        }
+
+        .small-modal .swal2-styled {
+            padding: 0.25em 0.75em !important;
+            font-size: 0.9em !important;
+        }
+
+        /* Update loading screen styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1.9s ease;
+
+        }
+
+        .loading-logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            animation: pulse 3s ease-in-out infinite;
+
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .loading-spinner {
             width: 40px;
-            /* Smaller logo size */
-            height: auto;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1.05s linear infinite;
         }
 
-        .header-section .text-center p {
-            font-size: 0.8rem;
-            /* Smaller font size */
-            margin-bottom: 0;
-            /* Remove bottom margin */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+
         }
 
-        .header-section .profile-dropdown img {
-            width: 30px;
-            /* Smaller profile image size */
-            height: auto;
+        .header-clock {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .header-clock span {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Profile and Display Settings Modal Styles */
+        .profile-settings-modal .swal2-popup,
+        .display-settings-modal .swal2-popup {
+            padding: 2rem;
+        }
+
+        .profile-settings-modal .form-label,
+        .display-settings-modal .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-settings-modal .form-control,
+        .display-settings-modal .form-control,
+        .display-settings-modal .form-select {
+            margin-bottom: 1rem;
+        }
+
+        .profile-settings-modal .btn-group {
+            width: 100%;
+        }
+
+        .profile-settings-modal .btn-group .btn {
+            flex: 1;
         }
     </style>
+
+    <!-- Add this before </head> -->
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const dateString = now.toLocaleDateString();
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('current-date').textContent = dateString;
+        }
+
+        // Update immediately and then every second
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+    </script>
 </head>
 
 <body>
+    <!-- Update the loading screen div -->
+    <div id="loading-screen">
+        <img src="../../assets/img/SanAndres.svg" alt="Logo" class="loading-logo">
+        <div class="loading-spinner"></div>
+    </div>
 
     <!-- Header Section -->
     <div class="bg-white py-1 shadow-sm h-1 header-section">
@@ -299,40 +363,53 @@ session_start();
                         $displayEmail = "Guest";
 
                         if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
-                            $displayEmail = htmlspecialchars($_SESSION['email']);
+                            $email = htmlspecialchars($_SESSION['email']);
                         } elseif (isset($_SESSION['user']['email']) && !empty($_SESSION['user']['email'])) {
-                            $displayEmail = htmlspecialchars($_SESSION['user']['email']);
+                            $email = htmlspecialchars($_SESSION['user']['email']);
+                        }
+
+                        if (isset($email)) {
+                            // Remove '@gmail.com' if it exists
+                            $displayEmail = str_replace('@gmail.com', '', $email);
                         }
 
                         echo $displayEmail;
                         ?>
+
                     </strong></p>
-                <p class="mb-0" id="dateTimeDisplay"></p>
+
+                <!-- Add this in your header where you want the clock -->
+                <div class="header-clock">
+                    <span id="current-date"></span>
+                    <span id="current-time"></span>
+                </div>
+
+
             </div>
             <!-- Profile Dropdown -->
-            <div class="profile-dropdown dropdown">
-                <img src="../../assets/img/dummy-profile.png"
-                    alt="Admin Profile"
-                    class="dropdown-toggle"
-                    id="profileDropdown"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                    style="width: 65px; height: 65px;">
-
-                <!-- Dropdown menu -->
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                    <li><a class="dropdown-item" href="#" id="profileButton">Profile</a></li>
-                    <li><a class="dropdown-item" href="#" id="settingsButton">Settings</a></li>
+            <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="profileSettingsBtn">
+                            <i class="fas fa-user-cog"></i> Profile Settings
+                        </a></li>
+                    <li><a class="dropdown-item" href="#" id="displaySettingsBtn">
+                            <i class="fas fa-cog"></i> Display Settings
+                        </a></li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li><a class="dropdown-item text-danger logout-Button" href="#" id="logoutButton">Logout</a></li>
+                    <li><a class="dropdown-item logout-button" href="#" id="logoutButton">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a></li>
                 </ul>
             </div>
         </div>
     </div>
 
-   
+
     <!-- Page Content -->
     <div class="container-fluid mt-4">
 
@@ -343,20 +420,20 @@ session_start();
             </li>
             <li class="nav-item" role="presentation" id="monitoring-container">
                 <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="false" tabindex="-1">Nutrition Monitoring</button>
-                <!-- Sub-navigation -->
                 <div class="sub-nav">
-                    <button class="sub-nav-button" data-target="nutrition-report">Nutrition Report</button>
+                    <button class="sub-nav-button" data-target="monitoring-records">Monitoring Records</button>
+                    <button class="sub-nav-button" data-target="nutrition-report">Growth Trends</button>
+                    <button class="sub-nav-button" data-target="arm-circumference">Arm Circumference</button>
+                    <button class="sub-nav-button" data-target="bmi-statistics">BMI Statistics</button>
+                    <button class="sub-nav-button" data-target="overall-report">OverAllReport</button>
                 </div>
             </li>
-
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false" tabindex="-1">Appointments</button>
             </li>
-
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="false" tabindex="-1">Event information</button>
             </li>
-
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit" type="button" role="tab" aria-controls="audit" aria-selected="false" tabindex="-1">Audit Trail</button>
             </li>
@@ -369,169 +446,37 @@ session_start();
             </li>
         </ul>
 
-        <div class="tab-content" id="myTabContent" role="tabpanel">
+        <div class="tab-content" id="adminTabContent">
             <!-- Patient Profile Section -->
             <div class="tab-pane fade show active" id="patients" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
                 <div id="patientProfileContainer" class="container mt-4">
                     <!-- Patient profile content will be loaded here -->
+                    <?php include 'patient_profile.php'; ?>
                 </div>
             </div>
 
-            <!-- Nutrition Monitoring Section -->
+            <!-- Schedule Section -->
             <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
                 <div class="container mt-4">
                     <!-- Monitoring Records Content -->
                     <div id="monitoring-records" class="sub-content">
-                        <h2>Nutrition Monitoring Records</h2>
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h3>Nutrition Check-up History</h3>
-                                    <div class="col-md-4">
-                                        <input type="text" id="historySearch" class="form-control form-control-sm" placeholder="Search nutrition history...">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover table-sm" id="historyTable">
-                                <thead>
-                                    <tr>
-                                        <th>Patient ID</th>
-                                        <th>Name</th>
-                                        <th>Age</th>
-                                        <th>Accompanied By</th>
-                                        <th>Weight (kg)</th>
-                                        <th>Height (cm)</th>
-                                        <th>Weight-for-Age</th>
-                                        <th>Height-for-Age</th>
-                                        <th>Weight-for-Height</th>
-                                        <th>Last Check-up</th>
-                                        <th>Nutritional Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>P001</td>
-                                        <td>Juan Dela Cruz</td>
-                                        <td>2 yrs</td>
-                                        <td>Maria Dela Cruz (Mother)</td>
-                                        <td>12.5</td>
-                                        <td>86</td>
-                                        <td>Normal</td>
-                                        <td>Normal</td>
-                                        <td>Normal</td>
-                                        <td>2024-12-01</td>
-                                        <td>Well-nourished</td>
-                                    </tr>
-                                    <tr>
-                                        <td>P002</td>
-                                        <td>Maria Santos</td>
-                                        <td>5 yrs</td>
-                                        <td>Roberto Santos (Father)</td>
-                                        <td>15.2</td>
-                                        <td>105</td>
-                                        <td>Underweight</td>
-                                        <td>Stunted</td>
-                                        <td>Wasted</td>
-                                        <td>2024-12-02</td>
-                                        <td>Needs intervention</td>
-                                    </tr>
-                                    <tr>
-                                        <td>P003</td>
-                                        <td>Pedro Reyes</td>
-                                        <td>8 mos</td>
-                                        <td>Ana Reyes (Mother)</td>
-                                        <td>8.3</td>
-                                        <td>70</td>
-                                        <td>Normal</td>
-                                        <td>Normal</td>
-                                        <td>Normal</td>
-                                        <td>2024-12-03</td>
-                                        <td>Well-nourished</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Add JavaScript for search functionality for check-ups and history tables -->
-                        <script>
-                            document.getElementById('historySearch').addEventListener('keyup', function() {
-                                searchTable('historyTable', this.value);
-                            });
-
-                            function searchTable(tableId, searchText) {
-                                const table = document.getElementById(tableId);
-                                const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-                                searchText = searchText.toLowerCase();
-                                for (let row of rows) {
-                                    let text = row.textContent || row.innerText;
-                                    text = text.toLowerCase();
-                                    row.style.display = text.includes(searchText) ? '' : 'none';
-                                }
-                            }
-                        </script>
+                        <?php include 'monitoring.php'; ?>
                     </div>
-
                     <!-- Nutrition Report Content -->
                     <div id="nutrition-report" class="sub-content" style="display: none;">
-                        <h2>Nutrition Report - Barangay San Andres Centers</h2>
-
-                        <!-- Bar Graph Section -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h4>Current Nutrition Status by Center (Ages 0-14)</h4>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="nutritionBarGraph"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Line Graph Section -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h4>Historical Nutrition Trends</h4>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="nutritionLineGraph"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Progress Details Section -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Progress Analysis by Age Group</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <h5>Age Group: 0-4 years</h5>
-                                        <ul class="list-group">
-                                            <li class="list-group-item">Average Weight Improvement: +15%</li>
-                                            <li class="list-group-item">Height Progress: On track</li>
-                                            <li class="list-group-item">Nutrition Status: Good</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <h5>Age Group: 5-9 years</h5>
-                                        <ul class="list-group">
-                                            <li class="list-group-item">Average Weight Improvement: +12%</li>
-                                            <li class="list-group-item">Height Progress: Above average</li>
-                                            <li class="list-group-item">Nutrition Status: Excellent</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <h5>Age Group: 10-14 years</h5>
-                                        <ul class="list-group">
-                                            <li class="list-group-item">Average Weight Improvement: +10%</li>
-                                            <li class="list-group-item">Height Progress: Normal</li>
-                                            <li class="list-group-item">Nutrition Status: Good</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <?php include 'report.php'; ?>
+                    </div>
+                    <!-- Arm Circumference Content -->
+                    <div id="arm-circumference" class="sub-content" style="display: none;">
+                        <?php include 'arm_circumference_report.php'; ?>
+                    </div>
+                    <!-- BMI Statistics Content -->
+                    <div id="bmi-statistics" class="sub-content" style="display: none;">
+                        <?php include 'bmi_statistics.php'; ?>
+                    </div>
+                    <!-- Overall Report Content -->
+                    <div id="overall-report" class="sub-content" style="display: none;">
+                        <?php include 'overall_report.php'; ?>
                     </div>
                 </div>
             </div>
@@ -551,10 +496,47 @@ session_start();
 
             <!-- Audit Trail Section -->
             <div class="tab-pane fade" id="audit" role="tabpanel" aria-labelledby="audit-tab">
-                <div class="container mt-4">
-                    <div class="row justify-content-center">
-                        <div class="col-12">
-                            <?php include 'audit_trail.php'; ?>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Audit Trail</h5>
+
+                        <!-- Search and length controls -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="search" class="form-control" id="auditSearch" placeholder="Search audit trail...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="auditsPerPage">
+                                    <option value="10">10 per page</option>
+                                    <option value="25">25 per page</option>
+                                    <option value="50">50 per page</option>
+                                    <option value="100">100 per page</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <!-- Audit table -->
+                        <div class="table-responsive">
+                            <table id="auditTable" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Action</th>
+                                        <th>Details</th>
+                                        <th>Timestamp</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded dynamically -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -562,20 +544,15 @@ session_start();
 
             <!-- Account Registration Section -->
             <div class="tab-pane fade" id="account" role="tabpanel" aria-labelledby="acc-reg">
-                <!-- Add Account Form -->
-                <div id="add-account" class="sub-content" style="display: none;">
-                    <div id="signupFormContainer" class="container mt-4">
-                        <!-- Signup form will be loaded here -->
-                        <?php include 'signup.php'; ?>
+                <div class="container mt-4">
+                    <!-- Account Registration Content -->
+                    <div id="signupFormContainer" class="sub-content">
+                        <?php include __DIR__ . '/signup.php'; ?>
                     </div>
-                </div>
 
-                <!-- View Users Section -->
-                <div id="viewer" class="sub-content" style="display: none;">
-                    <div class="container mt-4">
-                        <div id="UsersFormContainer">
-                            <!-- Users table will be loaded here -->
-                        </div>
+                    <!-- View Users Content -->
+                    <div id="view-users" class="sub-content" style="display: none;">
+                        <?php include __DIR__ . '/users.php'; ?>
                     </div>
                 </div>
             </div>
@@ -584,306 +561,42 @@ session_start();
     </div>
 
     <!-- Scripts -->
-  
-    <script src="/src/script/dropdrown.js"></script>
+    <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
+    <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../node_modules/moment/moment.js"></script>
+    <script src="../../node_modules/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="../../node_modules/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../../node_modules/daterangepicker/daterangepicker.js"></script>
+    <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="../../node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="../../node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
+
+    <!-- Custom Scripts - Load in specific order -->
+    <script src="../script/monitoring.js"></script>
+    <script src="../script/bmi_statistics.js"></script>
+    <script src="../script/audit_trail.js"></script>
+    <script src="../script/appointments.js"></script>
+    <script src="../script/users.js"></script>
+    <script src="../script/overall_report.js"></script>
+    <script src="../script/dropdrown.js"></script>
+    <script src="../script/logout.js"></script>
+    <script src="../script/session.js"></script>
+    <script src="../script/admin.js"></script>
+
+    <!-- Loading screen script -->
     <script>
-        $(document).ready(function() {
-            // Track loaded state for each tab
-            const loadedTabs = {
-                patients: false,
-                monitoring: false,
-                'nutrition-report': false,
-                appointments: false
-            };
-
-            // Handle sub-navigation clicks
-            $('.sub-nav .dropdown-item').click(function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Remove active class from all tabs
-                $('.nav-link').removeClass('active');
-                
-                // Add active class to parent schedule tab
-                $('#schedule-tab').addClass('active');
-                
-                // Show the target tab content
-                const targetId = $(this).attr('data-bs-target');
-                $('.tab-pane').removeClass('show active');
-                $(targetId).addClass('show active');
-            });
-
-            // Load patient profile content immediately on page load
-            if (!loadedTabs.patients) {
-                $('#patientProfileContainer').load('/src/view/patient_profile.php', function() {
-                    loadedTabs.patients = true;
-                });
+        window.addEventListener('load', function() {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.opacity = '0';
+                loadingScreen.style.transition = 'opacity 0.5s ease';
+                setTimeout(function() {
+                    loadingScreen.style.display = 'none';
+                }, 500);
             }
-
-            // Load signup form content once when the document is ready
-            if (!loadedTabs.account) {
-                $('#signupFormContainer').load('/src/view/signup.php', function() {
-                    loadedTabs.account = true;
-                });
-            }
-
-            // Event tab click handler
-            $('#event-tab').on('click', function() {
-                if (!loadedTabs.event) {
-                    $('#eventFormContainer').load('/src/view/event.php', function() {
-                        loadedTabs.event = true;
-                    });
-                }
-            });
-
-            // Audit trail tab click handler
-            $('#audit-tab').on('click', function() {
-                if (!loadedTabs.audit) {
-                    $('.container', '#audit').load('/src/view/audit_trail.php', function() {
-                        loadedTabs.audit = true;
-                    });
-                }
-            });
-
-            // Refresh table only when viewing users for the first time
-            $('.sub-nav-button[data-target="view-users"]').click(function() {
-                $('.sub-content').hide();
-                $('#viewer').show();
-
-                if (!loadedTabs.users) {
-                    $('#UsersFormContainer').load('../../src/view/users.php', function() {
-                        loadedTabs.users = true;
-                    });
-                }
-
-                // Hide sub-nav after clicking
-                $('.sub-nav').hide();
-            });
-
-            // Create Account tab click handler
-            $('#acc-reg').on('click', function() {
-                $('.sub-content').hide();
-                $('#add-account').show();
-            });
-
-            // Show sub-nav on hover
-            $('#acc-reg-container').hover(
-                function() {
-                    $(this).find('.sub-nav').show();
-                },
-                function() {
-                    if (!$('#viewer').is(':visible')) {
-                        $(this).find('.sub-nav').hide();
-                    }
-                }
-            );
-
-            // Handle sub-navigation clicks for monitoring
-            $('#monitoring-container').hover(
-                function() {
-                    $(this).find('.sub-nav').show();
-                },
-                function() {
-                    if (!$('#nutrition-report').is(':visible')) {
-                        $(this).find('.sub-nav').hide();
-                    }
-                }
-            );
-
-            // Show monitoring records by default when clicking main tab
-            $('#schedule-tab').on('click', function() {
-                $('.sub-content').hide();
-                $('#monitoring-records').show();
-            });
-
-            // Handle nutrition report button click
-            $('.sub-nav-button[data-target="nutrition-report"]').click(function() {
-                $('.sub-content').hide();
-                $('#nutrition-report').show();
-                $(this).closest('.sub-nav').hide();
-            });
-
-            // Update date and time
-            function updateDateTime() {
-                const now = new Date();
-                const options = {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                };
-                const dateTimeStr = now.toLocaleDateString('en-US', options);
-                $('#dateTimeDisplay').text(dateTimeStr);
-            }
-
-            // Update time immediately and then every second
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-
-            // Modal accessibility improvements
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                // Store the element that triggered the modal
-                let triggerElement = null;
-                const modalInstance = new bootstrap.Modal(modal);
-
-                // Function to properly hide modal and clean up
-                function hideModalAndCleanup() {
-                    modalInstance.hide();
-                    // Remove backdrop
-                    const backdrops = document.getElementsByClassName('modal-backdrop');
-                    while (backdrops.length > 0) {
-                        backdrops[0].remove();
-                    }
-                    // Clean up body classes
-                    document.body.classList.remove('modal-open');
-                    document.body.style.removeProperty('padding-right');
-                    // Reset modal state
-                    modal.style.display = 'none';
-                    modal.setAttribute('aria-hidden', 'true');
-                    modal.setAttribute('inert', '');
-                }
-
-                // When modal is about to be shown
-                modal.addEventListener('show.bs.modal', function () {
-                    this.removeAttribute('aria-hidden');
-                    triggerElement = document.activeElement;
-                    this.removeAttribute('inert');
-                });
-
-                // When modal is hidden
-                modal.addEventListener('hidden.bs.modal', function () {
-                    if (triggerElement) {
-                        triggerElement.focus();
-                    }
-                    hideModalAndCleanup();
-                });
-
-                // Add cleanup to all close buttons in this modal
-                const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
-                closeButtons.forEach(button => {
-                    button.addEventListener('click', hideModalAndCleanup);
-                });
-
-                // Cleanup after successful transactions
-                modal.addEventListener('transactionComplete', function() {
-                    hideModalAndCleanup();
-                });
-
-                // Trap focus within modal when open
-                modal.addEventListener('keydown', function (e) {
-                    if (e.key === 'Tab') {
-                        const focusableElements = modal.querySelectorAll(
-                            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                        );
-                        const firstFocusable = focusableElements[0];
-                        const lastFocusable = focusableElements[focusableElements.length - 1];
-
-                        if (e.shiftKey) {
-                            if (document.activeElement === firstFocusable) {
-                                lastFocusable.focus();
-                                e.preventDefault();
-                            }
-                        } else {
-                            if (document.activeElement === lastFocusable) {
-                                firstFocusable.focus();
-                                e.preventDefault();
-                            }
-                        }
-                    }
-                });
-            });
-
-            // Handle nutrition monitoring sub-content switching
-            $('#schedule .btn-group .btn').click(function() {
-                // Remove active class from all buttons
-                $(this).siblings().removeClass('active');
-                // Add active class to clicked button
-                $(this).addClass('active');
-                
-                // Hide all sub-content
-                $('.sub-content').hide();
-                // Show the selected content
-                $('#' + $(this).data('content')).show();
-            });
-
-            // Bar Graph Data
-            const nutritionBarCtx = document.getElementById('nutritionBarGraph').getContext('2d');
-            new Chart(nutritionBarCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Center 1', 'Center 2', 'Center 3', 'Center 4', 'Center 5', 'Center 6'],
-                    datasets: [{
-                        label: 'Normal Weight %',
-                        data: [75, 82, 78, 85, 80, 77],
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)'
-                    }, {
-                        label: 'Underweight %',
-                        data: [15, 10, 12, 8, 12, 13],
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                    }, {
-                        label: 'Overweight %',
-                        data: [10, 8, 10, 7, 8, 10],
-                        backgroundColor: 'rgba(255, 206, 86, 0.6)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100
-                        }
-                    }
-                }
-            });
-
-            // Line Graph Data
-            const nutritionLineCtx = document.getElementById('nutritionLineGraph').getContext('2d');
-            new Chart(nutritionLineCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: '0-4 years',
-                        data: [65, 70, 75, 78, 82, 85],
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        tension: 0.1
-                    }, {
-                        label: '5-9 years',
-                        data: [70, 72, 76, 80, 83, 85],
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        tension: 0.1
-                    }, {
-                        label: '10-14 years',
-                        data: [75, 77, 80, 82, 85, 87],
-                        borderColor: 'rgba(255, 206, 86, 1)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: 50,
-                            max: 100
-                        }
-                    }
-                }
-            });
         });
     </script>
-     
-    <script src="/src/script/logout.js"></script>
-
-    <script src="/src/script/audit_trail.js"></script>
-
-    <script src="/src/script/loader.js"></script>
-
 </body>
 
 </html>
